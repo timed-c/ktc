@@ -50,6 +50,11 @@ Thumbs.db
 *.o
 *.cil.c
 *.dot
+*.swp
+*.swj
+*.swm
+*.swn
+*.swo
 
 #Time-C generated files#
 ########################
