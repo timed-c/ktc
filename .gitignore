@@ -7,6 +7,9 @@
 *.o
 *.so
 *.cma
+*.cil.c
+*.i
+*.cmxa
 
 # Packages #
 ############

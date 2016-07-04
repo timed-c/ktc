@@ -10,7 +10,7 @@
 #include <sys/syscall.h>
 #include <linux/perf_event.h> 
 #include <cilktc.h>
-
+#include<string.h>
 /*
 static __thread pid_t cached_tid = -1;
 pid_t gettid()
@@ -232,20 +232,25 @@ long convert_to_ms(long interval, char* unit){
 	for computation in C*/
 struct timespec convert_to_timespec(long interval, char* unit){
         struct timespec temp;
-        if(!strcmp(unit, "sec")){
+	char tu[10];
+	strcpy(tu, "sec");
+        if(!strcmp(unit, tu)){
                 temp.tv_sec = interval;
                 temp.tv_nsec = 0;
 
         }
-        if(!strcmp(unit, "ms")){
+	strcpy(tu, "ms");
+        if(!strcmp(unit, tu)){
                 temp.tv_sec = interval/MILLI;
                 temp.tv_nsec = (interval % MILLI)*(MILLI_TO_NANO);
         }
+	strcpy(tu, tu);
         if(!strcmp(unit, "micro")){
                 temp.tv_sec = interval/MICRO;
                 temp.tv_nsec = (interval % MICRO)*(MICRO_TO_NANO);
         }
-        if(!strcmp(unit, "ns")){
+	strcpy(tu, "ns");
+        if(!strcmp(unit, tu)){
                 temp.tv_sec = interval/NANO;
                 temp.tv_nsec = (interval % NANO);
         }

@@ -3,7 +3,7 @@
 
 
 int  main(){
-	sdelay(0);
+	sdelay(0, "ms");
 	sleep(1);
 	sdelay(2, "ms");
 	sleep(1);

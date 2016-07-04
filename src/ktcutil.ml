@@ -28,6 +28,11 @@ let v2e (v : varinfo) : exp = Lval(var v)
 
 let (|>) (a : 'a) (f : 'a -> 'b) : 'b = f a
 
+let fst4 (a,_,_,_) = a
+let snd4 (_,b,_,_) = b
+let thd4 (_,_,c,_) = c
+let fur4 (_,_,_,d) = d
+
 let fst3 (a,_,_) = a
 let snd3 (_,b,_) = b
 let thd3 (_,_,c) = c
@@ -47,6 +52,20 @@ let forceOption (ao : 'a option) : 'a =
   | Some a -> a
   | None -> raise(Failure "forceOption")
 
+let remove_elt e l =
+  let rec go l acc = match l with
+    | [] -> List.rev acc
+    | x::xs when e = x -> go xs acc
+    | x::xs -> go xs (x::acc)
+  in go l []
+
+let remove_duplicates_in_list l =
+  let rec go l acc = match l with
+    | [] -> List.rev acc
+    | x :: xs -> go (remove_elt x xs) (x::acc)
+  in go l []
+
+
 let list_of_hash (sih : ('a, 'b) Hashtbl.t) : ('a * 'b) list =
 	Hashtbl.fold (fun a b l -> (a,b) :: l) sih []
 
@@ -60,6 +79,11 @@ let list_init (len : int) (f : int -> 'a) : 'a list =
 let split ?(re : string = "[ \t]+") (line : string) : string list =
   S.split (S.regexp re) line
 
+
+let unrollType2dArray vtype =
+	match vtype with 
+	| TArray(TArray(t,_,_),_,_) -> t 
+	| _ -> E.s (E.bug "Not 2-D matrix"); vtype
 
 let onlyFunctions (fn : fundec -> location -> unit) (g : global) : unit = 
   match g with
@@ -246,6 +270,8 @@ let findCompinfo (f : file) (ciname : string) : compinfo =
    in
       search f.globals
 
+ 
+	
 let findTypeinfo (f : file) (tpname : string) : typeinfo =
     let rec search glist =
         match glist with
@@ -533,7 +559,7 @@ class nullAdderClass data = object(self)
 end
 
 let null_adder fdec data =
-  ignore(visitCilFunction (new nullAdderClass data) fdec);
+  all_stmts := []; ignore(visitCilFunction (new nullAdderClass data) fdec);
   !all_stmts 
 
 
@@ -541,6 +567,15 @@ let getStmtTPSucc (data: TS.t IH.t) (s: stmt) : TS.t =
   try IH.find data s.sid
   with Not_found -> TS.empty (* Not reachable *)
 
+let retTimingPoint s =
+	match s.skind with
+	| Instr il ->  begin
+                        if List.length il = 1  && (isTimingPoint (List.hd il)) then
+                                true
+                        else
+                                false
+                      end
+        |_ -> false
 let retFirm s =
 	match s.skind with
 	| Instr il ->  begin
@@ -566,6 +601,15 @@ let checkFirmSuccs (data: TS.t IH.t) (s: stmt) =
 				true
 			else
 			        false
+let retTimingPointSucc s data =
+	let tsuccsofs = getStmtTPSucc data s in
+	let succSet = TS.filter retTimingPoint tsuccsofs in
+	let succList = TS.elements succSet in
+	let intrfirmSucc = if List.length succList = 1 then List.hd succList
+                           else
+			let loc = get_stmtLoc s.skind in
+                        (Printf.eprintf "%s:%d:" loc.file loc.line); E.s (E.error "conflicting target destination for next")  in
+                intrfirmSucc
 
 
 let  retFirmSucc s data =
@@ -596,12 +640,16 @@ let computeTPSucc ?(doCFG:bool=true) (f: fundec)  =
                          TPSucc.pretty (tsuc))
              )f.sallstmts; *)TPSucc.stmtStartData
 
-let checkTPSucc ?(doCFG:bool=true) (f: fundec)  =
+let checkTPSucc ?(doCFG:bool=true) (f: fundec) fil  =
 	let ch = open_out "timed_graph.dot" in
         let h = fprintf ch "digraph Timed_CFG {" in
         if doCFG then begin
+		Cfg.clearFileCFG fil;
+		Cfg.computeFileCFG fil
+		(*
                  prepareCFG f;
                 computeCFGInfo f false
+		*)
         end;
         IH.clear TPSucc.stmtStartData;
         let a = null_adder f TPSucc.stmtStartData in

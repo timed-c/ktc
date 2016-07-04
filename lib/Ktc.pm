@@ -77,9 +77,8 @@ sub processArguments {
     # Scan and process the arguments
     $self->setDefaultArguments;
     $self->collectArgumentList(@args);
-
-   push @{$self->{KTCLIBS}}, "$lib/libktc.$self->{LIBEXT}";
-
+    push @{$self->{KTCLIBS}}, "$lib/libktc.$self->{LIBEXT}";
+    push @{$self->{KTCLIBSRASP}}, "$lib/libktcrasp.$self->{LIBEXT}";
     return $self;
 }
 
@@ -95,7 +94,11 @@ sub collectOneArgument {
     my $res = 1;
     if ($self->compilerArgument($self->{OPTIONS}, $arg, $pargs)) {
         # do nothing
-    } elsif ($arg eq "--help" || $arg eq "-help") {
+	}
+	elsif($arg eq "--rasp"){
+	$self->{RASP} = 1;
+	}
+	elsif ($arg eq "--help" || $arg eq "-help") {
         $self->printVersion();
         $self->printHelp();
         exit 0;
@@ -145,14 +148,17 @@ sub preprocess_before_cil {
 
 
 ## We do not preprocess after CIL, to save time and files
-sub preprocessAfterOutputFile {
-    my ($self, $src) = @_;
-    return $src; # Do not preprocess after CIL
-}
+##sub preprocessAfterOutputFile {
+##    my ($self, $src) = @_;
+##    return $src; # Do not preprocess after CIL
+##}
 
 sub preprocess_after_cil {
     my ($self, $src, $dest, $ppargs) = @_;
-    if($src ne $dest) { die "I thought we are not preprocessing after CIL";}
+    my @args = @{$ppargs};
+    unshift @args, $self->{INCARG} . $::ktchome . "/include";
+    return $self->SUPER::preprocess_before_cil($src, $dest, \@args);
+    ##if($src ne $dest) { die "I thought we are not preprocessing after CIL";}
     return $dest;
 }
 
@@ -207,7 +213,11 @@ sub link_after_cil {
                         "/usr/local/lib/libyices.a";
         }
         else {
+	    if($self->{RASP} == 1){
+		push @libs, @{$self->{KTCLIBSRASP}};
+	    }else{
             push @libs, @{$self->{KTCLIBS}};
+	    }
         }
         if ($self->{DARWIN}) {
           push @libs, "-ldl";
