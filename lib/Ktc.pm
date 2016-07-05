@@ -189,8 +189,11 @@ sub link_after_cil {
     my @libs = @{$ldargs};
     my @cargs = @{$ccargs};
     if ($self->{DARWIN}) {
-        push @libs, "-Wl,-multiply_defined", "-Wl,suppress";
-    }
+        #push @libs, "-Wl,-multiply_defined", "-Wl,suppress";
+	#push @libs, "-Wl", "-Wl,suppress";
+	push @libs, "-lrt", "-lpthread";
+  
+}
     if (scalar @srcs == 0) {
         print STDERR "ktc: no input files\n";
         return 0;
