@@ -1,16 +1,16 @@
-						KTC : A Source to Source Compiler for TIMED-C 
+						KTC : A source-to-source Compiler for TIMED-C 
 							*****IN-PROGRESS*******
 
 1. Intro
 2. Building and Installing
-3.  Using KTC to compile timed-c code to run on Raspberry Pi
+3. Using KTC to compile timed-c code to run on Raspberry Pi
 
 
 1. Intro:
 ------
 
-KTC is a source-to-source compiler for the timed-C programming language. It takes timed-C code as input, performs source-to-source transformation(depending on the specified target platform), spits out a C code which then can be compiled using 
-a compiler that supports the target platform. The current version of KTC supports POSIX based hardwares. There is ongoing testingfor raspbery pi running Linux-RT and intel x86 processor running on Ubuntu.  
+KTC is a source-to-source compiler for the timed-C programming language. It takes timed-C code as input, performs source-to-source transformation (depending on the specified target platform), spits out a C code which then can be compiled using 
+a compiler that supports the target platform. The current version of KTC supports POSIX based hardwares. There is ongoing testing for Raspberry Pi running Linux-RT and Intel x86 processor running on Ubuntu.  
 
 2. Building and Installing KTC:
 ------------------------
@@ -19,10 +19,10 @@ a compiler that supports the target platform. The current version of KTC support
  
     . Ocaml Dependencies :
 
-      -	sudo install ocaml ocaml-findlib lablgl lablgtk lablgtk2 mercurial  ocaml-ocamlgraph 
+      -	sudo port install ocaml ocaml-findlib lablgtk2 mercurial ocaml-ocamlgraph 
         (Use macports for MAC OSX)
 
-      - opam install ocamlbuild
+      - opam port install ocamlbuild
 
     . CIL 
 
