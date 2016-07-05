@@ -19,10 +19,8 @@ a compiler that supports the target platform. The current version of KTC support
  
     . Ocaml Dependencies :
 
-      -	sudo port install ocaml ocaml-findlib lablgtk2 mercurial ocaml-ocamlgraph 
+      -	sudo port install ocaml opam ocaml-findlib lablgtk2 mercurial ocaml-ocamlgraph 
         (Use macports for MAC OSX)
-
-      - opam port install ocamlbuild
 
     . CIL 
 
