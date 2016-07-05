@@ -1,4 +1,3 @@
-#define _GNU_SOURCE   
 #include <stdint.h>   
 #include <pthread.h>  
 #include <dlfcn.h>    

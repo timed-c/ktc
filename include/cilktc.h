@@ -1,3 +1,8 @@
+#define __OSX_AVAILABLE_STARTING(_mac,_phone)
+#ifndef __AVAILABILITY__
+#define __AVAILABILITY__
+#endif
+
 
 #include <stdio.h>
 #include <stdint.h>
@@ -11,6 +16,14 @@
 #include <signal.h>
 #include <pthread.h>
 #include <stdbool.h>
+
+#include <sys/time.h>
+
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
+
 
 
 #define SEC_TO_NANO 1000000000
