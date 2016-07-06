@@ -64,12 +64,23 @@ let align () =
 
 let ext_options =
   Array.to_list (
+  Array.mapi (fun i br -> if i = 0 then
+    ("--enable-ext"^(string_of_int i),
+     Arg.Set br,
+     "Enable source-to-source transformation to POSIX") else 
+	("--enable-ext"^(string_of_int i),
+     Arg.Set br,
+     "Enable source-to-source transformatin to FreeRTOS"
+  ) )enable_ext)
+
+(*let ext_options =
+  Array.to_list (
   Array.mapi (fun i br ->
     ("--enable-ext"^(string_of_int i),
      Arg.Set br,
      "Enable the code in ext"^(string_of_int i)^".ml")
   ) enable_ext)
-
+*)
 let options = ext_options @ [
 
   
