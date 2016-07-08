@@ -1,3 +1,4 @@
+#define _GNU_SOURCE   
 #include <stdint.h>   
 #include <pthread.h>  
 #include <dlfcn.h>    
@@ -116,18 +117,19 @@ long ktc_fdelay_init(int interval, char* unit, struct timespec* start_time, int 
 
 }
 
-int ktc_fdelay_start_timer(int interval, char* unit, timer_t ktctimer, struct timespec start_time){
+int ktc_fdelay_start_timer(int interval, char* unit, timer_t ktctimer, struct timespec* start_time){
 	struct timespec interval_timespec;
         struct itimerspec i;
 	
 	interval_timespec = convert_to_timespec(interval, unit);
-        i.it_value = add_timespec(start_time, interval_timespec);
+        i.it_value = add_timespec((*start_time), interval_timespec);
         i.it_interval.tv_sec = 0;
         i.it_interval.tv_nsec = 0;
 	 if(timer_settime(ktctimer, TIMER_ABSTIME, &i, NULL) < 0){
                                 perror("timer_setitimer");
                                 exit(0);
         }
+	(*start_time) = add_timespec( (*start_time), interval_timespec); 
 	
 }
 
@@ -147,6 +149,24 @@ int ktc_critical_end(sigset_t* orig_mask){
 	}
  
 }
+
+cbm* ktc_htc_getmes(struct cab_ds* cab){
+	cbm* p;
+	p = cab->mrb;
+	p->use = p->use + 1;
+	return p;	
+}
+
+void ktc_htc_unget (struct cab_ds* cab, cbm* buffer){
+	buffer->use = buffer->use - 1;
+	if((buffer->use == 0) && (buffer != cab->mrb)){
+		buffer->nextc = cab->free;
+		cab->free = buffer;
+	}
+}
+
+
+
 /*
 void creadFourSlotIntChan(int* data, int* value, int* slot, int *latest, int *reading, int type){
 	int pair, index;
@@ -206,3 +226,18 @@ void main(){
 	ktc_fdelay_init(3, "ms", &start_time);
 }*/
 
+struct cbm* ktc_htc_reserve(struct cab_ds* cab){
+	struct cbm* p;
+	p = cab->free;
+	cab->free =p->nextc;
+	return p;
+}
+
+void ktc_htc_putmes(struct cab_ds* cab, struct cbm* buffer){
+	if(cab->mrb != NULL && cab->mrb->use == 0){
+		cab->mrb->nextc = cab->free;
+		cab->free = cab->mrb;
+	}
+	cab->mrb = buffer;
+	
+}  

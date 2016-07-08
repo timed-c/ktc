@@ -22,7 +22,7 @@ let all_threads = ref []
 let readChanHash = HT.create 34 
 let writeChanHash = HT.create 34
 let simpsonChanSet = HT.create 34 
-
+let htcChanSet = HT.create 34
 
 
 let critical_str = "critical"
@@ -31,6 +31,7 @@ let task_str = "task"
 let lv_str = "lvchannel"
 let read_str = "read_block"
 let write_str = "write_block"
+let init_str = "init_block"
 
 let hasCriticalAttrs : attributes -> bool = hasAttribute critical_str
 let isCriticalType (t : typ) : bool = t |> typeAttrs |> hasCriticalAttrs
@@ -50,6 +51,9 @@ let isReadType (t : typ) : bool = t |> typeAttrs |> hasReadAttrs
 let hasWriteAttrs : attributes -> bool = hasAttribute write_str
 let isWriteType (t : typ) : bool = t |> typeAttrs |> hasWriteAttrs
 
+let hasInitAttrs : attributes -> bool = hasAttribute init_str
+let isInitType (t : typ) : bool = t |> typeAttrs |> hasInitAttrs
+
 type functions = 
 {
   mutable sdelay_init : varinfo;
@@ -62,6 +66,10 @@ type functions =
   mutable critical_end : varinfo;
   mutable pthread_create : varinfo;
   mutable pthread_join : varinfo;
+  mutable htc_get : varinfo;
+  mutable htc_unget : varinfo; 
+  mutable htc_reserve : varinfo;
+  mutable htc_putmes : varinfo;
 }
 
 let dummyVar = makeVarinfo false "_sdelay_foo" voidType
@@ -77,6 +85,10 @@ let sdelayfuns = {
   critical_end = dummyVar;
   pthread_create = dummyVar;
   pthread_join = dummyVar;
+  htc_get = dummyVar;
+  htc_unget = dummyVar;
+  htc_reserve = dummyVar;
+  htc_putmes = dummyVar;
 }
 
 
@@ -91,6 +103,10 @@ let critical_start_str  = "ktc_critical_start"
 let critical_end_str = "ktc_critical_end"
 let pthread_create_str = "pthread_create" 
 let pthread_join_str = "pthread_join"
+let htc_get_str = "ktc_htc_getmes"
+let htc_unget_str = "ktc_htc_unget"
+let htc_reserve_str = "ktc_htc_reserve"
+let htc_putmes_str = "ktc_htc_putmes"
 
 let sdelay_function_names = [
   sdelay_init_str;
@@ -103,6 +119,10 @@ let sdelay_function_names = [
   critical_end_str;
   pthread_create_str;
   pthread_join_str;
+  htc_get_str;
+  htc_unget_str;
+  htc_reserve_str;
+  htc_putmes_str;
 ]
 
 
@@ -136,8 +156,14 @@ let initSdelayFunctions (f : file)  : unit =
   sdelayfuns.critical_start <- focf critical_start_str init_type;
   sdelayfuns.critical_end <- focf critical_end_str init_type;
   sdelayfuns.pthread_create <- focf pthread_create_str init_type;
+  sdelayfuns.htc_get <- focf htc_get_str init_type;
+  sdelayfuns.htc_unget <- focf htc_unget_str init_type;
+  sdelayfuns.htc_reserve <- focf htc_reserve_str init_type;
+  sdelayfuns.htc_putmes <- focf htc_putmes_str init_type;
   sdelayfuns.pthread_join <- focf pthread_join_str init_type
 
+
+	
 let makeSdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location)  =
   let time_unit = if (L.length argL) = 1 then mkString "NULL" else L.hd (L.tl argL) in
   let f, l, intervl, tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, time_unit, mkAddrOf((var structvar)), (List.hd (List.rev argL))  in
@@ -219,7 +245,8 @@ let maketimerfdelayStmt structvar argL tpstructvar timervar retjmp firmStmt =
 	(*let goto_label = dummyStmt in *)
 	let goto_label = mkStmt (Goto(ref letjmpto, locUnknown))  in 
 	let ifBlock = ifBlockFunc goto_label retjmp  in
-	let startTimer = Call(None, v2e sdelayfuns.fdelay_start_timer, [intr; tunit;timr;s;], locUnknown) in
+	let st = mkAddrOf (var structvar) in
+	let startTimer = Call(None, v2e sdelayfuns.fdelay_start_timer, [intr; tunit;timr;st;], locUnknown) in
 	  [mkStmtOneInstr sigInt; ifBlock; mkStmtOneInstr startTimer ]
 
 let instrVarInfoIfFun il =
@@ -379,18 +406,29 @@ let numberRW readers=
 	let reader_list = List.map (fun a -> findNumReadersPerTask a) readers in
 	let totalReader = List.fold_left (fun a b -> a + b) 0 reader_list in
 	totalReader
- 
+
+let numberReaders c = 
+	let reads = HT.find readChanHash c in
+        let num = numberRW reads in
+		num
+
+let isSimp c =
+	let num = numberReaders c in
+	let value = if (num = 1)  then true else false
+	in	
+	value
 
 let getInstr s =
 	match s.skind with
 	|Instr il when il <> []-> match List.hd il with 
 			|Call(_,Lval(Var vi,_),argList,loc)  -> argList 
 
+
 let getExpNameR e = 
 	match e with
 	|BinOp(_, SizeOfStr s1, SizeOfStr s2, _) -> (s1, s2)
 	(*|BinOp(_, Const(CStr c1), Const(CStr c2), _) -> (c1, c2) *)
-	| _ -> E.s (E.bug "Wrong format of read block") ; ("e", "r")
+	| _ -> E.s (E.bug "Wrong format of read block") ; ("e", "s")
 
 let getExpNameW e =
         match e with
@@ -605,8 +643,20 @@ let addLabel f =
         let cVisitor = new addLabelStmt f in
         visitCilFile cVisitor f
 
+let initializeCabDs f chanVar cname numbuf = 
+	let cabDs = HT.find htcChanSet cname in
+	let cabdsType = findCompinfo f "cab_ds" in
+	let freel = (Var (cabDs), Field((getCompField cabdsType "free"), NoOffset)) in
+	let mrbl = (Var (cabDs), Field((getCompField cabdsType "mrb"), NoOffset)) in
+	let maxc = (Var (cabDs), Field((getCompField cabdsType "maxcbm"), NoOffset)) in
+	let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in
+	let freeinit = mkStmtOneInstr (Set(freel, v2e chanVar, locUnknown)) in	
+	let mrbinit = mkStmtOneInstr (Set(mrbl, nullptr, locUnknown)) in
+	let maxc = mkStmtOneInstr (Set(maxc, integer numbuf, locUnknown)) in
+		[freeinit; mrbinit; maxc]
 
 
+	
 class sdelayFunc filename fname = object(self)
         inherit nopCilVisitor
 
@@ -644,18 +694,63 @@ class sdelayFunc filename fname = object(self)
 
 end
 
-class concurrencyImplmntSimpsonRead f fdec chanVarHash = object(self)
+class concurrencyImplmntSimpsonRead f fdec chanVarHash hchanVarHash = object(self)
         inherit nopCilVisitor
 
 	method vstmt (s: stmt) =
 	let action s =  (*let action s = *)
         match s.skind with
-        |If(CastE(t,e),b,_,_) when isReadType t -> let expName = getExpNameR e in
+	|If(CastE(t,e),b,_,_) when isInitType t ->      if(isSimp (fst (getExpNameW e))) then
+						   	let expName = (getExpNameW e) in
+						   	let chanVar = HT.find chanVarHash (fst expName) in
+						   	let itr1 = makeTempVar fdec ~name:("i_"^(fst expName)) intType in
+                                                   	let itr2 = makeTempVar fdec ~name:("j_"^(fst expName)) intType in	
+						   	let ptr = (Var (chanVar), Index(v2e (itr1), Index(v2e (itr2), NoOffset))) in
+						   	let fIns = Set(ptr, (snd (getExpNameW e)), locUnknown) in
+						   	let fStm = [mkStmtOneInstr fIns] in
+						   	let f2 = mkForIncr itr2 Cil.zero (integer 2) Cil.one fStm in
+						   	let f1 = mkForIncr itr1 Cil.zero (integer 2) Cil.one f2 in
+						   	let nb = mkBlock f1 in
+                                                    	s.skind <- Block nb; s
+						   else
+							let p =  E.log "hit here 11111"  in
+							let expName = (getExpNameW e) in
+                                                        let chanVar = HT.find hchanVarHash (fst expName) in
+							let numbuf = ((numberReaders (fst expName))) in
+                                                        let itr1 = makeTempVar fdec ~name:("i_"^(fst expName)) intType in
+							let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in
+							let nextIndex = BinOp(PlusA, (v2e itr1), Cil.one, intType) in 
+							let ptr_next = (Var (chanVar), Index(nextIndex, NoOffset)) in
+							let cbmTypeinfo = findCompinfo f "cbm" in
+							let usefieldinfo = getCompField cbmTypeinfo "use" in 
+							let usel = (Var (chanVar), Index(v2e (itr1), Field(usefieldinfo, NoOffset))) in
+							let datal = (Var (chanVar), Index(v2e (itr1), Field((getCompField cbmTypeinfo "data"), NoOffset))) in
+                                                        let nextl = (Var (chanVar), Index(v2e (itr1), Field((getCompField cbmTypeinfo "nextc"), NoOffset))) in
+							(*let usel =(ptr, Field(usefieldinfo, NoOffset)) in
+							let datal = (ptr, Field((getCompField cbmTypeinfo "data"), NoOffset)) in
+							let nextl = (ptr, Field((getCompField cbmTypeinfo "nextc"), NoOffset)) in  *)
+							let useinit = mkStmtOneInstr (Set(usel, Cil.zero, locUnknown)) in
+							let datainit = mkStmtOneInstr (Set(datal, Cil.zero, locUnknown)) in
+							let nextinit =  mkStmtOneInstr (Set(nextl, (mkAddrOf ptr_next), locUnknown)) in
+							let ifexp = BinOp(Eq, (v2e itr1), (integer numbuf), intType) in
+							let ifblk = mkBlock [(mkStmtOneInstr (Set(nextl, nullptr, locUnknown)))] in
+							let nexc =  mkStmt (If (ifexp, ifblk, (mkBlock[]), locUnknown)) in
+							let forSt = [useinit; datainit; nextinit; nexc] in    
+							let f1 = mkForIncr itr1 Cil.zero (integer (numbuf+1)) Cil.one forSt in	  
+							let cabInitStm = initializeCabDs f chanVar (fst expName) numbuf in
+							let allStmtBlk = List.append f1 cabInitStm in
+							let nb = mkBlock allStmtBlk in
+                                                        s.skind <- Block nb; E.log "hit here"; s	
+        |If(CastE(t,e),b,_,_) when isReadType t -> if(isSimp (fst (getExpNameR e))) then 
+						   let expName = getExpNameR e in
 						   let pairVar = makeTempVar fdec ~name:("pair_"^(fst expName)) intType in
 						   let indexVar = makeTempVar fdec ~name:("index_"^(fst expName)) intType in
 						   let chanVar = HT.find chanVarHash (fst expName) in
 						   let chanSet = HT.find simpsonChanSet (fst expName)  in
-						   let ptrRead = makeTempVar fdec ~name:(snd expName) (TPtr((unrollType2dArray chanVar.vtype), [])) in
+						   let ptrRead = findLocalVar fdec.slocals (snd expName) in
+						   (*let ptrRead = makeLocalVar fdec (snd expName) (TPtr((unrollType2dArray chanVar.vtype), [])) in
+						   let ptrReadEx = (snd expName) in
+						   let ptrRead = getVarFromExp ptrReadEx in *)
 						   let ione = Set((var pairVar), (v2e (snd3 chanSet)), locUnknown) in
 						   let itwo = Set((var (thd3 chanSet)), (v2e (pairVar)), locUnknown) in
 						   let slotThree = (Var (fst3 chanSet), Index(v2e (pairVar), NoOffset)) in
@@ -667,7 +762,27 @@ class concurrencyImplmntSimpsonRead f fdec chanVarHash = object(self)
 						   let slist = [mkStmtOneInstr ione; mkStmtOneInstr itwo; mkStmtOneInstr ithree; mkStmtOneInstr ifour; mkStmt (Block b); mkStmtOneInstr iend] in
 						   let nb = mkBlock slist in
                                                     s.skind <- Block nb; s
-	 |If(CastE(t,e),b,_,_) when isWriteType t -> let expName = getExpNameW e in
+						   else
+                                                   let expName = getExpNameR e in
+						   let chanVar = HT.find hchanVarHash (fst expName) in
+                                                   let cabds = HT.find htcChanSet (fst expName)  in
+						   let cbmTypeinfo = findCompinfo f "cbm" in
+                                		   let cbmTyp = TComp((cbmTypeinfo), []) in
+						   let ptrRead = findLocalVar fdec.slocals (snd expName) in 
+						   let ptrBuf = makeTempVar fdec ~name:(snd expName) (TPtr(cbmTyp, [])) in  
+						   (*let ptrReadEx = (snd expName)  in
+						   let ptrRead = getVarFromExp ptrReadEx in *)
+						   let getCall = Call((Some (var ptrBuf)),v2e sdelayfuns.htc_get, [(mkAddrOf (var cabds));], locUnknown) in
+						   let usefieldinfo = getCompField cbmTypeinfo "use" in
+						   let datal = (Mem (v2e ptrBuf), Field((getCompField cbmTypeinfo "data"), NoOffset)) in 
+						   let iset = Set((var ptrRead), Lval datal, locUnknown) in
+						   let ungetInstr = Call(None, v2e sdelayfuns.htc_unget, [(mkAddrOf (var cabds)); (v2e ptrBuf);], locUnknown) in 
+						   let slist = [mkStmtOneInstr getCall; mkStmtOneInstr iset;  mkStmt (Block b); mkStmtOneInstr ungetInstr] in
+						   let nb = mkBlock slist in
+                                                    s.skind <- Block nb; s
+
+	 |If(CastE(t,e),b,_,_) when isWriteType t -> if(isSimp (fst (getExpNameW e))) then 
+						   let expName = getExpNameW e in
                                                    let pairVar = makeTempVar fdec ~name:("pair_"^(fst expName)) intType in
                                                    let indexVar = makeTempVar fdec ~name:("index_"^(fst expName)) intType in
                                                    let chanVar = HT.find chanVarHash (fst expName) in
@@ -684,9 +799,23 @@ class concurrencyImplmntSimpsonRead f fdec chanVarHash = object(self)
                                                    let slist = [mkStmtOneInstr ione; mkStmtOneInstr itwo; mkStmtOneInstr ithree; mkStmtOneInstr ifour; mkStmtOneInstr ifive; mkStmt (Block b) ] in
                                                    let nb = mkBlock slist in
                                                     s.skind <- Block nb; s
-					
+						   else
+						   let expName = getExpNameW e in
+                                                   let chanVar = HT.find hchanVarHash (fst expName) in
+						   let cabds = HT.find htcChanSet (fst expName)  in
+						   let cbmTypeinfo = findCompinfo f "cbm" in
+                                                   let cbmTyp = TComp((cbmTypeinfo), []) in
+                                                   let ptrRead = snd expName in
+                                                   let ptrBuf = makeTempVar fdec ~name:("writmes"^(fst expName)) (TPtr(cbmTyp, [])) in
+						   let rescall = Call(Some (var ptrBuf), v2e sdelayfuns.htc_reserve, [(mkAddrOf (var cabds));], locUnknown) in
+						   let datal = (Mem (v2e ptrBuf), Field((getCompField cbmTypeinfo "data"), NoOffset)) in
+						   let writemes = Set(datal, ptrRead, locUnknown) in 
+						   let putmescall = Call(None, v2e sdelayfuns.htc_putmes, [(mkAddrOf (var cabds)); (v2e ptrBuf);], locUnknown) in
+						   let slist = [mkStmtOneInstr rescall; mkStmtOneInstr writemes;  mkStmtOneInstr putmescall; mkStmt (Block b)] in
+						   let nb = mkBlock slist in
+						   s.skind <- Block nb; s
 							
-                 |_ -> s
+                |_ -> s
 		in ChangeDoChildrenPost(s, action)
 	
 
@@ -695,12 +824,22 @@ end
 class concurrencyImplmntSimpson f = object(self)
         inherit nopCilVisitor
 	val mutable getChanVar = HT.create 34	
-
+	val mutable getHtcChanVar = HT.create 34
         method vvdec vi = 
-        let cVar = if (isLVType vi.vtype)  then
-                             let typSanAtt = typeRemoveAttributes [lv_str] vi.vtype in
-                             let chanVar = makeGlobalVar ("data_"^vi.vname) (TArray(TArray(typSanAtt, Some(integer 2), []), Some(integer 2), [])) in
-                              HT.add getChanVar vi.vname chanVar; chanVar
+        let cVar = E.log "JGD" ; if (isLVType vi.vtype)  then
+			let cv =
+			    if (not (isSimp vi.vname)) then
+				let typSanAtt = typeRemoveAttributes [lv_str] vi.vtype in
+				let cbmTypeinfo = findCompinfo f "cbm" in 
+				let cbmTyp = TComp((cbmTypeinfo), []) in
+				let numbuf = ((numberReaders vi.vname) + 1) in 
+				let cbmArray = makeGlobalVar ("data_"^vi.vname) (TArray(cbmTyp, Some(integer numbuf), [])) in
+				HT.add getHtcChanVar vi.vname cbmArray; E.log "ttt -> %s\n" vi.vname; cbmArray
+			    else 
+                             	let typSanAtt = typeRemoveAttributes [lv_str] vi.vtype in
+                             	let chanVar = makeGlobalVar ("data_"^vi.vname) (TArray(TArray(typSanAtt, Some(integer 2), []), Some(integer 2), [])) in
+                              	HT.add getChanVar vi.vname chanVar; chanVar in
+				cv
                    else vi
         in ChangeTo(cVar)
 	(*
@@ -721,14 +860,14 @@ class concurrencyImplmntSimpson f = object(self)
 	in ChangeTo(gVar)
 
 	*)
+		
 	method vfunc fdec =
 	
-		let cread = new concurrencyImplmntSimpsonRead f fdec getChanVar in
+		let cread = new concurrencyImplmntSimpsonRead f fdec getChanVar getHtcChanVar in
 		fdec.sbody <- visitCilBlock cread fdec.sbody ;
 		ChangeTo(fdec) 
 
 	
-
 		
 end
 	
@@ -755,15 +894,17 @@ let concurrencyConstructsTransformatn f =
 	let cVis = new concurrencyImplmntSimpson f in
 	visitCilFile cVis f 
 	(*else 
-	let cVis = new concurrencyImplmntCAB f in
+	ldd simpsonChanSet vname simpSet; ()et cVis = new concurrencyImplmntCAB f in
         visitCilFile cVis f*)
-(*
-let htcGlb f vname =
-	let cabdsType = findCompinfo f "cab_ds" in
-	let cbmType = findCompinfo f "cbm" in 
-	let cabdsVar = makeGlobalVar ("cds"_^vname) (cabdsType)
-	f.globals <- cabdsVar :: f.globals
-*)
+let htcGlb f vname  =
+        let cabdsTypeInfo = findCompinfo f "cab_ds" in
+	let cabstyp = TComp((cabdsTypeInfo), []) in
+	let cabdsVar = makeGlobalVar ("cds_"^vname) cabstyp in
+        (*let cabdsVar = makeGlobalVar ("cds_"^vname) (TPtr(cabstyp, [])) in*)
+        let cvList  = [GVarDecl(cabdsVar, locUnknown)] in
+        f.globals <- List.append cvList f.globals;
+	HT.add htcChanSet vname cabdsVar; ()
+
 let simpsonGlb f vname  =
 	let boolType = TInt(IBool, []) in
 	let slotVar = makeGlobalVar ("slot_"^vname) (TArray(boolType, Some(integer 2), [])) in
@@ -780,7 +921,7 @@ let rec addGlobalVarChan f lvcList =
 	match lvcList with
 	|c::res-> let reads = HT.find readChanHash c in
 		    let num = numberRW reads in
-		    if(num = 1) then (simpsonGlb f c)  else () ; (E.log "Number of readers for %s ---> %d\n" c num);  addGlobalVarChan f res
+		    if(num = 1) then (simpsonGlb f c)  else htcGlb f c ; (E.log "Number of readers for %s ---> %d\n" c num);  addGlobalVarChan f res
 	|[] -> []
 
 let rec checkWriteOperation f lvcList =
@@ -830,3 +971,4 @@ let sdelay (f : file) : unit =
   initSdelayFunctions f; Ciltools.one_instruction_per_statement f ; let fname = "sdelay" in
   let vis = new sdelayFunc f fname in
  *) 
+

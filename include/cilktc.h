@@ -183,7 +183,7 @@ void register_arr_input(char *name, uint64_t start, int sz, int cnt);
 void register_nt_input(char *name, char *start);
 //int ktc_sdelay_end(char const   *f , int l , int intrval , char *unit ) ;
 //void ktc_sdelay_init(char const   *f , int l ) ;
-int ktc_fdelay_start_timer(int interval, char* unit, timer_t ktctimer, struct timespec start_time);
+int ktc_fdelay_start_timer(int interval, char* unit, timer_t ktctimer, struct timespec* start_time);
 pthread_t pthread_id_example;
 
 #pragma cilnoremove("cabmsgv")
