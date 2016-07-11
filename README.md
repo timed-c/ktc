@@ -71,7 +71,7 @@ If you have not exported the path for the cross compiler, you will have to use t
 ***
 #### A. Setting up the Raspberry Pi
 
-(a) Follow the instructions at <https://www.raspberrypi.org/help/quick-start-guide/> to install Raspbian OS on the raspberry pi. For a hassle free setup, make sure you have all the required components as mentioned in the link before you start. 
+(a) Follow the instructions at <https://www.raspberrypi.org/help/quick-start-guide/> to install Raspbian OS on the raspberry pi. For a hassle free setup, make sure you have all the required components as mentioned in the link before you start. Use the official noobs installer to install raspbian. The instructions are avaialable at <https://www.raspberrypi.org/help/noobs-setup/>
 
 (b)This is an optional step, one can download and install the Linux RT Prempt patch over the Raspbian OS. The Linux RT Prempt patch guarantees better real-time performance.Follow the instructions for installing the pre-compiled (RT patch Linux) given at <http://www.frank-durr.de/?p=203>
 
