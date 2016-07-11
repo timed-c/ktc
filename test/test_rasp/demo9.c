@@ -5,7 +5,7 @@
 
 #define BILLION 1000000000L
 /*	
-While loop without deadline misses, i.e., timing block executes for time lesser than delay
+While loop of sdelay without deadline misses, i.e., timing block executes for time lesser than delay
 */
 int  main(){
 	long long unsigned int diff, diff_ms;

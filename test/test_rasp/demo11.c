@@ -13,12 +13,14 @@ int  main(){
 	struct timespec st, et;
 	clock_gettime(CLOCK_MONOTONIC, &st);
 	sdelay(0, "ms");
-	printf("Firm delay for 10  ms \nCode between fdelay executes for 2 sec \n");
+	critical{
 	sleep(2);
+	}
 	fdelay(10, "ms");
 	clock_gettime(CLOCK_MONOTONIC, &et);
 	diff =  BILLION * (et.tv_sec - st.tv_sec) + et.tv_nsec - st.tv_nsec;
 	diff_ms = diff/1000000;
+	printf("Sleep within critical block is 2 sec\n");
 	printf("elapsed time = %llu ms\n", (long long unsigned int) diff_ms);
 	/*sleep(1);
 	fdelay(2, "ms");*/

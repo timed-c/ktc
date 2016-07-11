@@ -8,13 +8,21 @@
         Firm Delay =  300 microsec
         Exec Time For Code between firm delays = 250sec
 */
+task bar(void* b){
+	printf("Entering task bar");
+	sleep(1);
+	printf("Exiting task bar");
+}
+
+
 int  main(){
 	long long unsigned int diff, diff_ms;
 	struct timespec st, et;
+	void* b;
 	clock_gettime(CLOCK_MONOTONIC, &st);
 	sdelay(0, "ms");
 	printf("Firm delay for 300 microsec \nCode between fdelay executes for 250 microsec \n");
-	usleep(250);
+	bar(b);
 	fdelay(300, "micro");
 	clock_gettime(CLOCK_MONOTONIC, &et);
 	diff =  BILLION * (et.tv_sec - st.tv_sec) + et.tv_nsec - st.tv_nsec;

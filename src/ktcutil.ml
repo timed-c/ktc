@@ -47,6 +47,11 @@ let tuplemap (f : 'a -> 'b) ((a,b) : ('a * 'a)) : ('b * 'b) = (f a, f b)
 let triplemap (f : 'a -> 'b) ((a,b,c) : ('a * 'a * 'a)) : ('b * 'b * 'b) =
   (f a, f b, f c)
 
+let getVarFromExp expv =
+	match expv with
+	| Lval(Var vi, _) -> vi
+	|_ -> raise(Failure "Exp not variable")
+
 let forceOption (ao : 'a option) : 'a =
   match ao with
   | Some a -> a
@@ -214,6 +219,10 @@ let rec findFunction (gl : global list) (fname : string) : fundec =
 	| GCompTagDecl(ci, _) :: _ when ci.cname = ciname -> ci
 	| _ :: rst -> findCompinfo rst ciname
 *)
+
+let findLocalVar (sl : varinfo list) (varname : string) : varinfo =
+	List.find (fun vi -> if vi.vname = varname then true else false) sl 
+
 let rec findGlobalVar (gl : global list) (varname : string) : varinfo =
   match gl with
   | [] -> E.s (E.error "Global not found: %s" varname)

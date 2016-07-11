@@ -826,7 +826,7 @@ class concurrencyImplmntSimpson f = object(self)
 	val mutable getChanVar = HT.create 34	
 	val mutable getHtcChanVar = HT.create 34
         method vvdec vi = 
-        let cVar = E.log "JGD" ; if (isLVType vi.vtype)  then
+        let cVar = if (isLVType vi.vtype)  then
 			let cv =
 			    if (not (isSimp vi.vname)) then
 				let typSanAtt = typeRemoveAttributes [lv_str] vi.vtype in

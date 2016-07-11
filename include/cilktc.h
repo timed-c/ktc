@@ -1,8 +1,3 @@
-#define __OSX_AVAILABLE_STARTING(_mac,_phone)
-#ifndef __AVAILABILITY__
-#define __AVAILABILITY__
-#endif
-
 
 #include <stdio.h>
 #include <stdint.h>
@@ -16,16 +11,10 @@
 #include <signal.h>
 #include <pthread.h>
 #include <stdbool.h>
-
-#include <sys/time.h>
-
-#ifdef __MACH__
-#include <mach/clock.h>
-#include <mach/mach.h>
-#endif
-
-
-
+/*#include  "../../FreeRTOSv9.0.0/FreeRTOS/Source/include/FreeRTOS.h"
+#include  "../../FreeRTOSv9.0.0/FreeRTOS/Source/include/task.h"
+#include "../../FreeRTOSv9.0.0/FreeRTOS/Source/include/timers.h"
+*/
 #define SEC_TO_NANO 1000000000
 #define MILLI_TO_NANO 1000000
 #define MICRO_TO_NANO 1000
@@ -60,8 +49,9 @@
 #define critical if((void *__attribute__((critical)))0)
 #define next if((void *__attribute__((next)))0) next()
 #define exec_child(x) if(x == 0)
-#define cread(chan, ptr)  if((void *__attribute__((read_block))) (sizeof(#chan) > sizeof(#ptr))) 
+#define cread(chan, ptr)   if((void *__attribute__((read_block))) (sizeof(#chan) > sizeof(#ptr))) 
 #define cwrite(chan, ptrw) if((void *__attribute__((write_block))) (sizeof(#chan) > ptrw))
+#define cinit(chan, val) if((void *__attribute__((init_block))) (sizeof(#chan) > val)){printf("dmmyStmt");}
 #define lvchannel __attribute__((lvchannel))
 
 //# task if((void *__attribute__((task)))1)
@@ -105,11 +95,11 @@ extern long ktc_fdelay_init(int intrval, char* unit, struct timespec* start_time
 sigjmp_buf buf_struct;
 
 
-struct cbm{
+typedef struct cbm{
 	int use;
 	int data;
-	struct cbm* nextcmb;
-};
+	struct cbm* nextc;
+} cbm;
 
 struct cab_ds{
 	struct cbm* free;
@@ -119,9 +109,13 @@ struct cab_ds{
 };
 
 
-struct cbm cabmsgv;
+cbm cabmsgv;
 struct cab_ds cabdsv;
 
+struct cbm* ktc_htc_reserve(struct cab_ds* cab);
+void ktc_htc_putmes(struct cab_ds* cab, struct cbm* buffer);
+cbm* ktc_htc_getmes(struct cab_ds* cab);
+void ktc_htc_unget (struct cab_ds* cab, cbm* buffer);
 #include <getopt.h>
 size_t s;
 struct option o;
@@ -186,6 +180,32 @@ void register_nt_input(char *name, char *start);
 int ktc_fdelay_start_timer(int interval, char* unit, timer_t ktctimer, struct timespec* start_time);
 pthread_t pthread_id_example;
 
+/** FREERTOS**/
+/*
+TaskHandle_t tskhndl;
+TimerHandle_t tmrhndl;
+UBaseType_t idle_prio = tskIDLE_PRIORITY;
+TickType_t tckvar;
+TimerHandle_t ktc_timer_init_free();
+long ktc_sdelay_init_free(int intrval, char* unit, TickType_t *start_time, int id);
+void ktc_start_time_init_free(TickType_t *start_time);
+#pragma cilnoremove("tmrhndl")
+#pragma cilnoremove("tckvar")
+#pragma cilnoremove("tskhdl")
+#pragma cilnoremove("idle_prio")
+#pragma cilnoremove("xTaskCreate")
+#pragma cilnoremove("xTaskGetTickCount")
+#pragma cilnoremove("vTaskDelayUntil")
+#pragma cilnoremove("vTaskDelete")
+#pragma cilnoremove("ktc_start_time_init_free")
+#pragma cilnoremove("ktc_timer_init_free")
+#pragma cilnoremove("ktc_sdelay_init_free")
+/*FREERTOS*/
+
+#pragma cilnoremove("ktc_htc_reserve")
+#pragma cilnoremove("ktc_htc_putmes")
+#pragma cilnoremove("ktc_htc_getmes")
+#pragma cilnoremove("ktc_htc_unget")
 #pragma cilnoremove("cabmsgv")
 #pragma cilnoremove("cabdsv")
 #pragma cilnoremove("boolvar")

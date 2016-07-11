@@ -4,7 +4,7 @@
 #include<unistd.h>
 
 #define BILLION 1000000000L
-/*An example of series of soft delays.
+/*An example of series of soft and firm delays.
 	BLOCK 1 : 
 	Soft Delay = 10 sec 
 	Exec Time For Code between soft delays = 3  sec
@@ -32,7 +32,7 @@ int  main(){
         st = et;
 	printf("\nBLOCK 2\nSoft Delay 8ms  \nSleep 5 ms\n");
         usleep(5000);
-        sdelay(8, "ms");
+        fdelay(8, "ms");
         clock_gettime(CLOCK_REALTIME, &et);
         diff =  BILLION * (et.tv_sec - st.tv_sec) + et.tv_nsec - st.tv_nsec;
         diff_ms = diff/1000000;
