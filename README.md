@@ -85,11 +85,11 @@ If you have not exported the path for the cross compiler, you will have to use t
 
 (b) To cross compile timed-C file to run on raspberry pi run use the following command
 
-	./ktc --enable-ext0 --gcc=arm-linux-gnueabihf-gcc ../test/demo1.c
+	./ktc --enable-ext0 --rasp --gcc=arm-linux-gnueabihf-gcc ../test/demo1.c
 	
 If you have not exported the path for the cross compiler, you will have to use the complete path in the *--gcc* option as below. 
 
-	./ktc --enable-ext0 --gcc=/usr/local/linaro/arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-gcc ../test/demo1.c
+	./ktc --enable-ext0 --rasp --gcc=/usr/local/linaro/arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-gcc ../test/demo1.c
 
 
 
