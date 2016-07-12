@@ -23,7 +23,7 @@ let outputFile (f : C.file) : unit =
 
 let processOneFile (cil: C.file) : unit =
   if !(O.enable_ext.(0)) then Sdelay.sdelay cil;
-  if !(O.enable_ext.(1)) then Fdelay.sdelay cil;
+  if !(O.enable_ext.(1)) then Sdelay.sdelay cil;
   outputFile cil
 ;;
 
