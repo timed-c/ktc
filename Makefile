@@ -8,6 +8,8 @@ all:   ktcutil ktcoption native
 
 # Compile native version.
 ktcutil:
+	@rm -f -r libs
+	@mkdir libs
 	@ocamlbuild -no-hygiene -use-ocamlfind -package cil -Is $(DIRS) ktcutil.cma
 	@ocamlbuild -no-hygiene -use-ocamlfind -package cil -Is $(DIRS) ktcutil.cmxa 
 	@rm -f bytes.ml
@@ -30,3 +32,11 @@ native:
 	@rm -f main.native
 	@cd bin; cp ../_build/src/main.native ktcexe
 
+clean:
+	@rm -f -r libs
+	@rm -f -r _build
+	@rm -f bin/ktcexe
+	@rm -f bin/*.cil.c
+	@rm -f bin/*.i 
+	
+	

@@ -89,7 +89,38 @@ If you have not exported the path for the cross compiler, you will have to use t
 	
 If you have not exported the path for the cross compiler, you will have to use the complete path in the *--gcc* option as below. 
 
-	./ktc --enable-ext0 --rasp --gcc=/usr/local/linaro/arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-gcc ../test/demo1.c
+	./ktc --enable-ext0 --rasp --gcc=/usr/local/linaro/arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-gcc ../test/demo1.c -w
+	
+
+## KTC for PIC32 Microcontroller using FreeRTOS.
+***
+
+####A. Setting up FreeRTOS on PIC32 
+
+(a) Download the MPLAB XC Compiler from <http://www.microchip.com/mplab/compilers>. 
+
+(b) Download Microchip's Integrated Development Environment, MPLAB X IDE, from <http://www.microchip.com/mplab/mplab-x-ide>. Inorder to program your PIC32 microcontroller board using MPLAB you will also need either microchips's chipKIT PGM or PICkit 3 Programmer/Debugger.
+
+(c)FreeRTOS is downloaded as a part of the KTC environment from the github which contains the FreeRTOS code from <https://sourceforge.net/projects/freertos/files/latest/download?source=file>
+
+(d)In the ktc home directory, open the RTOSDEMO.X project  (distributed by FreeRTOS) using MPLAB from within the FreeRTOS/Demo directory depending on your microcontroller. Connect your PIC32 board and chipKIT PGM or PICkit 3 Programmer/Debugger to the computer and execute the demo application from MPLAB X IDE. The function of the Demo applications are explained in the source files.
+
+(c)KTC can preform source-to-source transformation to support FreeRTOS APIs. For this write your code in a .c file, compile it using the below command and then add the .cil.c file to your project in MPLAB.
+
+	./ktc --enable-ext1 --freertos --save-temps --gcc=/Applications/microchip/xc32/v1.42/bin/xc32-gcc <NAME-OF-C-FILE> -w 
+	
+(d) The file freertos_main.c is a TIMED-C version of the FreeRTOS demo application. In order to run this application on the PIC32 board execute the below commands from ktc/bin directory, followed by building the RTOSDEMO.X project on MPLAB. 
+
+First perform the source-to-source transformation
+
+	./ktc --enable-ext1 --freertos --save-temps --gcc=/Applications/microchip/xc32/v1.42/bin/xc32-gcc freertos_main.c -w
+	
+Now copy the .cil.c file to the MPLAB project.
+
+	cp freertos_main.cil.c ../FreeRTOS/Demo/PIC32MX_MPLAB/main_blinky.c
+	
+	
+
 
 
 

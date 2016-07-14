@@ -79,6 +79,7 @@ sub processArguments {
     $self->collectArgumentList(@args);
     push @{$self->{KTCLIBS}}, "$lib/libktc.$self->{LIBEXT}";
     push @{$self->{KTCLIBSRASP}}, "$lib/libktcrasp.$self->{LIBEXT}";
+    push @{$self->{KTCLIBFREERTOS}}, "$lib/libktcfree.$self->{LIBEXT}";
     return $self;
 }
 
@@ -94,6 +95,9 @@ sub collectOneArgument {
     my $res = 1;
     if ($self->compilerArgument($self->{OPTIONS}, $arg, $pargs)) {
         # do nothing
+	}
+	elsif($arg eq "--freertos"){
+	$self->{FREERTOS} = 1;
 	}
 	elsif($arg eq "--rasp"){
 	$self->{RASP} = 1;
@@ -142,7 +146,12 @@ sub collectOneArgument {
 sub preprocess_before_cil {
     my($self, $src, $dest, $ppargs) = @_;
     my @args = @{$ppargs};
-    unshift @args, $self->{INCARG} . $::ktchome . "/include";
+	if($self->{FREERTOS} == 1){
+     unshift @args, $self->{INCARG} . $::ktchome . "/include", "$self->{INCARG}$::ktchome/FreeRTOS/Source/include", "$self->{INCARG}$::ktchome/FreeRTOS/Demo/PIC32MX_MPLAB", "$self->{INCARG}$::ktchome/FreeRTOS/Demo/Common/include",  "$self->{INCARG}$::ktchome/FreeRTOS/Source/portable/MPLAB/PIC32MX";
+	} else{
+		 unshift @args, $self->{INCARG} . $::ktchome . "/include";
+	}
+	
     return $self->SUPER::preprocess_before_cil($src, $dest, \@args);
 }
 
@@ -156,7 +165,7 @@ sub preprocess_before_cil {
 sub preprocess_after_cil {
     my ($self, $src, $dest, $ppargs) = @_;
     my @args = @{$ppargs};
-    unshift @args, $self->{INCARG} . $::ktchome . "/include";
+    unshift @args, $self->{INCARG} . $::ktchome . "/include", "$self->{INCARG}$::ktchome/FreeRTOS/Source/include";
     return $self->SUPER::preprocess_before_cil($src, $dest, \@args);
     ##if($src ne $dest) { die "I thought we are not preprocessing after CIL";}
     return $dest;
@@ -188,10 +197,16 @@ sub link_after_cil {
     my @srcs = @{$psrcs};
     my @libs = @{$ldargs};
     my @cargs = @{$ccargs};
+    if($self->{FREERTOS} != 1){
     if ($self->{DARWIN}) {
         #push @libs, "-Wl,-multiply_defined", "-Wl,suppress";
 	#push @libs, "-Wl", "-Wl,suppress";
-	push @libs, "-lrt", "-lpthread";
+	if($self->{FREERTOS} == 1){
+		push @libs ;
+	}
+	else{
+		push @libs, "-lrt", "-lpthread";
+	}	
   
 }
     if (scalar @srcs == 0) {
@@ -218,19 +233,24 @@ sub link_after_cil {
         else {
 	    if($self->{RASP} == 1){
 		push @libs, @{$self->{KTCLIBSRASP}};
+	    }elsif ($self->{FREERTOS} == 1){
+		push @libs, @{$self->{KTCLIBFREERTOS}};
 	    }else{
             push @libs, @{$self->{KTCLIBS}};
 	    }
         }
         if ($self->{DARWIN}) {
-          push @libs, "-ldl";
-        }
+           if($self->{FREERTOS} == 1){
+		 push @libs;
+	   }else {push @libs, "-ldl";} 
+	}
         else {
           push @libs, "-ldl", "-lrt";
         }
         return $self->SUPER::link_after_cil(\@srcs, $dest, $ppargs,
                                             \@cargs, \@libs);
     }
+ }
 }
 
 sub linktolib {
@@ -275,6 +295,8 @@ Front end:
                         the include path.
   --gcc                 Use the specified executable instead of gcc as the
                         final C compiler (see also the --envmachine option)
+  --rasp		Compiling for Raspberry Pi.
+  --freertos		Compiling for Free RTOS.
 
 EOF
     $self->runShell(@cmd); 
