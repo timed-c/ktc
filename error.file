@@ -1,0 +1,8 @@
+ERROR 1 - inconsistent assumptions over implementation Cfg
+make clean !
+
+ERROR 2 - recieved signal %d
+sudo opam init 
+eval `opam config env`
+sudo make clean
+sudo make
