@@ -47,7 +47,6 @@ const unsigned long ulValueToSend = 100UL;
 
 	/* Initialise xNextWakeTime - this only needs to be done once. */
 //	xNextWakeTime = xTaskGetTickCount();
-	sdelay(0, "ms");
 
 	for( ;; )
 	{
@@ -56,7 +55,7 @@ const unsigned long ulValueToSend = 100UL;
 		to ms.  While in the Blocked state this task will not consume any CPU
 		time. */
 	//	vTaskDelayUntil( &xNextWakeTime, mainQUEUE_SEND_FREQUENCY_MS );
-		sdelay(0,"ms");
+		sdelay(200,"ms");
 		/* Send to the queue - causing the queue receive task to unblock and
 		toggle the LED.  0 is used as the block time so the sending operation
 		will not block - it shouldn't need to block as the queue should always
@@ -91,9 +90,9 @@ unsigned long ulReceivedValue;
 			ulReceivedValue = 0U;
 		}
 		fdelay(200, "ms");
-		
-		
 	}
+		
+		
 }
 
 void main_blinky( void )
