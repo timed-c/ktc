@@ -49,11 +49,11 @@
 #define critical if((void *__attribute__((critical)))0)
 #define next if((void *__attribute__((next)))0) next()
 #define exec_child(x) if(x == 0)
-#define cread(chan, ptr)   if((void *__attribute__((read_block))) (sizeof(#chan) > sizeof(#ptr))) 
+#define cread(chan, ptr)   printf("hey"); if((void *__attribute__((read_block))) (sizeof(#chan) > sizeof(#ptr))) 
 #define cwrite(chan, ptrw) if((void *__attribute__((write_block))) (sizeof(#chan) > ptrw))
 #define cinit(chan, val) if((void *__attribute__((init_block))) (sizeof(#chan) > val)){printf("dmmyStmt");}
 #define lvchannel __attribute__((lvchannel))
-
+#define fifochannel  __attribute__((fifochannel))
 //# task if((void *__attribute__((task)))1)
 
 
@@ -108,9 +108,16 @@ struct cab_ds{
 	
 };
 
-
 cbm cabmsgv;
 struct cab_ds cabdsv;
+
+struct fifolist{
+	int data;
+	struct timespec ts;
+	struct fifolist* next
+};
+
+struct fifolist fifoex;
 
 struct cbm* ktc_htc_reserve(struct cab_ds* cab);
 void ktc_htc_putmes(struct cab_ds* cab, struct cbm* buffer);
@@ -228,6 +235,7 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("ktc_fdelay_start_timer")
 #pragma cilnoremove("ktc_critical_end")
 #pragma cilnoremove("ktc_critical_start")
+#pragma cilnoremove("fifoex")
 extern int autotest_finished;
 //extern int ktc_sdelay_end(char const   *f , int l , int intrval , char *unit ) ;
 //extern long ktc_sdelay_init(char const   *f , int l, int intrval, char* unit, struct timespec* start_time ) ;

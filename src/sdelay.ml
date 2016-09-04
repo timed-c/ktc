@@ -197,9 +197,9 @@ let makePthreadCreateInstr (threadvar : varinfo) (funvar : varinfo) (loc:locatio
 	i2s ( Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero; addrFun; Cil.zero;], loc)) *)
 	Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero; v2e funvar; nullptr;], loc)
 
-let makePthreadJoinInstr (threadvar : varinfo)  =
-	let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in
-        i2s ( Call(None, v2e sdelayfuns.pthread_join, [v2e threadvar; nullptr;], locUnknown))
+let makePthreadJoinInstr fdec (threadvar : varinfo)  =
+	let threadvoidptr = makeLocalVar fdec (threadvar.vname^"_join") (voidPtrType) in
+        i2s ( Call(None, v2e sdelayfuns.pthread_join, [v2e threadvar; (mkAddrOf (var threadvoidptr));], locUnknown))
 
 let ifBlockFunc goto_stmt retjmp =
 	(*goto_stmt.skind <- Goto(ref goto_stmt, locUnknown);*) 
@@ -260,18 +260,18 @@ let unrollStmtIfInstr s =
 	|_ -> E.s (E.log "Not instruction")
 
  
-let pthreadJoinList slist =
+let pthreadJoinList fdec slist =
 	let revList = List.rev slist in
 	let ret_stmt  = List.hd revList in
 	let revList = List.tl revList in
-	let pthreadjoin_stmt = List.map makePthreadJoinInstr !all_threads in
+	let pthreadjoin_stmt = List.map (fun a -> makePthreadJoinInstr fdec a) !all_threads in
 	let revList = List.append pthreadjoin_stmt revList in
 	let revList = List.append [ret_stmt] revList in
 		List.rev revList 
 	 
-let addPthreadJoin slist =
+let addPthreadJoin fdec slist =
 	if List.length !all_threads = 0 then slist
-	else  pthreadJoinList slist 
+	else  pthreadJoinList fdec slist 
  
 let instrTimingPoint (i : instr) : bool = 
    match i with
@@ -689,7 +689,7 @@ class sdelayFunc filename fname = object(self)
 		let modifysdelay = new sdelayReportAdder filename fdec structvar tpstructvar ftimer ret_jmp data fname org_sig  in
 		fdec.sbody <- visitCilBlock modifysdelay fdec.sbody;  
 		fdec.sbody.bstmts <- List.append init_start fdec.sbody.bstmts;
-		fdec.sbody.bstmts <- addPthreadJoin fdec.sbody.bstmts ; 
+		fdec.sbody.bstmts <- addPthreadJoin fdec fdec.sbody.bstmts ; 
                 ChangeTo(fdec)
 
 end
@@ -826,7 +826,7 @@ class concurrencyImplmntSimpson f = object(self)
 	val mutable getChanVar = HT.create 34	
 	val mutable getHtcChanVar = HT.create 34
         method vvdec vi = 
-        let cVar = if (isLVType vi.vtype)  then
+        let cVar = E.log "JGD" ; if (isLVType vi.vtype)  then
 			let cv =
 			    if (not (isSimp vi.vname)) then
 				let typSanAtt = typeRemoveAttributes [lv_str] vi.vtype in
@@ -840,7 +840,7 @@ class concurrencyImplmntSimpson f = object(self)
                              	let chanVar = makeGlobalVar ("data_"^vi.vname) (TArray(TArray(typSanAtt, Some(integer 2), []), Some(integer 2), [])) in
                               	HT.add getChanVar vi.vname chanVar; chanVar in
 				cv
-                   else vi
+                   else vi;
         in ChangeTo(cVar)
 	(*
 	method vglob (vg ) =
@@ -864,7 +864,7 @@ class concurrencyImplmntSimpson f = object(self)
 	method vfunc fdec =
 	
 		let cread = new concurrencyImplmntSimpsonRead f fdec getChanVar getHtcChanVar in
-		fdec.sbody <- visitCilBlock cread fdec.sbody ;
+		fdec.sbody <- visitCilBlock cread fdec.sbody;
 		ChangeTo(fdec) 
 
 	
