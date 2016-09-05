@@ -32,6 +32,7 @@ let lv_str = "lvchannel"
 let read_str = "read_block"
 let write_str = "write_block"
 let init_str = "init_block"
+let fifo_str = "fifochannel"
 
 let hasCriticalAttrs : attributes -> bool = hasAttribute critical_str
 let isCriticalType (t : typ) : bool = t |> typeAttrs |> hasCriticalAttrs
@@ -44,6 +45,10 @@ let isTaskType (t : typ) : bool = t |> typeAttrs |> hasTaskAttrs
 
 let hasLVAttrs : attributes -> bool = hasAttribute lv_str
 let isLVType (t : typ) : bool = t |> typeAttrs |> hasLVAttrs
+
+let hasFIFOAttrs : attributes -> bool = hasAttribute fifo_str
+let isFifoType (t : typ) : bool = t |> typeAttrs |> hasFIFOAttrs
+
 
 let hasReadAttrs : attributes -> bool = hasAttribute read_str
 let isReadType (t : typ) : bool = t |> typeAttrs |> hasReadAttrs
@@ -135,6 +140,31 @@ let findGlobalLvc (f : file)  =
 				|_ -> E.s (E.bug "List must only contain global variable declaration\n"); "error"
 		     ) glist   in 
 			vchan
+
+let findGlobalFifo (f : file)  =
+        let glist = List.find_all (fun gi -> match gi with
+                                |GVar(vi, _, _) when  (isFifoType vi.vtype)  -> true
+                                |_ ->  false ) f.globals  in
+        let vchan = List.map (fun gv -> match gv with
+                                |GVar(vi, _, _) -> vi.vname
+                                |_ -> E.s (E.bug "List must only contain global variable declaration\n"); "error"
+                     ) glist   in
+                        vchan
+
+
+let findGlobalFifoVar (f : file) str  =
+	 let glist = List.find_all (fun gi -> match gi with
+                                |GVar(vi, _, _) when  (vi.vname = str)  -> true
+                                |_ ->  false ) f.globals  in
+        let vchan = List.map (fun gv -> match gv with
+                                |GVar(vi, _, _) -> vi
+                                |_ -> E.s (E.bug "List must only contain global variable declaration\n") 
+                     ) glist   in
+                        (List.hd vchan)
+
+
+
+
 
 let isSdelayFun (name : string) : bool =
   L.mem name sdelay_function_names
@@ -870,6 +900,42 @@ class concurrencyImplmntSimpson f = object(self)
 	
 		
 end
+
+
+
+class concurrencyImplmntFifoTrans f fdec = object(self)
+        inherit nopCilVisitor
+
+        method vstmt (s: stmt) =
+        let action s =  (*let action s = *)
+        match s.skind with
+        |If(CastE(t,e),b,_,_) when isInitType t -> let str = fst (getExpNameW e) in 
+						  let chanVar = findGlobalFifoVar f (str) in
+						   let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in  
+						   let initmes = Set((Var chanVar, NoOffset), nullptr, locUnknown) in
+						   let slist = [mkStmtOneInstr initmes] in
+                                                   let nb = mkBlock slist in
+                                                   s.skind <- Block nb; s
+
+        |_ -> s
+                in ChangeDoChildrenPost(s, action)
+
+
+end
+
+
+
+class concurrencyImplmntFifo f = object(self)
+        inherit nopCilVisitor
+
+        method vfunc fdec =
+                let cread = new concurrencyImplmntFifoTrans f fdec in
+                fdec.sbody <- visitCilBlock cread fdec.sbody;
+                ChangeTo(fdec)
+
+
+
+end
 	
 
 let timing_basic_block f =
@@ -896,14 +962,22 @@ let concurrencyConstructsTransformatn f =
 	(*else 
 	ldd simpsonChanSet vname simpSet; ()et cVis = new concurrencyImplmntCAB f in
         visitCilFile cVis f*)
-let htcGlb f vname  =
+
+let htcGlb f vname = 
         let cabdsTypeInfo = findCompinfo f "cab_ds" in
-	let cabstyp = TComp((cabdsTypeInfo), []) in
-	let cabdsVar = makeGlobalVar ("cds_"^vname) cabstyp in
+        let cabstyp = TComp((cabdsTypeInfo), []) in
+        let cabdsVar = makeGlobalVar ("cds_"^vname) cabstyp in
         (*let cabdsVar = makeGlobalVar ("cds_"^vname) (TPtr(cabstyp, [])) in*)
         let cvList  = [GVarDecl(cabdsVar, locUnknown)] in
-        f.globals <- List.append cvList f.globals;
-	HT.add htcChanSet vname cabdsVar; ()
+        f.globals <- List.append cvList f.globals; ()
+ 
+let fifoGlb f vname  =
+        let fifoTypeInfo = findCompinfo f "fifolist" in
+	let fifotyp = TComp((fifoTypeInfo), []) in
+        let fifoVar = makeGlobalVar ("fifo_"^vname) (TPtr(fifotyp, [])) in
+        (*let fifoVar = makeGlobalVar ("cds_"^vname) fifotyp in *)
+	let cvList  = [GVarDecl(fifoVar, locUnknown)] in
+        f.globals <- List.append cvList f.globals; ()
 
 let simpsonGlb f vname  =
 	let boolType = TInt(IBool, []) in
@@ -916,6 +990,11 @@ let simpsonGlb f vname  =
 	let simpSet = (slotVar, latestVar, readingVar) in
 	f.globals <- List.append simpList f.globals ;
 	HT.add simpsonChanSet vname simpSet; ()
+
+let rec addGlobalFifoVar lst f =
+        match lst with
+        | c :: res -> fifoGlb f c ; E.log "hit\n" ; addGlobalFifoVar res f
+        | [] -> []
 
 let rec addGlobalVarChan f lvcList =
 	match lvcList with
@@ -951,12 +1030,14 @@ let rec rwTaskOfChan f cl cgraph=
 	| [] -> []  
 
  
-let chanReaderWriterAnalysis f = 
+let chanReaderWriterAnalysis f =
+        let fifolist = findGlobalFifo f in
+        addGlobalFifoVar fifolist f; 
 	let lvList = findGlobalLvc f in
 	let cgraph = CG.computeGraph f in 
 	rwTaskOfChan f lvList cgraph;
 	checkWriteOperation f lvList;
-	addGlobalVarChan f lvList; ()
+	addGlobalVarChan f lvList;  ()
 	 	
 	 
 let sdelay (f : file) : unit =
