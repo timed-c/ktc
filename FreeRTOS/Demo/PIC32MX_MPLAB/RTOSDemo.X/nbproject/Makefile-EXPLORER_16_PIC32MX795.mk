@@ -45,17 +45,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=../../../Source/portable/MPLAB/PIC32MX/port.c ../../../Source/portable/MPLAB/PIC32MX/port_asm.S ../../../Source/queue.c ../../../Source/tasks.c ../../../Source/list.c ../../../Source/timers.c ../../../Source/portable/MemMang/heap_4.c ../../Common/Minimal/blocktim.c ../../Common/Minimal/semtest.c ../../Common/Minimal/QPeek.c ../../Common/Minimal/IntQueue.c ../../Common/Minimal/GenQTest.c ../../Common/Minimal/flash_timer.c ../main.c ../RegisterTestTasks.S ../timertest.c ../timertest_isr.S ../IntQueueTimer.c ../IntQueueTimer_isr.S ../printf-stdarg.c ../main_blinky.c ../main_full.c ../ConfigPerformance.c ../ParTest/ParTest_Explorer16.c
+SOURCEFILES_QUOTED_IF_SPACED=../../../Source/portable/MPLAB/PIC32MX/port.c ../../../Source/portable/MPLAB/PIC32MX/port_asm.S ../../../Source/queue.c ../../../Source/tasks.c ../../../Source/list.c ../../../Source/timers.c ../../../Source/portable/MemMang/heap_4.c ../../Common/Minimal/blocktim.c ../../Common/Minimal/semtest.c ../../Common/Minimal/QPeek.c ../../Common/Minimal/IntQueue.c ../../Common/Minimal/GenQTest.c ../../Common/Minimal/flash_timer.c ../RegisterTestTasks.S ../timertest.c ../timertest_isr.S ../IntQueueTimer.c ../IntQueueTimer_isr.S ../printf-stdarg.c ../ConfigPerformance.c ../ParTest/ParTest_Explorer16.c ../oledChar.c ../oledDriver.c ../oledGrph.c ../fillpat.c ../charFont0.c ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/pic32pins.c ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_full.c ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_blinky.c ../tcar.c ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main.c
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/332309696/port.o ${OBJECTDIR}/_ext/332309696/port_asm.o ${OBJECTDIR}/_ext/449926602/queue.o ${OBJECTDIR}/_ext/449926602/tasks.o ${OBJECTDIR}/_ext/449926602/list.o ${OBJECTDIR}/_ext/449926602/timers.o ${OBJECTDIR}/_ext/1884096877/heap_4.o ${OBJECTDIR}/_ext/1163846883/blocktim.o ${OBJECTDIR}/_ext/1163846883/semtest.o ${OBJECTDIR}/_ext/1163846883/QPeek.o ${OBJECTDIR}/_ext/1163846883/IntQueue.o ${OBJECTDIR}/_ext/1163846883/GenQTest.o ${OBJECTDIR}/_ext/1163846883/flash_timer.o ${OBJECTDIR}/_ext/1472/main.o ${OBJECTDIR}/_ext/1472/RegisterTestTasks.o ${OBJECTDIR}/_ext/1472/timertest.o ${OBJECTDIR}/_ext/1472/timertest_isr.o ${OBJECTDIR}/_ext/1472/IntQueueTimer.o ${OBJECTDIR}/_ext/1472/IntQueueTimer_isr.o ${OBJECTDIR}/_ext/1472/printf-stdarg.o ${OBJECTDIR}/_ext/1472/main_blinky.o ${OBJECTDIR}/_ext/1472/main_full.o ${OBJECTDIR}/_ext/1472/ConfigPerformance.o ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/332309696/port.o.d ${OBJECTDIR}/_ext/332309696/port_asm.o.d ${OBJECTDIR}/_ext/449926602/queue.o.d ${OBJECTDIR}/_ext/449926602/tasks.o.d ${OBJECTDIR}/_ext/449926602/list.o.d ${OBJECTDIR}/_ext/449926602/timers.o.d ${OBJECTDIR}/_ext/1884096877/heap_4.o.d ${OBJECTDIR}/_ext/1163846883/blocktim.o.d ${OBJECTDIR}/_ext/1163846883/semtest.o.d ${OBJECTDIR}/_ext/1163846883/QPeek.o.d ${OBJECTDIR}/_ext/1163846883/IntQueue.o.d ${OBJECTDIR}/_ext/1163846883/GenQTest.o.d ${OBJECTDIR}/_ext/1163846883/flash_timer.o.d ${OBJECTDIR}/_ext/1472/main.o.d ${OBJECTDIR}/_ext/1472/RegisterTestTasks.o.d ${OBJECTDIR}/_ext/1472/timertest.o.d ${OBJECTDIR}/_ext/1472/timertest_isr.o.d ${OBJECTDIR}/_ext/1472/IntQueueTimer.o.d ${OBJECTDIR}/_ext/1472/IntQueueTimer_isr.o.d ${OBJECTDIR}/_ext/1472/printf-stdarg.o.d ${OBJECTDIR}/_ext/1472/main_blinky.o.d ${OBJECTDIR}/_ext/1472/main_full.o.d ${OBJECTDIR}/_ext/1472/ConfigPerformance.o.d ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/332309696/port.o ${OBJECTDIR}/_ext/332309696/port_asm.o ${OBJECTDIR}/_ext/449926602/queue.o ${OBJECTDIR}/_ext/449926602/tasks.o ${OBJECTDIR}/_ext/449926602/list.o ${OBJECTDIR}/_ext/449926602/timers.o ${OBJECTDIR}/_ext/1884096877/heap_4.o ${OBJECTDIR}/_ext/1163846883/blocktim.o ${OBJECTDIR}/_ext/1163846883/semtest.o ${OBJECTDIR}/_ext/1163846883/QPeek.o ${OBJECTDIR}/_ext/1163846883/IntQueue.o ${OBJECTDIR}/_ext/1163846883/GenQTest.o ${OBJECTDIR}/_ext/1163846883/flash_timer.o ${OBJECTDIR}/_ext/1472/RegisterTestTasks.o ${OBJECTDIR}/_ext/1472/timertest.o ${OBJECTDIR}/_ext/1472/timertest_isr.o ${OBJECTDIR}/_ext/1472/IntQueueTimer.o ${OBJECTDIR}/_ext/1472/IntQueueTimer_isr.o ${OBJECTDIR}/_ext/1472/printf-stdarg.o ${OBJECTDIR}/_ext/1472/ConfigPerformance.o ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o ${OBJECTDIR}/_ext/1472/oledChar.o ${OBJECTDIR}/_ext/1472/oledDriver.o ${OBJECTDIR}/_ext/1472/oledGrph.o ${OBJECTDIR}/_ext/1472/fillpat.o ${OBJECTDIR}/_ext/1472/charFont0.o ${OBJECTDIR}/_ext/1630351898/pic32pins.o ${OBJECTDIR}/_ext/1630351898/main_full.o ${OBJECTDIR}/_ext/1630351898/main_blinky.o ${OBJECTDIR}/_ext/1472/tcar.o ${OBJECTDIR}/_ext/1630351898/main.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/332309696/port.o.d ${OBJECTDIR}/_ext/332309696/port_asm.o.d ${OBJECTDIR}/_ext/449926602/queue.o.d ${OBJECTDIR}/_ext/449926602/tasks.o.d ${OBJECTDIR}/_ext/449926602/list.o.d ${OBJECTDIR}/_ext/449926602/timers.o.d ${OBJECTDIR}/_ext/1884096877/heap_4.o.d ${OBJECTDIR}/_ext/1163846883/blocktim.o.d ${OBJECTDIR}/_ext/1163846883/semtest.o.d ${OBJECTDIR}/_ext/1163846883/QPeek.o.d ${OBJECTDIR}/_ext/1163846883/IntQueue.o.d ${OBJECTDIR}/_ext/1163846883/GenQTest.o.d ${OBJECTDIR}/_ext/1163846883/flash_timer.o.d ${OBJECTDIR}/_ext/1472/RegisterTestTasks.o.d ${OBJECTDIR}/_ext/1472/timertest.o.d ${OBJECTDIR}/_ext/1472/timertest_isr.o.d ${OBJECTDIR}/_ext/1472/IntQueueTimer.o.d ${OBJECTDIR}/_ext/1472/IntQueueTimer_isr.o.d ${OBJECTDIR}/_ext/1472/printf-stdarg.o.d ${OBJECTDIR}/_ext/1472/ConfigPerformance.o.d ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o.d ${OBJECTDIR}/_ext/1472/oledChar.o.d ${OBJECTDIR}/_ext/1472/oledDriver.o.d ${OBJECTDIR}/_ext/1472/oledGrph.o.d ${OBJECTDIR}/_ext/1472/fillpat.o.d ${OBJECTDIR}/_ext/1472/charFont0.o.d ${OBJECTDIR}/_ext/1630351898/pic32pins.o.d ${OBJECTDIR}/_ext/1630351898/main_full.o.d ${OBJECTDIR}/_ext/1630351898/main_blinky.o.d ${OBJECTDIR}/_ext/1472/tcar.o.d ${OBJECTDIR}/_ext/1630351898/main.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/_ext/332309696/port.o ${OBJECTDIR}/_ext/332309696/port_asm.o ${OBJECTDIR}/_ext/449926602/queue.o ${OBJECTDIR}/_ext/449926602/tasks.o ${OBJECTDIR}/_ext/449926602/list.o ${OBJECTDIR}/_ext/449926602/timers.o ${OBJECTDIR}/_ext/1884096877/heap_4.o ${OBJECTDIR}/_ext/1163846883/blocktim.o ${OBJECTDIR}/_ext/1163846883/semtest.o ${OBJECTDIR}/_ext/1163846883/QPeek.o ${OBJECTDIR}/_ext/1163846883/IntQueue.o ${OBJECTDIR}/_ext/1163846883/GenQTest.o ${OBJECTDIR}/_ext/1163846883/flash_timer.o ${OBJECTDIR}/_ext/1472/main.o ${OBJECTDIR}/_ext/1472/RegisterTestTasks.o ${OBJECTDIR}/_ext/1472/timertest.o ${OBJECTDIR}/_ext/1472/timertest_isr.o ${OBJECTDIR}/_ext/1472/IntQueueTimer.o ${OBJECTDIR}/_ext/1472/IntQueueTimer_isr.o ${OBJECTDIR}/_ext/1472/printf-stdarg.o ${OBJECTDIR}/_ext/1472/main_blinky.o ${OBJECTDIR}/_ext/1472/main_full.o ${OBJECTDIR}/_ext/1472/ConfigPerformance.o ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o
+OBJECTFILES=${OBJECTDIR}/_ext/332309696/port.o ${OBJECTDIR}/_ext/332309696/port_asm.o ${OBJECTDIR}/_ext/449926602/queue.o ${OBJECTDIR}/_ext/449926602/tasks.o ${OBJECTDIR}/_ext/449926602/list.o ${OBJECTDIR}/_ext/449926602/timers.o ${OBJECTDIR}/_ext/1884096877/heap_4.o ${OBJECTDIR}/_ext/1163846883/blocktim.o ${OBJECTDIR}/_ext/1163846883/semtest.o ${OBJECTDIR}/_ext/1163846883/QPeek.o ${OBJECTDIR}/_ext/1163846883/IntQueue.o ${OBJECTDIR}/_ext/1163846883/GenQTest.o ${OBJECTDIR}/_ext/1163846883/flash_timer.o ${OBJECTDIR}/_ext/1472/RegisterTestTasks.o ${OBJECTDIR}/_ext/1472/timertest.o ${OBJECTDIR}/_ext/1472/timertest_isr.o ${OBJECTDIR}/_ext/1472/IntQueueTimer.o ${OBJECTDIR}/_ext/1472/IntQueueTimer_isr.o ${OBJECTDIR}/_ext/1472/printf-stdarg.o ${OBJECTDIR}/_ext/1472/ConfigPerformance.o ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o ${OBJECTDIR}/_ext/1472/oledChar.o ${OBJECTDIR}/_ext/1472/oledDriver.o ${OBJECTDIR}/_ext/1472/oledGrph.o ${OBJECTDIR}/_ext/1472/fillpat.o ${OBJECTDIR}/_ext/1472/charFont0.o ${OBJECTDIR}/_ext/1630351898/pic32pins.o ${OBJECTDIR}/_ext/1630351898/main_full.o ${OBJECTDIR}/_ext/1630351898/main_blinky.o ${OBJECTDIR}/_ext/1472/tcar.o ${OBJECTDIR}/_ext/1630351898/main.o
 
 # Source Files
-SOURCEFILES=../../../Source/portable/MPLAB/PIC32MX/port.c ../../../Source/portable/MPLAB/PIC32MX/port_asm.S ../../../Source/queue.c ../../../Source/tasks.c ../../../Source/list.c ../../../Source/timers.c ../../../Source/portable/MemMang/heap_4.c ../../Common/Minimal/blocktim.c ../../Common/Minimal/semtest.c ../../Common/Minimal/QPeek.c ../../Common/Minimal/IntQueue.c ../../Common/Minimal/GenQTest.c ../../Common/Minimal/flash_timer.c ../main.c ../RegisterTestTasks.S ../timertest.c ../timertest_isr.S ../IntQueueTimer.c ../IntQueueTimer_isr.S ../printf-stdarg.c ../main_blinky.c ../main_full.c ../ConfigPerformance.c ../ParTest/ParTest_Explorer16.c
+SOURCEFILES=../../../Source/portable/MPLAB/PIC32MX/port.c ../../../Source/portable/MPLAB/PIC32MX/port_asm.S ../../../Source/queue.c ../../../Source/tasks.c ../../../Source/list.c ../../../Source/timers.c ../../../Source/portable/MemMang/heap_4.c ../../Common/Minimal/blocktim.c ../../Common/Minimal/semtest.c ../../Common/Minimal/QPeek.c ../../Common/Minimal/IntQueue.c ../../Common/Minimal/GenQTest.c ../../Common/Minimal/flash_timer.c ../RegisterTestTasks.S ../timertest.c ../timertest_isr.S ../IntQueueTimer.c ../IntQueueTimer_isr.S ../printf-stdarg.c ../ConfigPerformance.c ../ParTest/ParTest_Explorer16.c ../oledChar.c ../oledDriver.c ../oledGrph.c ../fillpat.c ../charFont0.c ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/pic32pins.c ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_full.c ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_blinky.c ../tcar.c ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main.c
 
 
 CFLAGS=
@@ -222,12 +222,6 @@ ${OBJECTDIR}/_ext/1163846883/flash_timer.o: ../../Common/Minimal/flash_timer.c  
 	@${RM} ${OBJECTDIR}/_ext/1163846883/flash_timer.o 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1163846883/flash_timer.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1163846883/flash_timer.o.d" -o ${OBJECTDIR}/_ext/1163846883/flash_timer.o ../../Common/Minimal/flash_timer.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
 	
-${OBJECTDIR}/_ext/1472/main.o: ../main.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
-	@${RM} ${OBJECTDIR}/_ext/1472/main.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1472/main.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/main.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/main.o.d" -o ${OBJECTDIR}/_ext/1472/main.o ../main.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
-	
 ${OBJECTDIR}/_ext/1472/timertest.o: ../timertest.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
 	@${RM} ${OBJECTDIR}/_ext/1472/timertest.o.d 
@@ -246,18 +240,6 @@ ${OBJECTDIR}/_ext/1472/printf-stdarg.o: ../printf-stdarg.c  nbproject/Makefile-$
 	@${RM} ${OBJECTDIR}/_ext/1472/printf-stdarg.o 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/printf-stdarg.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/printf-stdarg.o.d" -o ${OBJECTDIR}/_ext/1472/printf-stdarg.o ../printf-stdarg.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
 	
-${OBJECTDIR}/_ext/1472/main_blinky.o: ../main_blinky.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
-	@${RM} ${OBJECTDIR}/_ext/1472/main_blinky.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1472/main_blinky.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/main_blinky.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/main_blinky.o.d" -o ${OBJECTDIR}/_ext/1472/main_blinky.o ../main_blinky.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
-	
-${OBJECTDIR}/_ext/1472/main_full.o: ../main_full.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
-	@${RM} ${OBJECTDIR}/_ext/1472/main_full.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1472/main_full.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/main_full.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/main_full.o.d" -o ${OBJECTDIR}/_ext/1472/main_full.o ../main_full.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
-	
 ${OBJECTDIR}/_ext/1472/ConfigPerformance.o: ../ConfigPerformance.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
 	@${RM} ${OBJECTDIR}/_ext/1472/ConfigPerformance.o.d 
@@ -269,6 +251,66 @@ ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o: ../ParTest/ParTest_Explorer16.
 	@${RM} ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o.d 
 	@${RM} ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o.d" -o ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o ../ParTest/ParTest_Explorer16.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1472/oledChar.o: ../oledChar.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/oledChar.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/oledChar.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/oledChar.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/oledChar.o.d" -o ${OBJECTDIR}/_ext/1472/oledChar.o ../oledChar.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1472/oledDriver.o: ../oledDriver.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/oledDriver.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/oledDriver.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/oledDriver.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/oledDriver.o.d" -o ${OBJECTDIR}/_ext/1472/oledDriver.o ../oledDriver.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1472/oledGrph.o: ../oledGrph.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/oledGrph.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/oledGrph.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/oledGrph.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/oledGrph.o.d" -o ${OBJECTDIR}/_ext/1472/oledGrph.o ../oledGrph.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1472/fillpat.o: ../fillpat.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/fillpat.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/fillpat.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/fillpat.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/fillpat.o.d" -o ${OBJECTDIR}/_ext/1472/fillpat.o ../fillpat.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1472/charFont0.o: ../charFont0.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/charFont0.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/charFont0.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/charFont0.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/charFont0.o.d" -o ${OBJECTDIR}/_ext/1472/charFont0.o ../charFont0.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1630351898/pic32pins.o: ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/pic32pins.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1630351898" 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/pic32pins.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/pic32pins.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1630351898/pic32pins.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1630351898/pic32pins.o.d" -o ${OBJECTDIR}/_ext/1630351898/pic32pins.o ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/pic32pins.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1630351898/main_full.o: ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_full.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1630351898" 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/main_full.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/main_full.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1630351898/main_full.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1630351898/main_full.o.d" -o ${OBJECTDIR}/_ext/1630351898/main_full.o ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_full.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1630351898/main_blinky.o: ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_blinky.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1630351898" 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/main_blinky.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/main_blinky.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1630351898/main_blinky.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1630351898/main_blinky.o.d" -o ${OBJECTDIR}/_ext/1630351898/main_blinky.o ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_blinky.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1472/tcar.o: ../tcar.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/tcar.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/tcar.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/tcar.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/tcar.o.d" -o ${OBJECTDIR}/_ext/1472/tcar.o ../tcar.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1630351898/main.o: ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1630351898" 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/main.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/main.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1630351898/main.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1630351898/main.o.d" -o ${OBJECTDIR}/_ext/1630351898/main.o ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
 	
 else
 ${OBJECTDIR}/_ext/332309696/port.o: ../../../Source/portable/MPLAB/PIC32MX/port.c  nbproject/Makefile-${CND_CONF}.mk
@@ -343,12 +385,6 @@ ${OBJECTDIR}/_ext/1163846883/flash_timer.o: ../../Common/Minimal/flash_timer.c  
 	@${RM} ${OBJECTDIR}/_ext/1163846883/flash_timer.o 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1163846883/flash_timer.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1163846883/flash_timer.o.d" -o ${OBJECTDIR}/_ext/1163846883/flash_timer.o ../../Common/Minimal/flash_timer.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
 	
-${OBJECTDIR}/_ext/1472/main.o: ../main.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
-	@${RM} ${OBJECTDIR}/_ext/1472/main.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1472/main.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/main.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/main.o.d" -o ${OBJECTDIR}/_ext/1472/main.o ../main.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
-	
 ${OBJECTDIR}/_ext/1472/timertest.o: ../timertest.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
 	@${RM} ${OBJECTDIR}/_ext/1472/timertest.o.d 
@@ -367,18 +403,6 @@ ${OBJECTDIR}/_ext/1472/printf-stdarg.o: ../printf-stdarg.c  nbproject/Makefile-$
 	@${RM} ${OBJECTDIR}/_ext/1472/printf-stdarg.o 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/printf-stdarg.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/printf-stdarg.o.d" -o ${OBJECTDIR}/_ext/1472/printf-stdarg.o ../printf-stdarg.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
 	
-${OBJECTDIR}/_ext/1472/main_blinky.o: ../main_blinky.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
-	@${RM} ${OBJECTDIR}/_ext/1472/main_blinky.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1472/main_blinky.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/main_blinky.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/main_blinky.o.d" -o ${OBJECTDIR}/_ext/1472/main_blinky.o ../main_blinky.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
-	
-${OBJECTDIR}/_ext/1472/main_full.o: ../main_full.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
-	@${RM} ${OBJECTDIR}/_ext/1472/main_full.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1472/main_full.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/main_full.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/main_full.o.d" -o ${OBJECTDIR}/_ext/1472/main_full.o ../main_full.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
-	
 ${OBJECTDIR}/_ext/1472/ConfigPerformance.o: ../ConfigPerformance.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
 	@${RM} ${OBJECTDIR}/_ext/1472/ConfigPerformance.o.d 
@@ -390,6 +414,66 @@ ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o: ../ParTest/ParTest_Explorer16.
 	@${RM} ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o.d 
 	@${RM} ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o 
 	@${FIXDEPS} "${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o.d" -o ${OBJECTDIR}/_ext/809743516/ParTest_Explorer16.o ../ParTest/ParTest_Explorer16.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1472/oledChar.o: ../oledChar.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/oledChar.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/oledChar.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/oledChar.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/oledChar.o.d" -o ${OBJECTDIR}/_ext/1472/oledChar.o ../oledChar.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1472/oledDriver.o: ../oledDriver.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/oledDriver.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/oledDriver.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/oledDriver.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/oledDriver.o.d" -o ${OBJECTDIR}/_ext/1472/oledDriver.o ../oledDriver.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1472/oledGrph.o: ../oledGrph.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/oledGrph.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/oledGrph.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/oledGrph.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/oledGrph.o.d" -o ${OBJECTDIR}/_ext/1472/oledGrph.o ../oledGrph.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1472/fillpat.o: ../fillpat.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/fillpat.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/fillpat.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/fillpat.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/fillpat.o.d" -o ${OBJECTDIR}/_ext/1472/fillpat.o ../fillpat.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1472/charFont0.o: ../charFont0.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/charFont0.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/charFont0.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/charFont0.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/charFont0.o.d" -o ${OBJECTDIR}/_ext/1472/charFont0.o ../charFont0.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1630351898/pic32pins.o: ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/pic32pins.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1630351898" 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/pic32pins.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/pic32pins.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1630351898/pic32pins.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1630351898/pic32pins.o.d" -o ${OBJECTDIR}/_ext/1630351898/pic32pins.o ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/pic32pins.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1630351898/main_full.o: ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_full.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1630351898" 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/main_full.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/main_full.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1630351898/main_full.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1630351898/main_full.o.d" -o ${OBJECTDIR}/_ext/1630351898/main_full.o ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_full.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1630351898/main_blinky.o: ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_blinky.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1630351898" 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/main_blinky.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/main_blinky.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1630351898/main_blinky.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1630351898/main_blinky.o.d" -o ${OBJECTDIR}/_ext/1630351898/main_blinky.o ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_blinky.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1472/tcar.o: ../tcar.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/tcar.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/tcar.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1472/tcar.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1472/tcar.o.d" -o ${OBJECTDIR}/_ext/1472/tcar.o ../tcar.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
+	
+${OBJECTDIR}/_ext/1630351898/main.o: ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}/_ext/1630351898" 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/main.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1630351898/main.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/1630351898/main.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION)  -D_SUPPRESS_PLIB_WARNING -D_DISABLE_OPENADC10_CONFIGPORT_WARNING -MMD -MF "${OBJECTDIR}/_ext/1630351898/main.o.d" -o ${OBJECTDIR}/_ext/1630351898/main.o ../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main.c      -I ../../../Source/include -I ../../../Source/portable/MPLAB/PIC32MX -I ../../Common/include -I ../
 	
 endif
 

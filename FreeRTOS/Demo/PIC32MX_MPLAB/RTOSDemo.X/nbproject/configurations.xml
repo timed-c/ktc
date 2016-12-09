@@ -4,18 +4,18 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <logicalFolder name="f1" displayName="FreeRTOS Source" projectFiles="true">
-        <itemPath>../../../Source/portable/MPLAB/PIC32MX/portmacro.h</itemPath>
-        <itemPath>../../../Source/include/portable.h</itemPath>
-        <itemPath>../../../Source/include/task.h</itemPath>
-        <itemPath>../../../Source/include/croutine.h</itemPath>
-        <itemPath>../../../Source/include/list.h</itemPath>
-        <itemPath>../../../Source/include/projdefs.h</itemPath>
-        <itemPath>../../../Source/include/queue.h</itemPath>
-        <itemPath>../../../Source/include/semphr.h</itemPath>
-        <itemPath>../../../Source/include/FreeRTOS.h</itemPath>
-      </logicalFolder>
       <itemPath>../FreeRTOSConfig.h</itemPath>
+      <itemPath>../../../../include/cilktc-free.h</itemPath>
+      <itemPath>../../../../include/cilktc.h</itemPath>
+      <itemPath>../../../Source/include/croutine.h</itemPath>
+      <itemPath>../../../Source/include/FreeRTOS.h</itemPath>
+      <itemPath>../../../Source/include/list.h</itemPath>
+      <itemPath>../../../Source/include/portable.h</itemPath>
+      <itemPath>../../../Source/portable/MPLAB/PIC32MX/portmacro.h</itemPath>
+      <itemPath>../../../Source/include/projdefs.h</itemPath>
+      <itemPath>../../../Source/include/queue.h</itemPath>
+      <itemPath>../../../Source/include/semphr.h</itemPath>
+      <itemPath>../../../Source/include/task.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -45,18 +45,25 @@
         <itemPath>../../Common/Minimal/GenQTest.c</itemPath>
         <itemPath>../../Common/Minimal/flash_timer.c</itemPath>
       </logicalFolder>
-      <itemPath>../main.c</itemPath>
       <itemPath>../RegisterTestTasks.S</itemPath>
       <itemPath>../timertest.c</itemPath>
       <itemPath>../timertest_isr.S</itemPath>
       <itemPath>../IntQueueTimer.c</itemPath>
       <itemPath>../IntQueueTimer_isr.S</itemPath>
       <itemPath>../printf-stdarg.c</itemPath>
-      <itemPath>../main_blinky.c</itemPath>
-      <itemPath>../main_full.c</itemPath>
       <itemPath>../ConfigPerformance.c</itemPath>
       <itemPath>../ParTest/ParTest_Explorer16.c</itemPath>
       <itemPath>../ParTest/ParTest_USBII_Starter_Kit.c</itemPath>
+      <itemPath>../oledChar.c</itemPath>
+      <itemPath>../oledDriver.c</itemPath>
+      <itemPath>../oledGrph.c</itemPath>
+      <itemPath>../fillpat.c</itemPath>
+      <itemPath>../charFont0.c</itemPath>
+      <itemPath>../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/pic32pins.c</itemPath>
+      <itemPath>../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_full.c</itemPath>
+      <itemPath>../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main_blinky.c</itemPath>
+      <itemPath>../tcar.c</itemPath>
+      <itemPath>../../../../../../FreeRTOSv9.0.0/FreeRTOS/Demo/PIC32MX_MPLAB/main.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -872,6 +879,7 @@
         <property key="ToolFirmwareFilePath"
                   value="Press to browse for a specific firmware version"/>
         <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
+        <property key="firmware.download.all" value="false"/>
         <property key="memories.bootflash" value="true"/>
         <property key="memories.configurationmemory" value="true"/>
         <property key="memories.dataflash" value="true"/>

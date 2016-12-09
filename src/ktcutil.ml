@@ -419,6 +419,7 @@ let computeAvail ?(doCFG:bool=false) (f: fundec)  =
 let isFirm (i : instr) : bool =
    match i with
     | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "fdelay") -> true
+    | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_fdelay_init_free") -> true
     | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "sdelay")  ->  false
     | _ -> false
 
@@ -604,13 +605,16 @@ let checkSuccs (data: TS.t IH.t) (s: stmt) =
 				  (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "conflicting firm timing point for %a" dn_stmt s) 
 		end
 let checkFirmSuccs (data: TS.t IH.t) (s: stmt) = 
+        let sp = E.log "sri sri 1" in
         let tsuccsofs = getStmtTPSucc data s in
-                let firmsucc = TS.filter retFirm tsuccsofs  in
+                let firmsucc = TS.filter retFirm tsuccsofs in
+		let so = E.log "sri sri 2" in
                         if TS.cardinal firmsucc > 0 then
 				true
 			else
 			        false
 let retTimingPointSucc s data =
+	let pp = E.log "retTimingPointSucc" in
 	let tsuccsofs = getStmtTPSucc data s in
 	let succSet = TS.filter retTimingPoint tsuccsofs in
 	let succList = TS.elements succSet in
@@ -639,15 +643,15 @@ let computeTPSucc ?(doCFG:bool=true) (f: fundec)  =
 	let a = null_adder f TPSucc.stmtStartData in
            TSucc.compute a ;
 	
-                 (* Dump the dominators information *)
-      (*     List.iter
+                 (* Dump the dominators information *) 
+         List.iter
 
              (fun s ->
                let tsuc = getStmtTPSucc TPSucc.stmtStartData s in
                 (*ignore (printAvail s*)
                  ignore (printAvail s
                          TPSucc.pretty (tsuc))
-             )f.sallstmts; *)TPSucc.stmtStartData
+             )f.sallstmts; TPSucc.stmtStartData
 
 let checkTPSucc ?(doCFG:bool=true) (f: fundec) fil  =
 	let ch = open_out "timed_graph.dot" in
