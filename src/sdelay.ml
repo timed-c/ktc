@@ -19,10 +19,13 @@ let all_task = ref []
 let all_read = ref []
 let all_write = ref[] 
 let all_threads = ref []
+let fifovarlst = ref [] 
 let readChanHash = HT.create 34 
 let writeChanHash = HT.create 34
 let simpsonChanSet = HT.create 34 
 let htcChanSet = HT.create 34
+let fifoChanSet = HT.create 34
+let signumb = ref 0
 
 
 let critical_str = "critical"
@@ -75,6 +78,10 @@ type functions =
   mutable htc_unget : varinfo; 
   mutable htc_reserve : varinfo;
   mutable htc_putmes : varinfo;
+  mutable fifo_init : varinfo;
+  mutable fifo_read : varinfo;
+  mutable fifo_write : varinfo;
+  mutable simsp_equal : varinfo;
 }
 
 let dummyVar = makeVarinfo false "_sdelay_foo" voidType
@@ -94,6 +101,10 @@ let sdelayfuns = {
   htc_unget = dummyVar;
   htc_reserve = dummyVar;
   htc_putmes = dummyVar;
+  fifo_init = dummyVar;
+  fifo_read = dummyVar;
+  fifo_write = dummyVar;
+  simsp_equal = dummyVar;
 }
 
 
@@ -112,6 +123,11 @@ let htc_get_str = "ktc_htc_getmes"
 let htc_unget_str = "ktc_htc_unget"
 let htc_reserve_str = "ktc_htc_reserve"
 let htc_putmes_str = "ktc_htc_putmes"
+let fifo_init_str = "ktc_fifo_init"
+let fifo_read_str =  "ktc_fifo_read"
+let fifo_write_str = "ktc_fifo_write"
+let  simsp_equal_str = "ktc_simpson"
+
 
 let sdelay_function_names = [
   sdelay_init_str;
@@ -128,6 +144,10 @@ let sdelay_function_names = [
   htc_unget_str;
   htc_reserve_str;
   htc_putmes_str;
+  fifo_init_str;
+  fifo_read_str;
+  fifo_write_str;
+  simsp_equal_str;
 ]
 
 
@@ -190,27 +210,29 @@ let initSdelayFunctions (f : file)  : unit =
   sdelayfuns.htc_unget <- focf htc_unget_str init_type;
   sdelayfuns.htc_reserve <- focf htc_reserve_str init_type;
   sdelayfuns.htc_putmes <- focf htc_putmes_str init_type;
-  sdelayfuns.pthread_join <- focf pthread_join_str init_type
-
-
+  sdelayfuns.pthread_join <- focf pthread_join_str init_type;
+  sdelayfuns.fifo_init <- focf fifo_init_str init_type;
+  sdelayfuns.fifo_read <- focf fifo_read_str init_type;
+  sdelayfuns.fifo_write <- focf fifo_write_str init_type;
+  sdelayfuns.simsp_equal <- focf simsp_equal_str init_type
 	
 let makeSdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location)  =
   let time_unit = if (L.length argL) = 1 then mkString "NULL" else L.hd (L.tl argL) in
   let f, l, intervl, tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, time_unit, mkAddrOf((var structvar)), (List.hd (List.rev argL))  in
   [Call(None,v2e sdelayfuns.sdelay_init, [intervl;tunit;s;t_id;], loc)]
 
-let makeSdelayEndInstr (structvar : varinfo) (timervar : varinfo) (tp : varinfo)=
+let makeSdelayEndInstr (structvar : varinfo) (timervar : varinfo) (tp : varinfo) (signo : int)=
   let s =  mkAddrOf((var structvar)) in
   let start_time_init = Call(None, v2e sdelayfuns.start_timer_init, [s;], locUnknown) in 
   let t =  mkAddrOf((var timervar)) in
   let handlrt = mkAddrOf((var tp)) in
-  let timer_init = Call(None, v2e sdelayfuns.timer_create, [t;handlrt;], locUnknown) in
+  let timer_init = Call(None, v2e sdelayfuns.timer_create, [t;handlrt; (integer signo);], locUnknown) in
   [mkStmtOneInstr start_time_init; mkStmtOneInstr timer_init]
 
-let makeFdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location) : instr list =
+let makeFdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location) (retjmp) (signo) : instr list =
   let time_unit = if (L.length argL) = 1 then mkString "NULL" else L.hd (L.tl argL) in
   let f, l, intervl, tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, time_unit, mkAddrOf((var structvar)), (List.hd(List.rev argL)) in
-  [Call(None,v2e sdelayfuns.fdelay_init, [intervl;tunit;s;t_id;], loc)]
+  [Call(None,v2e sdelayfuns.fdelay_init, [intervl;tunit;s;t_id;(v2e retjmp); signo;], loc)]
 
 let makeCriticalStartInstr (sigvar : varinfo) (loc: location) = 
 	let argSig = mkAddrOf (var sigvar) in
@@ -310,9 +332,10 @@ let instrTimingPoint (i : instr) : bool =
     | _ -> false
 
 let instrTimingPointAftr (i : instr) : bool =
+  let p =  E.log "instrTimingPointAftr" in
    match i with
     | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_sdelay_init") -> true
-    | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "ktc_fdelay_init")  -> true
+    | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "ktc_fdelay_init")  -> E.log "true-true-true"; true
     | _ -> false
 (*
 let getFirmInterval s =
@@ -448,18 +471,28 @@ let isSimp c =
 	in	
 	value
 
+let isFifo varnme fifoq = 
+	if(List.exists (fun x -> x = varnme) fifoq) then true else false 
+
+
 let getInstr s =
 	match s.skind with
 	|Instr il when il <> []-> match List.hd il with 
 			|Call(_,Lval(Var vi,_),argList,loc)  -> argList 
 
 
+
 let getExpNameR e = 
+        match e with
+        |BinOp(_, SizeOfStr s1, e1, _) -> (s1, e1)
+        (*|BinOp(_, Const(CStr c1), Const(CStr c2), _) -> (c1, c2) *)
+        | _ -> E.s (E.bug "Wrong format of read block") ; ("e", Cil.zero)
+(*let getExpNameR e = 
 	match e with
 	|BinOp(_, SizeOfStr s1, SizeOfStr s2, _) -> (s1, s2)
 	(*|BinOp(_, Const(CStr c1), Const(CStr c2), _) -> (c1, c2) *)
 	| _ -> E.s (E.bug "Wrong format of read block") ; ("e", "s")
-
+*)
 let getExpNameW e =
         match e with
         |BinOp(_, SizeOfStr s1, e1, _) -> (s1, e1)
@@ -487,7 +520,7 @@ let getExpNameW e =
 *)
 
 	
-class sdelayReportAdder filename fdec structvar tpstructvar timervar ret_jmp data fname sigvar  = object(self)
+class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : varinfo) data fname sigvar  signo = object(self)
   inherit nopCilVisitor
 	
        method vinst (i :instr) =
@@ -495,7 +528,7 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar ret_jmp dat
         let action [i] =
         match i with
         |Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = fname) -> makeSdelayInitInstr structvar argList loc
-        |Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = sname) -> makeFdelayInitInstr structvar argList loc
+        |Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = sname) -> makeFdelayInitInstr structvar argList loc ret_jmp (integer signo)
 	(*|Call(_,LVal(Var vi,_),_,loc) when (vi.vname = "next") -> makeNextGoto loc *)
 	|Call(_,Lval(Var vi,_),_,_) when (isFunTask vi) -> 
                                                         let pthread_id_str = "pthread_t" in
@@ -519,7 +552,7 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar ret_jmp dat
 	(*let replaceBlockWithFdelay (List.hd b.bstmts) (List.tl b.bstmts) b data structvar tpstructvar timervar ret_jmp data sigvar*)
 		match s.skind with
 		|Instr il when il <> [] -> 
-                         if instrTimingPointAftr (List.hd il) && (checkFirmSuccs data s) then
+                         if instrTimingPointAftr (List.hd il) && (checkFirmSuccs data s) then 
                          (*let label_stmt = mkStmt (Instr []) in
                          label_stmt.labels <- [Label(string_to_int s.sid,locUnknown,false)] ;*)
                           (*let tname = E.log "out here fdelay" in*)
@@ -553,8 +586,9 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar ret_jmp dat
 							(*let blockStmt = retFirmSucc (List.hd b.bstmts) data  in*)
                                                         let blockStmt = retTimingPointSucc (List.hd b.bstmts) data  in 
                                                         let letjmpto = findgoto labelHash blockStmt in
+							let rtjmp =mkStmtOneInstr( Set((var ret_jmp), Cil.one, locUnknown)) in
         						let goto_label = mkStmt (Goto(ref letjmpto, locUnknown))  in
-							let nb = mkBlock[goto_label] in
+							let nb = mkBlock[rtjmp;goto_label] in
                                                         s.skind <- Block nb; s
                                                         end
 	(*|If(CastE(t,z),b,_,_) when isTaskType t -> begin
@@ -640,7 +674,7 @@ class addLabelStmt fdec = object(self)
 			(*let label_no =  getvaridStmt s in*)
 			let label_stmt = mkStmt (Instr []) in 
                 		label_stmt.labels <- [Label(label_name,locUnknown,false)]; E.log "s.sid  %d \n" s.sid; HT.add labelHash label_no label_stmt; 
-			let changStmTo = List.append [mkStmt s.skind] [label_stmt] in
+			let changStmTo = List.append [label_stmt] [mkStmt s.skind] in
 			let block = mkBlock  changStmTo in
                 	s.skind <- Block block ;
                 	s
@@ -687,7 +721,7 @@ let initializeCabDs f chanVar cname numbuf =
 
 
 	
-class sdelayFunc filename fname = object(self)
+class sdelayFunc filename fname fno = object(self)
         inherit nopCilVisitor
 
         method vfunc (fdec : fundec) =
@@ -709,20 +743,23 @@ class sdelayFunc filename fname = object(self)
 		let tpstructvar = makeLocalVar fdec "tp" (TComp(tpstructvarinfo,[])) in
 		let sigtype = findTypeinfo filename "sigset_t" in 
 		let org_sig  = makeLocalVar fdec "orig_mask" (TNamed(sigtype, [])) in
-		let ret_jmp = makeLocalVar fdec "retjmp" intType in
-		let init_start = makeSdelayEndInstr structvar ftimer tpstructvar  in
+		let rt_jmp = makeLocalVar fdec "retjmp" intType in
+		let signo = (signumb := !signumb + 1);  !signumb in 
+		let init_start = makeSdelayEndInstr structvar ftimer tpstructvar signo in
 		let data =  checkTPSucc fdec filename  in 
 		let y = checkAvailOfStmt fdec in
 	(*	let addl = new  addLabelStmt filename in
                 fdec.sbody <- visitCilBlock addl  fdec.sbody ; *)
-		(*let y' = isErrorFree filename in*)
-		let modifysdelay = new sdelayReportAdder filename fdec structvar tpstructvar ftimer ret_jmp data fname org_sig  in
+		(*let y' = isErrorFree filename in*)	
+		let modifysdelay = new sdelayReportAdder filename fdec structvar tpstructvar ftimer rt_jmp data fname org_sig signo in
 		fdec.sbody <- visitCilBlock modifysdelay fdec.sbody;  
 		fdec.sbody.bstmts <- List.append init_start fdec.sbody.bstmts;
 		fdec.sbody.bstmts <- addPthreadJoin fdec fdec.sbody.bstmts ; 
                 ChangeTo(fdec)
 
 end
+
+	
 
 class concurrencyImplmntSimpsonRead f fdec chanVarHash hchanVarHash = object(self)
         inherit nopCilVisitor
@@ -771,13 +808,15 @@ class concurrencyImplmntSimpsonRead f fdec chanVarHash hchanVarHash = object(sel
 							let allStmtBlk = List.append f1 cabInitStm in
 							let nb = mkBlock allStmtBlk in
                                                         s.skind <- Block nb; E.log "hit here"; s	
-        |If(CastE(t,e),b,_,_) when isReadType t -> if(isSimp (fst (getExpNameR e))) then 
+        |If(CastE(t,e),b,_,_) when isReadType t -> E.log "SRI SRI"; if(isSimp (fst (getExpNameR e))) then 
 						   let expName = getExpNameR e in
 						   let pairVar = makeTempVar fdec ~name:("pair_"^(fst expName)) intType in
 						   let indexVar = makeTempVar fdec ~name:("index_"^(fst expName)) intType in
 						   let chanVar = HT.find chanVarHash (fst expName) in
 						   let chanSet = HT.find simpsonChanSet (fst expName)  in
-						   let ptrRead = findLocalVar fdec.slocals (snd expName) in
+						   let ptrRead = snd expName in 
+						   (*let ptrRead = getVarFromExp (snd expName) in
+ 						    let ptrRead = findLocalVar fdec.slocals (snd expName) in *)
 						   (*let ptrRead = makeLocalVar fdec (snd expName) (TPtr((unrollType2dArray chanVar.vtype), [])) in
 						   let ptrReadEx = (snd expName) in
 						   let ptrRead = getVarFromExp ptrReadEx in *)
@@ -786,20 +825,20 @@ class concurrencyImplmntSimpsonRead f fdec chanVarHash hchanVarHash = object(sel
 						   let slotThree = (Var (fst3 chanSet), Index(v2e (pairVar), NoOffset)) in
 						   let ithree = Set((var indexVar), (Lval slotThree), locUnknown) in
 						   let readingIndex = (Var (chanVar), Index(v2e (pairVar), Index(v2e (indexVar), NoOffset)) ) in
-						   let ifour = Set((var ptrRead), (mkAddrOf readingIndex), locUnknown) in
-						   let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in
-						   let iend = Set((var ptrRead), nullptr, locUnknown) in
-						   let slist = [mkStmtOneInstr ione; mkStmtOneInstr itwo; mkStmtOneInstr ithree; mkStmtOneInstr ifour; mkStmt (Block b); mkStmtOneInstr iend] in
+						   let ifour = Call(None, v2e sdelayfuns.simsp_equal, [(mkAddrOf readingIndex); ptrRead;], locUnknown) in
+						   let slist = [mkStmtOneInstr ione; mkStmtOneInstr itwo; mkStmtOneInstr ithree; mkStmtOneInstr ifour; mkStmt (Block b)] in
 						   let nb = mkBlock slist in
-                                                    s.skind <- Block nb; s
+                                                    s.skind <- Block nb; E.log "GURUJI" ; s
 						   else
                                                    let expName = getExpNameR e in
 						   let chanVar = HT.find hchanVarHash (fst expName) in
                                                    let cabds = HT.find htcChanSet (fst expName)  in
 						   let cbmTypeinfo = findCompinfo f "cbm" in
                                 		   let cbmTyp = TComp((cbmTypeinfo), []) in
-						   let ptrRead = findLocalVar fdec.slocals (snd expName) in 
-						   let ptrBuf = makeTempVar fdec ~name:(snd expName) (TPtr(cbmTyp, [])) in  
+						   let ptrRead = getVarFromExp (snd expName) in 
+						   (*let ptrRead = findLocalVar fdec.slocals (snd expName) in *)
+					
+						   let ptrBuf = makeTempVar fdec ~name:(ptrRead.vname) (TPtr(cbmTyp, [])) in  
 						   (*let ptrReadEx = (snd expName)  in
 						   let ptrRead = getVarFromExp ptrReadEx in *)
 						   let getCall = Call((Some (var ptrBuf)),v2e sdelayfuns.htc_get, [(mkAddrOf (var cabds));], locUnknown) in
@@ -856,7 +895,7 @@ class concurrencyImplmntSimpson f = object(self)
 	val mutable getChanVar = HT.create 34	
 	val mutable getHtcChanVar = HT.create 34
         method vvdec vi = 
-        let cVar = E.log "JGD" ; if (isLVType vi.vtype)  then
+        let cVar = if (isLVType vi.vtype)  then
 			let cv =
 			    if (not (isSimp vi.vname)) then
 				let typSanAtt = typeRemoveAttributes [lv_str] vi.vtype in
@@ -903,40 +942,65 @@ end
 
 
 
-class concurrencyImplmntFifoTrans f fdec = object(self)
-        inherit nopCilVisitor
 
+
+class fifoQu f fdec  = object(self)
+        inherit nopCilVisitor
+       (*saranya*)
         method vstmt (s: stmt) =
         let action s =  (*let action s = *)
         match s.skind with
-        |If(CastE(t,e),b,_,_) when isInitType t -> let str = fst (getExpNameW e) in 
-						  let chanVar = findGlobalFifoVar f (str) in
-						   let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in  
-						   let initmes = Set((Var chanVar, NoOffset), nullptr, locUnknown) in
-						   let slist = [mkStmtOneInstr initmes] in
+        |If(CastE(t,e),b,_,_) when isInitType t -> E.log "init";if (isFifo (fst (getExpNameW e)) !fifovarlst) then 
+						   let fifovar = HT.find fifoChanSet (fst (getExpNameW e)) in 
+						   let init_call = Call(None, v2e sdelayfuns.fifo_init, [((v2e fifovar));], locUnknown) in
+						   let slist = [mkStmtOneInstr init_call] in 
+						   let nb = mkBlock slist in
+                                                    s.skind <- Block nb; s
+						   else 
+					           s 
+        |If(CastE(t,e),b,_,_) when isWriteType t ->E.log "WRITES";if (isFifo (fst (getExpNameW e)) !fifovarlst) then
+                                                    let fifovar = HT.find fifoChanSet (fst (getExpNameW e)) in
+						   let writeVal = snd (getExpNameW e) in 
+                                                   let write_call = Call(None, v2e sdelayfuns.fifo_write, [((mkAddrOf (var fifovar))); writeVal;], locUnknown) in
+                                                   let slist = [mkStmtOneInstr write_call] in
                                                    let nb = mkBlock slist in
-                                                   s.skind <- Block nb; s
+                                                    s.skind <- Block nb; s
+                                                   else
+                                                   s 
+       |If(CastE(t,e),b,_,_) when isReadType t -> E.log "READ";if (isFifo (fst (getExpNameR e)) !fifovarlst) then
+						   let expName = getExpNameR e in
+                                                   let fifovar = HT.find fifoChanSet (fst (expName)) in
+                                                   let test = E.log "%s" (fst (expName))   in
+						   let readVar = snd expName in
+						   (*let vl = begin match readVar with 
+							  |LVal(var v,_) -> v
+							  |_ -> E.log "error" end
+						   let readVar = findLocalVar fdec.slocals (snd expName) in *)
+                                                   let read_call = Call(None, v2e sdelayfuns.fifo_read, [((mkAddrOf (var fifovar))); readVar;], locUnknown) in
+						   let slist = [mkStmtOneInstr read_call] in
+                                                   let nb = mkBlock slist in
+                                                    s.skind <- Block nb; E.log "END"; s
+                                                   else
+                                                   s 
 
-        |_ -> s
-                in ChangeDoChildrenPost(s, action)
+   	
+         |_ -> E.log "Nothing"; s
+          in ChangeDoChildrenPost(s, action)
 
 
 end
 
-
-
-class concurrencyImplmntFifo f = object(self)
-        inherit nopCilVisitor
-
-        method vfunc fdec =
-                let cread = new concurrencyImplmntFifoTrans f fdec in
-                fdec.sbody <- visitCilBlock cread fdec.sbody;
+class fifoTrans f = object(self)
+		inherit nopCilVisitor
+	        method vfunc fdec =
+                let fifo = new fifoQu f fdec  in
+                fdec.sbody <- visitCilBlock fifo fdec.sbody;
                 ChangeTo(fdec)
-
-
-
 end
-	
+
+
+
+
 
 let timing_basic_block f =
   let thisVisitor = new timingAnalysis f in
@@ -952,7 +1016,7 @@ let concurrencyA f =
 
 let timingConstructsTransformatn f =
          let fname = "sdelay" in
-        let vis = new sdelayFunc f fname in
+        let vis = new sdelayFunc f fname 0 in
         visitCilFile vis f
 
 let concurrencyConstructsTransformatn f =
@@ -974,10 +1038,12 @@ let htcGlb f vname =
 let fifoGlb f vname  =
         let fifoTypeInfo = findCompinfo f "fifolist" in
 	let fifotyp = TComp((fifoTypeInfo), []) in
-        let fifoVar = makeGlobalVar ("fifo_"^vname) (TPtr(fifotyp, [])) in
+        let fifoVar = makeGlobalVar ("fifo"^vname) (TPtr(fifotyp, [])) in
         (*let fifoVar = makeGlobalVar ("cds_"^vname) fifotyp in *)
 	let cvList  = [GVarDecl(fifoVar, locUnknown)] in
-        f.globals <- List.append cvList f.globals; ()
+        f.globals <- List.append cvList f.globals; 
+	HT.add fifoChanSet vname fifoVar; 
+	fifovarlst := vname :: !fifovarlst; ()
 
 let simpsonGlb f vname  =
 	let boolType = TInt(IBool, []) in
@@ -1031,18 +1097,24 @@ let rec rwTaskOfChan f cl cgraph=
 
  
 let chanReaderWriterAnalysis f =
-        let fifolist = findGlobalFifo f in
-        addGlobalFifoVar fifolist f; 
+	E.log "RWA\n";
 	let lvList = findGlobalLvc f in
 	let cgraph = CG.computeGraph f in 
 	rwTaskOfChan f lvList cgraph;
 	checkWriteOperation f lvList;
 	addGlobalVarChan f lvList;  ()
-	 	
+	 
+
+let fifoAnalysi f =
+	E.log "FIFO\n"; 
+	let fifolist = findGlobalFifo f in
+        addGlobalFifoVar fifolist f;
+	let cVis = new fifoTrans f in
+        visitCilFile cVis f	
 	 
 let sdelay (f : file) : unit =
 initSdelayFunctions f; timing_basic_block f; Cfg.computeFileCFG f; addLabel f; Cfg.clearFileCFG f; concurrencyA f; 
-List.iter (fun (a,b) -> E.log "(%s %d)" a b) !all_task; chanReaderWriterAnalysis f; 
+List.iter (fun (a,b) -> E.log "(%s %d)" a b) !all_task; fifoAnalysi f; chanReaderWriterAnalysis f; 
 	timingConstructsTransformatn f; concurrencyConstructsTransformatn f ; () 
 
 

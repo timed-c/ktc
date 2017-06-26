@@ -1,5 +1,6 @@
 #include<cilktc-free.h>
 #include<queue.h>
+#include<timers.h>
 
 /* The rate at which data is sent to the queue.  The 200ms value is converted
 to ticks using the portTICK_PERIOD_MS constant. */
@@ -19,7 +20,6 @@ extern void control1AuxOff();
 
 struct timer_env* timer_env_array[50] ;
 jmp_buf bufinC;
-
 struct qdata{
 	int data;
 	TickType_t time;
@@ -52,6 +52,7 @@ void vfTimerCallback( TimerHandle_t xTimer ){
 		if(tflag == 0){
 			trgt = temp;
 			timerExpired = 1;
+				//longjmp(temp->envn, 1);
 			break;
 		}	
 	}
@@ -75,21 +76,24 @@ long ktc_sdelay_init_free(int intrval, char* unit, TickType_t *start_time, int i
  		*start_time = xTaskGetTickCount();
 		return 0; 
 	}
-	time_in_ms = convert_to_ms(intrval, unit);
-	time_perid = time_in_ms/portTICK_PERIOD_MS;
+	//time_in_ms = convert_to_ms(intrval, unit);
+	//time_perid = time_in_ms/portTICK_PERIOD_MS;
+	time_perid = intrval/portTICK_PERIOD_MS;
 	time_now = xTaskGetTickCount();
 	time_elaps = time_now - (*start_time);
-	if(time_elaps < time_perid){
+	if(time_elaps < time_perid){	
 		temp = time_perid + (*start_time);
-		ret = 0;
+		vTaskDelayUntil(start_time, time_perid);
+	        ret = 0;
+	        return ret;
 	}	
 	else{
+	
 		temp = (time_elaps - time_perid) + (*start_time + time_perid);
+		 *start_time = xTaskGetTickCount();
 		ret = (time_elaps - time_perid);
+		return ret;
 	}
-	vTaskDelayUntil(start_time, time_perid);
-	*start_time = temp;
-	return ret;
 }
 /* mistake here in conversion from ms to ticks*/
 
@@ -101,7 +105,7 @@ int ktc_fdelay_start_timer_free(int interval, char* unit,TimerHandle_t  ktctimer
 	new_perid = time_perid - time_elsp;
 	int ret ;
 	if( xTimerIsTimerActive( ktctimer ) != pdFALSE ){
-		xTimerStop( ktctimer, 50 );
+		xTimerDelete( ktctimer, 50 );	
 	}
 	if((xTimerChangePeriod(ktctimer, time_perid, 50)) == pdPASS ){
 		//control1Aux();
@@ -124,7 +128,7 @@ long ktc_fdelay_init_free(int interval, char* unit, TickType_t* start_time, Time
 	temp =  time_perid + (*start_time);
 	if(retjmp == 0){
 		if( xTimerIsTimerActive( ktctimer ) != pdFALSE ){
-			xTimerStop( ktctimer, 50 );
+		xTimerDelete( ktctimer, 50 );	
 		}
 		vTaskDelayUntil(start_time, time_perid);
 		*start_time = temp;
@@ -138,7 +142,7 @@ long ktc_fdelay_init_free(int interval, char* unit, TickType_t* start_time, Time
 			*start_time =  xTaskGetTickCount();
 			if(temp >  xTaskGetTickCount()){
 				if( xTimerIsTimerActive( ktctimer ) != pdFALSE ){
-				xTimerStop( ktctimer, 50 );
+				xTimerDelete( ktctimer, 50 );	
 			}			
 				return -1;
 			}

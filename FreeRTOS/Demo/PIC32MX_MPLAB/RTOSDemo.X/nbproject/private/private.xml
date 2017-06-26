@@ -9,7 +9,14 @@
             <file>file:/C:/E/Dev/FreeRTOS/WorkingCopy/FreeRTOS/Demo/PIC32MX_MPLAB/main_full.c</file>
         </group>
         <group>
-            <file>file:/Users/saranya/Documents/VM_Shared/ktc/FreeRTOS/Demo/PIC32MX_MPLAB/tcar.c</file>
+            <file>file:/Users/saranya/Documents/VM_Shared/ktc/FreeRTOS/Source/list.c</file>
+            <file>file:/Users/saranya/Documents/VM_Shared/ktc/FreeRTOS/Source/include/projdefs.h</file>
+            <file>file:/Users/saranya/Documents/VM_Shared/ktc/FreeRTOS/Source/include/portable.h</file>
+            <file>file:/Users/saranya/Documents/VM_Shared/ktc/FreeRTOS/Source/portable/MPLAB/PIC32MX/port_asm.S</file>
+            <file>file:/Users/saranya/Documents/VM_Shared/ktc/FreeRTOS/Source/timers.c</file>
+            <file>file:/Users/saranya/Documents/VM_Shared/ktc/FreeRTOS/Demo/Common/Minimal/IntQueue.c</file>
+            <file>file:/Users/saranya/Documents/VM_Shared/ktc/FreeRTOS/Source/portable/MPLAB/PIC32MX/port.c</file>
+            <file>file:/Users/saranya/Documents/VM_Shared/ktc/FreeRTOS/Source/tasks.c</file>
         </group>
     </open-files>
 </project-private>

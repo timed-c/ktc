@@ -2,6 +2,7 @@
 
 UBaseType_t idle_prio_free = tskIDLE_PRIORITY;
 
+
 void ktc_start_time_init_free(TickType_t *start_time){
 	*start_time = xTaskGetTickCount();
 }
@@ -43,15 +44,17 @@ long ktc_sdelay_init_free(int intrval, char* unit, TickType_t *start_time, int i
 	time_elaps = time_now - (*start_time);
 	if(time_elaps < time_perid){
 		temp = time_perid + (*start_time);
+		vTaskDelayUntil(start_time, time_perid);
+	        *start_time = temp;
 		ret = 0;
+	        return ret;
 	}	
 	else{
 		temp = (time_elaps - time_perid) + (*start_time + time_perid);
+		 *start_time = temp
 		ret = (time_elaps - time_perid);
 	}
-	vTaskDelayUntil(start_time, time_perid);
-	*start_time = temp;
-	return ret;
+
 }
 
 int ktc_fdelay_start_timer_free(int interval, char* unit,TimerHandle_t  ktctimer, TickType_t start_time){
