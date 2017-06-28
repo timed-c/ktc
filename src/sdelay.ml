@@ -232,7 +232,10 @@ let makeSdelayEndInstr (structvar : varinfo) (timervar : varinfo) (tp : varinfo)
 let makeFdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location) (retjmp) (signo) : instr list =
   let time_unit = if (L.length argL) = 1 then mkString "NULL" else L.hd (L.tl argL) in
   let f, l, intervl, tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, time_unit, mkAddrOf((var structvar)), (List.hd(List.rev argL)) in
-  [Call(None,v2e sdelayfuns.fdelay_init, [intervl;tunit;s;t_id;(v2e retjmp); signo;], loc)]
+  [Call(None,v2e sdelayfuns.fdelay_init, [intervl;tunit;s;t_id;(v2e retjmp); signo;], loc)] 
+
+
+
 
 let makeCriticalStartInstr (sigvar : varinfo) (loc: location) = 
 	let argSig = mkAddrOf (var sigvar) in
@@ -520,7 +523,7 @@ let getExpNameW e =
 *)
 
 	
-class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : varinfo) data fname sigvar  signo = object(self)
+class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : varinfo) data fname sigvar signo = object(self)
   inherit nopCilVisitor
 	
        method vinst (i :instr) =
@@ -528,7 +531,7 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : 
         let action [i] =
         match i with
         |Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = fname) -> makeSdelayInitInstr structvar argList loc
-        |Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = sname) -> makeFdelayInitInstr structvar argList loc ret_jmp (integer signo)
+	|Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = sname) -> makeFdelayInitInstr structvar argList loc ret_jmp (integer signo)
 	(*|Call(_,LVal(Var vi,_),_,loc) when (vi.vname = "next") -> makeNextGoto loc *)
 	|Call(_,Lval(Var vi,_),_,_) when (isFunTask vi) -> 
                                                         let pthread_id_str = "pthread_t" in
@@ -543,7 +546,7 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : 
         ChangeDoChildrenPost([i], action)
 	
 	
-	method vblock b =
+	method vblock b =	
 	if List.length b.bstmts <> 0 then  
 	let action  b  =
 	let tl = (List.tl b.bstmts) in
@@ -552,10 +555,11 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : 
 	(*let replaceBlockWithFdelay (List.hd b.bstmts) (List.tl b.bstmts) b data structvar tpstructvar timervar ret_jmp data sigvar*)
 		match s.skind with
 		|Instr il when il <> [] -> 
+			 let traceprint = E.log "saranya" in	
                          if instrTimingPointAftr (List.hd il) && (checkFirmSuccs data s) then 
                          (*let label_stmt = mkStmt (Instr []) in
                          label_stmt.labels <- [Label(string_to_int s.sid,locUnknown,false)] ;*)
-                          (*let tname = E.log "out here fdelay" in*)
+                          let tname = E.log "out here fdelay-saranya" in
                          let firmSuccInst = retFirmSucc s data in
                          let intr = getInstr firmSuccInst in
                          let addthisTo = maketimerfdelayStmt structvar intr tpstructvar timervar ret_jmp firmSuccInst in
@@ -564,7 +568,7 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : 
                          (*let changStmTo = (mkStmt s.skind)  :: addthisTo  in
                          let changStm = List.append changStmTo tl in*)
 			 b.bstmts <- changStm ; ()  
-                 |_ -> () 
+                 |_ ->  E.log "saranya-----"; () 
 	end;  b
 	(*in ChangeTo b*)
 	in ChangeDoChildrenPost(b, action) 
@@ -674,7 +678,7 @@ class addLabelStmt fdec = object(self)
 			(*let label_no =  getvaridStmt s in*)
 			let label_stmt = mkStmt (Instr []) in 
                 		label_stmt.labels <- [Label(label_name,locUnknown,false)]; E.log "s.sid  %d \n" s.sid; HT.add labelHash label_no label_stmt; 
-			let changStmTo = List.append [label_stmt] [mkStmt s.skind] in
+			let changStmTo = List.append  [mkStmt s.skind] [label_stmt] in
 			let block = mkBlock  changStmTo in
                 	s.skind <- Block block ;
                 	s
@@ -721,7 +725,7 @@ let initializeCabDs f chanVar cname numbuf =
 
 
 	
-class sdelayFunc filename fname fno = object(self)
+class sdelayFunc filename fname = object(self)
         inherit nopCilVisitor
 
         method vfunc (fdec : fundec) =
@@ -984,7 +988,7 @@ class fifoQu f fdec  = object(self)
                                                    s 
 
    	
-         |_ -> E.log "Nothing"; s
+         |_ -> s
           in ChangeDoChildrenPost(s, action)
 
 
@@ -1016,7 +1020,7 @@ let concurrencyA f =
 
 let timingConstructsTransformatn f =
          let fname = "sdelay" in
-        let vis = new sdelayFunc f fname 0 in
+        let vis = new sdelayFunc f fname in
         visitCilFile vis f
 
 let concurrencyConstructsTransformatn f =
@@ -1097,7 +1101,6 @@ let rec rwTaskOfChan f cl cgraph=
 
  
 let chanReaderWriterAnalysis f =
-	E.log "RWA\n";
 	let lvList = findGlobalLvc f in
 	let cgraph = CG.computeGraph f in 
 	rwTaskOfChan f lvList cgraph;
@@ -1113,9 +1116,9 @@ let fifoAnalysi f =
         visitCilFile cVis f	
 	 
 let sdelay (f : file) : unit =
-initSdelayFunctions f; timing_basic_block f; Cfg.computeFileCFG f; addLabel f; Cfg.clearFileCFG f; concurrencyA f; 
-List.iter (fun (a,b) -> E.log "(%s %d)" a b) !all_task; fifoAnalysi f; chanReaderWriterAnalysis f; 
-	timingConstructsTransformatn f; concurrencyConstructsTransformatn f ; () 
+initSdelayFunctions f; timing_basic_block f; Cfg.computeFileCFG f; addLabel f; Cfg.clearFileCFG f; (*concurrencyA f; 
+List.iter (fun (a,b) -> E.log "(%s %d)" a b) !all_task; fifoAnalysi f; chanReaderWriterAnalysis f; *)
+	timingConstructsTransformatn f;(* concurrencyConstructsTransformatn f ;*) () 
 
 
 
