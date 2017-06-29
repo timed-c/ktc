@@ -119,7 +119,8 @@ Now copy the .cil.c file to the MPLAB project.
 
 	cp freertos_main.cil.c ../FreeRTOS/Demo/PIC32MX_MPLAB/main_blinky.c
 	
-NOTE : FIFO functionality is broken. Working on fix. 
+
+
 	
 	
 
