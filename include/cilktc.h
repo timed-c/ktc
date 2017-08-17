@@ -15,6 +15,11 @@
 #include  "../../FreeRTOSv9.0.0/FreeRTOS/Source/include/task.h"
 #include "../../FreeRTOSv9.0.0/FreeRTOS/Source/include/timers.h"
 */
+
+enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
+int policy;
+//#define spolicy(X) if( (X) == EDF) spolicy_edf(); else spolicy_other(); sleep(0)
+#define spolicy(X) policy =X
 #define SEC_TO_NANO 1000000000
 #define MILLI_TO_NANO 1000000
 #define MICRO_TO_NANO 1000
@@ -57,6 +62,11 @@
 //# task if((void *__attribute__((task)))1)
 
 
+#define ms "ms"
+#define ns "ns"
+#define sec "sec"
+#define gettime(unit)  gettime(unit);sdelay(-1, ms)
+
 void *checked_dlsym(void *handle, const char *sym);
 pid_t gettid();
 
@@ -78,6 +88,7 @@ struct timespec convert_to_timespec(long, char*);
 long timespec_to_unit(struct timespec val, char* unit);
 int ktc_critical_end(sigset_t* orig_mask);
 int ktc_critical_start(sigset_t* orig_mask);
+int ktc_set_sched(int policy, int runtime, int deadline, int period) ;
 
 void toggle_lock_tracking();
 
@@ -91,6 +102,7 @@ struct tp_struct tp_struct_data;
 void ktc_create_timer(timer_t* ktctimer, struct tp_struct* tp, int num);
 extern int ktc_start_time_init(struct timespec* start_time) ;
 extern long ktc_sdelay_init(int intrval, char* unit, struct timespec* start_time, int id ) ;
+extern long ktc_gettime(char* unit, struct timespec* start_time);
 extern long ktc_fdelay_init(int interval, char* unit, struct timespec* start_time, int id, int num, int retjmp);
 sigjmp_buf buf_struct;
 
@@ -115,6 +127,7 @@ struct fifolist{
 	int data;
 	struct timespec ts;
 	struct fifolist* nextf;
+	pthread_mutex_t mutx;
 };
 
 struct fifolist fifoex;
@@ -124,8 +137,10 @@ void ktc_htc_putmes(struct cab_ds* cab, struct cbm* buffer);
 cbm* ktc_htc_getmes(struct cab_ds* cab);
 void ktc_htc_unget (struct cab_ds* cab, cbm* buffer);
 void ktc_fifo_init(struct fifolist** chan);
-int ktc_fifo_read(struct fifolist** chan, int* data,  pthread_mutex_t* mutx);
-void ktc_fifo_write(struct fifolist** chan, int data,  pthread_mutex_t* mutx);
+int ktc_fifo_read_aux(struct fifolist** chan, int* data,  pthread_mutex_t* mutx);
+void ktc_fifo_write_aux(struct fifolist** chan, int data,  pthread_mutex_t* mutx);
+int ktc_fifo_read(struct fifolist** chan, int* data);
+void ktc_fifo_write(struct fifolist** chan, int data);
 void ktc_simpson(int* sdata, int* tdata);
 #include <getopt.h>
 size_t s;
@@ -244,6 +259,8 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("ktc_fifo_read")
 #pragma cilnoremove("ktc_fifo_write")
 #pragma cilnoremove("ktc_simpson")
+#pragma cilnoremove("ktc_set_sched")
+#pragma cilnoremove("ktc_gettime")
 extern int autotest_finished;
 //extern int ktc_sdelay_end(char const   *f , int l , int intrval , char *unit ) ;
 //extern long ktc_sdelay_init(char const   *f , int l, int intrval, char* unit, struct timespec* start_time ) ;

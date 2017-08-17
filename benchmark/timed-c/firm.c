@@ -8,7 +8,7 @@ int  main(){
 	int ov;
 	while(1){
 	   sdelay(0, ms);
-	   printf("done\n");
+	   //printf("done\n");
 	   if(count % 3 < 0){
 		for(i=0; i<1000000000; i++){}
 	   }	
