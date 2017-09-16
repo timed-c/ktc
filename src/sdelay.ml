@@ -67,6 +67,7 @@ type functions =
   mutable sdelay_init : varinfo;
   mutable start_timer_init : varinfo;
   mutable fdelay_init :varinfo;
+  mutable gettime : varinfo;
   mutable timer_create : varinfo;
   mutable sig_setjmp : varinfo;
   mutable fdelay_start_timer : varinfo;
@@ -82,6 +83,8 @@ type functions =
   mutable fifo_read : varinfo;
   mutable fifo_write : varinfo;
   mutable simsp_equal : varinfo;
+  mutable spolicy_set : varinfo;
+  mutable compute_priority : varinfo;
 }
 
 let dummyVar = makeVarinfo false "_sdelay_foo" voidType
@@ -90,6 +93,7 @@ let sdelayfuns = {
   sdelay_init = dummyVar;
   start_timer_init  = dummyVar;
   fdelay_init = dummyVar;
+  gettime = dummyVar;
   timer_create = dummyVar;
   sig_setjmp = dummyVar;
   fdelay_start_timer = dummyVar;
@@ -105,6 +109,8 @@ let sdelayfuns = {
   fifo_read = dummyVar;
   fifo_write = dummyVar;
   simsp_equal = dummyVar;
+  spolicy_set = dummyVar;
+  compute_priority = dummyVar;
 }
 
 
@@ -112,6 +118,7 @@ let sdelayfuns = {
 let sdelay_init_str = "ktc_sdelay_init"
 let start_timer_init_str   = "ktc_start_time_init"
 let fdelay_init_str = "ktc_fdelay_init"
+let gettime_str = "ktc_gettime"
 let timer_create_str  = "ktc_create_timer"
 let sig_setjmp_str = "__sigsetjmp" 
 let fdelay_start_timer_str = "ktc_fdelay_start_timer" 
@@ -126,13 +133,16 @@ let htc_putmes_str = "ktc_htc_putmes"
 let fifo_init_str = "ktc_fifo_init"
 let fifo_read_str =  "ktc_fifo_read"
 let fifo_write_str = "ktc_fifo_write"
-let  simsp_equal_str = "ktc_simpson"
+let simsp_equal_str = "ktc_simpson"
+let spolicy_set_str = "ktc_set_sched"
+let compute_priority_str = "ktc_priority"
 
 
 let sdelay_function_names = [
   sdelay_init_str;
   start_timer_init_str;
   fdelay_init_str;
+  gettime_str;
   timer_create_str;
   sig_setjmp_str;
   fdelay_start_timer_str;
@@ -148,6 +158,8 @@ let sdelay_function_names = [
   fifo_read_str;
   fifo_write_str;
   simsp_equal_str;
+  spolicy_set_str;
+  compute_priority_str;
 ]
 
 
@@ -200,6 +212,7 @@ let initSdelayFunctions (f : file)  : unit =
   sdelayfuns.sdelay_init <- focf sdelay_init_str init_type;
   sdelayfuns.start_timer_init <- focf start_timer_init_str   end_type;
   sdelayfuns.fdelay_init <- focf fdelay_init_str init_type;
+  sdelayfuns.gettime <- focf gettime_str init_type;
   sdelayfuns.timer_create <- focf timer_create_str init_type;
   sdelayfuns.sig_setjmp <- focf   sig_setjmp_str init_type;
   sdelayfuns.fdelay_start_timer <- focf  fdelay_start_timer_str init_type;
@@ -214,7 +227,10 @@ let initSdelayFunctions (f : file)  : unit =
   sdelayfuns.fifo_init <- focf fifo_init_str init_type;
   sdelayfuns.fifo_read <- focf fifo_read_str init_type;
   sdelayfuns.fifo_write <- focf fifo_write_str init_type;
-  sdelayfuns.simsp_equal <- focf simsp_equal_str init_type
+  sdelayfuns.simsp_equal <- focf simsp_equal_str init_type;
+  sdelayfuns.spolicy_set <- focf spolicy_set_str init_type;
+  sdelayfuns.compute_priority <- focf compute_priority_str init_type
+
 	
 let makeSdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location)  =
   let time_unit = if (L.length argL) = 1 then mkString "NULL" else L.hd (L.tl argL) in
@@ -233,6 +249,15 @@ let makeFdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location)
   let time_unit = if (L.length argL) = 1 then mkString "NULL" else L.hd (L.tl argL) in
   let f, l, intervl, tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, time_unit, mkAddrOf((var structvar)), (List.hd(List.rev argL)) in
   [Call(None,v2e sdelayfuns.fdelay_init, [intervl;tunit;s;t_id;(v2e retjmp); signo;], loc)]
+
+let makegettimeInstr lv (structvar : varinfo) (argL : exp list) loc = 
+	let tunit, s =  L.hd argL, mkAddrOf((var structvar)) in
+	[Call(lv,v2e sdelayfuns.gettime, [tunit;s;], loc)]
+
+
+
+let makespolicysetInstr runtime period deadline policy =  
+  Call(None,v2e sdelayfuns.spolicy_set, [v2e policy; v2e runtime; v2e deadline; v2e period], locUnknown)
 
 let makeCriticalStartInstr (sigvar : varinfo) (loc: location) = 
 	let argSig = mkAddrOf (var sigvar) in
@@ -284,6 +309,24 @@ let findgoto data s =
         let id = get_label_no tpinstr in 
          try HT.find data id
                 with Not_found -> E.s(E.bug "not found")
+
+let policyValue data hstm runtime deadline period priority policy = 
+	let succTP = retTimingPointSucc hstm data in
+	let tpinstr = getInstruction succTP in 
+	let vl = (match tpinstr with 
+		    |Call(_,Lval(Var vf,_),argList,_) -> (*E.log "%s\n" vf.vname;*) List.hd (argList)
+		    | _ ->  E.s(E.bug "Error: label") ) in
+	let runstm =  Set((var runtime), (vl), locUnknown) in
+	let dlstm =  Set((var deadline), (vl), locUnknown) in
+	let perstm =  Set((var period), (vl), locUnknown) in
+	let setsched = makespolicysetInstr runtime deadline period policy in
+	let polist = [runstm; dlstm; perstm; setsched] in 
+	polist
+	
+
+	
+
+
 
 let maketimerfdelayStmt structvar argL tpstructvar timervar retjmp firmStmt =
 	 let offset' = match tpstructvar.vtype with
@@ -519,7 +562,34 @@ let getExpNameW e =
 	         |_ -> b 
 *)
 
+
+class policydetail filename data runtime deadline period priority policy = object(self) 
+	inherit nopCilVisitor 
+	method vstmt (s :stmt) =
+	let action s =
+	(match s.skind with 
+	|Instr il when il <> [] -> (match (List.hd il) with 
+	          				|Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> 
+							E.log "JGD-fdelay" ;
+							if isZeroTimingPointSucc s data then 
+							   let nb = policyValue data s runtime deadline period priority policy in s.skind <- Instr (List.append ((List.hd il ):: nb) (List.tl il)); s
+							else 
+							  s
+                  				|Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> 
+								E.log "JGD-sdelay" ;
+								if isZeroTimingPointSucc s data then 
+								 let nb = policyValue data s runtime deadline period priority policy in s.skind <- Instr (List.append ((List.hd il) :: nb) (List.tl il)); s
+								else 
+									let p = E.log "JGD-hop out" in s
+		  				| _ -> E.log "JGD-none" ;  s)
+	| _ ->  s)
+	in ChangeDoChildrenPost(s, action) 
+end
 	
+class merger filename fdec = object(self)
+   inherit nopCilVisitor 
+
+	method vblock b =	
 class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : varinfo) data fname sigvar  signo = object(self)
   inherit nopCilVisitor
 	
@@ -529,6 +599,7 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : 
         match i with
         |Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = fname) -> makeSdelayInitInstr structvar argList loc
         |Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = sname) -> makeFdelayInitInstr structvar argList loc ret_jmp (integer signo)
+	|Call(lv ,Lval(Var vi,_), argList, loc) when (vi.vname = "gettime") -> makegettimeInstr lv structvar argList loc
 	(*|Call(_,LVal(Var vi,_),_,loc) when (vi.vname = "next") -> makeNextGoto loc *)
 	|Call(_,Lval(Var vi,_),_,_) when (isFunTask vi) -> 
                                                         let pthread_id_str = "pthread_t" in
@@ -654,6 +725,7 @@ class addLabelStmt fdec = object(self)
 	inherit nopCilVisitor
 
 	method vinst (i :instr) = 
+	E.log "HIT-HIT";
         let action [i] =
         match i with
         |Call(ret,lval,argList,loc) when (instrTimingPoint i)  ->   tp_id := !tp_id + 1;
@@ -665,9 +737,27 @@ class addLabelStmt fdec = object(self)
 
 
 	method vstmt (s :stmt) =
+	
 	let action s =
 	match s.skind with 
-	|Instr (il) ->  
+	(*|Block b -> let hstm = List.hd b.bstmts in 
+		    (match hstm.skind with 
+	       	      |Instr (il) ->  
+			if (List.length il = 1 &&  instrTimingPoint (List.hd il)) && (instrTimingPoint (List.hd il)) then
+			let label_name = "_"^string_of_int(s.sid) in
+			let label_no =  (get_label_no (List.hd il) )in
+			(*let label_no =  getvaridStmt s in*)
+			let label_stmt = mkStmt (Instr []) in 
+                		label_stmt.labels <- [Label(label_name,locUnknown,false)]; (*E.log "s.sid  %d \n" s.sid;*) HT.add labelHash label_no label_stmt; 
+			let changStmTo = List.append [mkStmt s.skind] [label_stmt] in
+			let changStmTo1 = List.append changStmTo (List.tl b.bstmts) in
+			let block = mkBlock  changStmTo1 in
+                	s.skind <- Block block ;
+                	s
+                	else
+                	s
+		     |_ -> s)	*)
+	 |Instr (il) ->  
 			if (List.length il = 1 &&  instrTimingPoint (List.hd il)) && (instrTimingPoint (List.hd il)) then
 			let label_name = "_"^string_of_int(s.sid) in
 			let label_no =  (get_label_no (List.hd il) )in
@@ -680,6 +770,7 @@ class addLabelStmt fdec = object(self)
                 	s
                 	else
                 	s
+	
 
         |_ -> s
         in ChangeDoChildrenPost(s, action)
@@ -720,7 +811,37 @@ let initializeCabDs f chanVar cname numbuf =
 		[freeinit; mrbinit; maxc]
 
 
-	
+
+
+class addpolicyDetailFunc filename = object(self)
+	inherit nopCilVisitor 	
+        method vfunc (fdec : fundec) =
+		let runtime = makeLocalVar fdec "runtime" intType in
+		let deadline = makeLocalVar fdec "deadline" intType in
+		let period = makeLocalVar fdec "period" intType in
+		let priority = makeLocalVar fdec "priority" intType in
+		let policy = makeLocalVar fdec "policy" intType in
+		let taskid =  makeLocalVar fdec "taskid" charPtrType in
+		let data =  checkTPSucc fdec filename  in 
+		let pd = new policydetail filename data runtime deadline period priority policy in	
+		fdec.sbody <- visitCilBlock pd fdec.sbody;
+		(match fdec.svar.vtype with
+                        | TFun(rt,_,_,attr) when (isTaskType rt)-> let set_taskid = mkStmtOneInstr (Set(var taskid, mkString fdec.svar.vname, locUnknown)) in	
+								   fdec.sbody.bstmts <- List.append [set_taskid] fdec.sbody.bstmts; ()		    
+                        | _ ->	()
+		);ChangeTo(fdec)
+end
+
+
+class mergeDelays filename = object(self) 
+	inherit nopCilVisitor 
+
+	method vfunc (fdec : fundec) =
+	let mfile = new merger filename fdec in
+	fdec.sbody <- visitCilBlock md fdec.sbody; ChangeTo(fdec)
+
+end
+
 class sdelayFunc filename fname fno = object(self)
         inherit nopCilVisitor
 
@@ -748,7 +869,9 @@ class sdelayFunc filename fname fno = object(self)
 		let init_start = makeSdelayEndInstr structvar ftimer tpstructvar signo in
 		let data =  checkTPSucc fdec filename  in 
 		let y = checkAvailOfStmt fdec in
-	(*	let addl = new  addLabelStmt filename in
+	(*	let policydetail = new addPolicydetail filename data runtime deadline period priority in
+		fdec.sbody <- visitCilBlock policydetail fdec.sbody;
+		let addl = new  addLabelStmt filename in
                 fdec.sbody <- visitCilBlock addl  fdec.sbody ; *)
 		(*let y' = isErrorFree filename in*)	
 		let modifysdelay = new sdelayReportAdder filename fdec structvar tpstructvar ftimer rt_jmp data fname org_sig signo in
@@ -1014,10 +1137,19 @@ let concurrencyA f =
 	visitCilFile vis f
 
 
+let addpolicyDetail f =
+        let vis = new addpolicyDetailFunc f in
+        visitCilFile vis f
+
+
 let timingConstructsTransformatn f =
          let fname = "sdelay" in
         let vis = new sdelayFunc f fname 0 in
         visitCilFile vis f
+
+let mergeTimingPoints f = 
+	let vis = new mergeDelays f in
+	visitCilFile vis f
 
 let concurrencyConstructsTransformatn f =
 	(*if n = 1 then *)
@@ -1113,9 +1245,9 @@ let fifoAnalysi f =
         visitCilFile cVis f	
 	 
 let sdelay (f : file) : unit =
-initSdelayFunctions f; timing_basic_block f; Cfg.computeFileCFG f; addLabel f; Cfg.clearFileCFG f; concurrencyA f; 
+initSdelayFunctions f;  Cfg.clearFileCFG f; Cfg.computeFileCFG f; mergeTimingPoints f;  Cfg.clearFileCFG f; timing_basic_block f; addpolicyDetail f; timing_basic_block f;  Cfg.clearFileCFG f; Cfg.computeFileCFG f;  addLabel f;  Cfg.clearFileCFG f; concurrencyA f; 
 List.iter (fun (a,b) -> E.log "(%s %d)" a b) !all_task; fifoAnalysi f; chanReaderWriterAnalysis f; 
-	timingConstructsTransformatn f; concurrencyConstructsTransformatn f ; () 
+	timingConstructsTransformatn f; concurrencyConstructsTransformatn f ;  () 
 
 
 

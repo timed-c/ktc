@@ -624,6 +624,18 @@ let retTimingPointSucc s data =
                         (Printf.eprintf "%s:%d:" loc.file loc.line); E.s (E.error "conflicting target destination for next")  in
                 intrfirmSucc
 
+let isZeroTimingPointSucc s data =
+	let pp = E.log "isZeroTimingPointSucc" in
+	let tsuccsofs = getStmtTPSucc data s in
+	let succSet = TS.filter retTimingPoint tsuccsofs in
+	let succList = TS.elements succSet in
+	if List.length succList = 1 then 
+				true
+                           else
+				false
+				
+
+
 
 let  retFirmSucc s data =
 	let tsuccsofs = getStmtTPSucc data s in
