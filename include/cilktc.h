@@ -11,6 +11,8 @@
 #include <signal.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <linux/sched.h>
+#include <linux/types.h>
 /*#include  "../../FreeRTOSv9.0.0/FreeRTOS/Source/include/FreeRTOS.h"
 #include  "../../FreeRTOSv9.0.0/FreeRTOS/Source/include/task.h"
 #include "../../FreeRTOSv9.0.0/FreeRTOS/Source/include/timers.h"
@@ -19,7 +21,7 @@
 enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
 int policy;
 //#define spolicy(X) if( (X) == EDF) spolicy_edf(); else spolicy_other(); sleep(0)
-#define spolicy(X) policy =X
+#define spolicy(X) policy =X; sdelay(0, ms); 
 #define SEC_TO_NANO 1000000000
 #define MILLI_TO_NANO 1000000
 #define MICRO_TO_NANO 1000
@@ -60,12 +62,14 @@ int policy;
 #define lvchannel __attribute__((lvchannel))
 #define fifochannel  __attribute__((fifochannel))
 //# task if((void *__attribute__((task)))1)
+#define main() populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort); } void main()
 
 
 #define ms "ms"
 #define ns "ns"
 #define sec "sec"
-#define gettime(unit)  gettime(unit);sdelay(-1, ms)
+#define gettime(unit)  ktc_gettime(unit);sdelay(-1, ms)
+
 
 void *checked_dlsym(void *handle, const char *sym);
 pid_t gettid();
@@ -97,12 +101,16 @@ struct tp_struct{
         jmp_buf env;
         timer_t* tmr;
 };
+
+
 bool boolvar;
 struct tp_struct tp_struct_data;
+int list_pr[500];
+int list_dl[500];
 void ktc_create_timer(timer_t* ktctimer, struct tp_struct* tp, int num);
 extern int ktc_start_time_init(struct timespec* start_time) ;
 extern long ktc_sdelay_init(int intrval, char* unit, struct timespec* start_time, int id ) ;
-extern long ktc_gettime(char* unit, struct timespec* start_time);
+extern long ktc_gettime(char* unit);
 extern long ktc_fdelay_init(int interval, char* unit, struct timespec* start_time, int id, int num, int retjmp);
 sigjmp_buf buf_struct;
 
@@ -130,8 +138,29 @@ struct fifolist{
 	pthread_mutex_t mutx;
 };
 
+struct sched_attr {
+	__u32 size;
+
+	__u32 sched_policy;
+	__u64 sched_flags;
+
+	/* SCHED_NORMAL, SCHED_BATCH */
+	__s32 sched_nice;
+
+	/* SCHED_FIFO, SCHED_RR */
+	__u32 sched_priority;
+
+	/* SCHED_DEADLINE (nsec) */
+	__u64 sched_runtime;
+	__u64 sched_deadline;
+	__u64 sched_period;
+ };
+
+struct sched_attr sae;
 struct fifolist fifoex;
 
+extern int compare_qsort (const void * elem1, const void * elem2);
+extern int populatelist(int num);
 struct cbm* ktc_htc_reserve(struct cab_ds* cab);
 void ktc_htc_putmes(struct cab_ds* cab, struct cbm* buffer);
 cbm* ktc_htc_getmes(struct cab_ds* cab);
@@ -145,6 +174,7 @@ void ktc_simpson(int* sdata, int* tdata);
 #include <getopt.h>
 size_t s;
 struct option o;
+static inline int sched_getattr(pid_t pid, struct sched_attr *attr, unsigned int size, unsigned int flags){return syscall(315, pid, attr, size, flags);}
 /*
 static inline int setjmpdummy(){
 	sigsetjmp(buf_struct, 1);
@@ -206,6 +236,9 @@ void register_nt_input(char *name, char *start);
 int ktc_fdelay_start_timer(int interval, char* unit, timer_t ktctimer, struct timespec* start_time);
 pthread_t pthread_id_example;
 
+
+
+
 /** FREERTOS**/
 /*
 TaskHandle_t tskhndl;
@@ -228,6 +261,7 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("ktc_sdelay_init_free")
 /*FREERTOS*/
 
+#pragma cilnoremove("compare_qsort")
 #pragma cilnoremove("ktc_htc_reserve")
 #pragma cilnoremove("ktc_htc_putmes")
 #pragma cilnoremove("ktc_htc_getmes")
@@ -261,6 +295,11 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("ktc_simpson")
 #pragma cilnoremove("ktc_set_sched")
 #pragma cilnoremove("ktc_gettime")
+#pragma cilnoremove("list_dl")
+#pragma cilnoremove("list_pr")
+#pragma cilnoremove("populatelist")
+#pragma cilnoremove("sched_getattr")
+#pragma cilnoremove("sae")
 extern int autotest_finished;
 //extern int ktc_sdelay_end(char const   *f , int l , int intrval , char *unit ) ;
 //extern long ktc_sdelay_init(char const   *f , int l, int intrval, char* unit, struct timespec* start_time ) ;

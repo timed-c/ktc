@@ -16,7 +16,7 @@ task tsk2(){
 	spolicy(EDF);
 	while(1){
 	  printf("Task 2\n");
-	  sdelay(100, ms);
+	  sdelay(20, ms);
 	}
 
 }

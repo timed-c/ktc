@@ -4,7 +4,7 @@ public class Fpriority {
   static public void main(String [] args){
     Scheduler scheduler = FindScheduler.findScheduler("EDFScheduler");
     if(scheduler == null){
-      System.out.println("No least laxity scheduler was found");
+      System.out.println("No scheduler was found");
     } else {
       RealtimeThread rtt = new RealtimeThread(
           null,					    //	Default scheduling Parameters

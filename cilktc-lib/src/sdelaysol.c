@@ -10,28 +10,13 @@
 #include<setjmp.h>
 #include <time.h>
 #include <pthread.h>
+#include <errno.h>
 #include <linux/sched.h>
 
 
 pthread_mutex_t mt;
 
- struct sched_attr {
-	int size;
 
-	int sched_policy;
-	int sched_flags;
-
-	/* SCHED_NORMAL, SCHED_BATCH */
-	int sched_nice;
-
-	/* SCHED_FIFO, SCHED_RR */
-	int sched_priority;
-
-	/* SCHED_DEADLINE (nsec) */
-	int sched_runtime;
-	int sched_deadline;
-	int sched_period;
- };
 
  int sched_setattr(pid_t pid,
 		  const struct sched_attr *attr,
@@ -40,42 +25,100 @@ pthread_mutex_t mt;
 	return syscall(314, pid, attr, flags);
  }
 
- int sched_getattr(pid_t pid,
-		  struct sched_attr *attr,
-		  unsigned int size,
-		  unsigned int flags)
- {
-	return syscall(315, pid, attr, size, flags);
- }
+int compare_qsort (const void * elem1, const void * elem2) 
+{
+    int f = *((int*)elem1);
+    int s = *((int*)elem2);
+    if (f > s) return  1;
+    if (f < s) return -1;
+    return 0;
+}
+int compute_priority(int* array, int para){
+	for(int i =0; i < 100; i++){
+		if(array[i] == para)
+			return i;
+	}
+}
 
 
-int ktc_set_sched(int policy, int runtime, int deadline, int period){
+int ktc_set_sched(int policy, int runtime, int period, int deadline){
 	struct sched_attr sa;
+	int priority;
+	sa.size = sizeof(sa);
+        sa.sched_flags = 0;
+        sa.sched_nice = 0;
+    	
 	if(policy == EDF){
+		sa.sched_priority = 0;
 		sa.sched_policy = SCHED_DEADLINE;
+		sa.sched_runtime = runtime * 1000 *1000;
+		sa.sched_deadline = deadline * 1000* 1000;
+		sa.sched_period = period* 1000 * 1000;
+	}
+	if(policy == RR_RM){
+		priority = compute_priority(list_pr, period);
+		priority = sched_get_priority_max(SCHED_RR) - priority;
+		sa.sched_priority = priority;
+		sa.sched_policy = SCHED_RR;
 		sa.sched_runtime = runtime;
 		sa.sched_deadline = deadline;
 		sa.sched_period = period;
 	}
-	if(policy == RR_DM || policy == RR_RM){
-		sa.sched_policy = SCHED_RR;
-	}
-	if(policy == FIFO_DM || policy == FIFO_RM){
+	if(policy == FIFO_RM){
+		priority = compute_priority(list_pr, period);
+		priority = sched_get_priority_max(SCHED_RR) - priority;
+		sa.sched_priority = priority;
 		sa.sched_policy = SCHED_FIFO;
+		sa.sched_runtime = runtime;
+		sa.sched_deadline = deadline;
+		sa.sched_period = period;
+	}
+	if(policy == FIFO_DM){
+		priority = compute_priority(list_dl, deadline);
+		priority = compute_priority(list_pr, period);
+		priority = sched_get_priority_max(SCHED_RR) - priority;
+		sa.sched_priority = priority;
+		sa.sched_policy = SCHED_FIFO;
+		sa.sched_runtime = runtime;
+		sa.sched_deadline = deadline;
+		sa.sched_period = period;
+	}
+	if(policy == RR_DM){
+		priority = compute_priority(list_dl, deadline);
+		priority = compute_priority(list_pr, period);
+		priority = sched_get_priority_max(SCHED_RR) - priority;
+		sa.sched_priority = priority;
+		sa.sched_policy = SCHED_RR;
+		sa.sched_runtime = runtime;
+		sa.sched_deadline = deadline;
+		sa.sched_period = period;
+	}
+	int err;
+	int pid = getpid();
+	int flag = 0;
+	if(&sa == NULL){
+		printf("this is null");
+	}
+	 if( (err = sched_setattr(0, &sa, flag)) == -1) { 
+		 perror("error");
+		 printf("%d\n", errno);
 	}
 }
 
-long ktc_gettime(char* unit, struct timespec* start_time){
+long ktc_gettime(char* unit){
 	struct timespec st;
-	long ret;
-	(void) clock_gettime(CLOCK_REALTIME, start_time);
-	ret = timespec_to_unit((*start_time), unit);
+	long ret;		
+	(void) clock_gettime(CLOCK_REALTIME, &st);
+	ret = timespec_to_unit(st, unit);
 	return ret;
 }
 
 long ktc_sdelay_init(int intrval, char* unit, struct timespec* start_time, int id){
 
-	if(intrval == -1){return 0;}
+	if(intrval == -1){
+		(void) clock_gettime(CLOCK_REALTIME, start_time);
+		return 0;
+	}
 	 if(intrval == 0){
 		//printf("intr ==0");
 		struct timespec st, elapsed_time;

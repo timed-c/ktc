@@ -279,6 +279,8 @@ void ktc_htc_putmes(struct cab_ds* cab, struct cbm* buffer){
 
 int ktc_set_sched(int policy, int runtime, int deadline, int period){
 	struct sched_attr sa;
+	static int count_dl = 0;
+	static int count_pr = 0;
 	if(policy == EDF){
 		sa.sched_policy = SCHED_DEADLINE;
 		sa.sched_runtime = runtime;
@@ -293,6 +295,4 @@ int ktc_set_sched(int policy, int runtime, int deadline, int period){
 	}
 }
 
-void ktc_compute_priorirty(int taskno, int runtime){
 
-}

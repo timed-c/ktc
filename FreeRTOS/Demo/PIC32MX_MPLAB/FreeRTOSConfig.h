@@ -70,7 +70,7 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
-#include <p32xxxx.h>
+//#include <p32xxxx.h>
 
 /*-----------------------------------------------------------
  * Application specific definitions.

@@ -605,10 +605,8 @@ let checkSuccs (data: TS.t IH.t) (s: stmt) =
 				  (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "conflicting firm timing point for %a" dn_stmt s) 
 		end
 let checkFirmSuccs (data: TS.t IH.t) (s: stmt) = 
-        let sp = E.log "sri sri 1" in
         let tsuccsofs = getStmtTPSucc data s in
                 let firmsucc = TS.filter retFirm tsuccsofs in
-		let so = E.log "sri sri 2" in
                         if TS.cardinal firmsucc > 0 then
 				true
 			else
@@ -625,7 +623,6 @@ let retTimingPointSucc s data =
                 intrfirmSucc
 
 let isZeroTimingPointSucc s data =
-	let pp = E.log "isZeroTimingPointSucc" in
 	let tsuccsofs = getStmtTPSucc data s in
 	let succSet = TS.filter retTimingPoint tsuccsofs in
 	let succList = TS.elements succSet in
@@ -696,5 +693,18 @@ let checkTPSucc ?(doCFG:bool=true) (f: fundec) fil  =
                                         checkSuccs TPSucc.stmtStartData s 
 
                         | _ -> ()
-             )f.sallstmts; TPSucc.stmtStartData 
+             )f.sallstmts; TPSucc.stmtStartData
+
+
+let rec getruntime exp  =
+	match exp with
+	|BinOp(PlusA, e1, e2, _) -> getruntime e2 
+	| _ as e -> e 
+
+let rec getdl exp = 
+	getruntime exp 
+
+let getperiod exp = 
+	exp
+
 	

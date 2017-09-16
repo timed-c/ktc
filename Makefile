@@ -10,8 +10,8 @@ all:   ktcutil ktcoption native
 ktcutil:
 	@rm -f -r libs
 	@mkdir libs
-	@ocamlbuild -no-hygiene -use-ocamlfind -package cil -Is $(DIRS) ktcutil.cma > log
-	@ocamlbuild -no-hygiene -use-ocamlfind -package cil -Is $(DIRS) ktcutil.cmxa > log
+	@ocamlbuild -no-hygiene -use-ocamlfind -package cil -Is $(DIRS) ktcutil.cma 
+	@ocamlbuild -no-hygiene -use-ocamlfind -package cil -Is $(DIRS) ktcutil.cmxa 
 	@rm -f bytes.ml
 	@cp _build/src/ktcutil.cma libs/.
 	@cp _build/src/ktcutil.cmxa libs/.

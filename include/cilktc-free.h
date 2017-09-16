@@ -6,10 +6,10 @@
 #include <signal.h>
 #include <pthread.h>
 #include <stdbool.h>
-#include  "FreeRTOS.h"
-#include  "task.h"
-#include "timers.h"
-#include "queue.h"
+#include  <freertos/FreeRTOS.h>
+#include  <freertos/task.h>
+#include <freertos/timers.h>
+#include <freertos/queue.h>
 
 #define SEC_TO_NANO 1000000000
 #define MILLI_TO_NANO 1000000

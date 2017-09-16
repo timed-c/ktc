@@ -107,7 +107,7 @@
 		let fdelay_start_timer_str = "ktc_fdelay_start_timer_free" 
 		let critical_start_str  = "vTaskEnterCritical"
 		let critical_end_str = "vTaskExitCritical"
-		let task_create_str = "xTaskCreate" 
+		let task_create_str = "xTaskGenericCreate" 
 		let task_delete_str = "vTaskDelete"
 		let fifo_init_str = "ktc_fifo_init"
 		let fifo_read_str =  "ktc_fifo_read"
@@ -223,7 +223,7 @@
 			let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in 
 			(*let addrFun = mkAddrOf(var funvar) in
 			i2s ( Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero; addrFun; Cil.zero;], loc)) *)
-			Call(None, v2e sdelayfuns.task_create, [v2e funvar; (mkString (funvar.vname^handlevar.vname)); (integer 190); (integer 31); v2e idlePrioVar; addrHandle], loc)
+			Call(None, v2e sdelayfuns.task_create, [v2e funvar; (mkString (funvar.vname^handlevar.vname)); (integer 190); (integer 31); v2e idlePrioVar; addrHandle; nullptr; nullptr ], loc)
 
 		let makeTaskDeleteInstr (handlevar : varinfo)  =
 			let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in
