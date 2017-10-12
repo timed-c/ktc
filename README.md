@@ -39,13 +39,13 @@ Follow the instructions at <https://github.com/cil-project/cil> to install and b
 Mac OSX does not provide support for Real-Time POSIX APIs. To build a Timed C application for a linux based operating system download the Linux cross compiler for Mac OSX from <http://crossgcc.rts-software.org/doku.php> 
 
 
-#### B. KTC Installation
+### B. KTC Installation
 
 (a.) Clone or download the source code from <https://github.com/timed-c/ktc.git>
 
 (b.) Run **make** from the root directory (in this case, the ktc directory)
 
-#### C. Compiling Timed C program
+### C. Compiling Timed C program
 
 (a.) Go to the bin directory 
 
@@ -65,7 +65,7 @@ If the path for the cross compiler has not be exported use the complete path in 
 
 	./ktc --enable-ext0 --gcc=/usr/local/gcc-4.5.2-for-	linux64/bin/i586-pc-linux-gcc ../test/demo1.c
 
-#### D. Example Timed C programs 
+### D. Example Timed C programs 
 
 (a.) The folder called *example* within the *ktc* directory contains the few example programs (**these example program are listed in the paper which is is currently under submission at the RTAS 2018 conference**). To compile and execute the program use the following command 
 
