@@ -8,47 +8,57 @@
 ## Building and Installing KTC
 ***
 ### A. Installing Dependencies
-#### 1.Linux based OS 
+#### 1.Linux Based Operating System
 The following steps have been tested on ubuntu 14.04LTS.
-**(A.) OCaml Dependencies**
+
+**(a.) OCaml dependencies**
+
 Install the following packages using apt-get. 
 
 	sudo apt-get install ocaml opam ocaml-findlib 	lablgtk2 mercurial ocaml-ocamlgraph
 	
-**(B.) CIL Dependencies**
+**(b.) CIL dependencies**
+
 Follow the instructions at <https://github.com/cil-project/cil> to install and build CIL.
 
 #### 2. MAC OSX 
+
 The following steps have been tested on OSX El Capitan. 
-**(A.) OCaml Dependencies**
+
+**(a.) OCaml dependencies**
+
 Install the following packages using MacPorts. 
 
 	sudo port install ocaml opam ocaml-findlib lablgtk2 mercurial ocaml-ocamlgraph
-**(B.) CIL Dependencies**
+**(b.) CIL dependencies**
+
 Follow the instructions at <https://github.com/cil-project/cil> to install and build CIL.
 
-**(C.) A C compiler that supports Real-Time POSIX standards** 
+**(c.) A C compiler that supports Real-Time POSIX standards** 
+
 Mac OSX does not provide support for Real-Time POSIX APIs. To build a Timed C application for a linux based operating system download the Linux cross compiler for Mac OSX from <http://crossgcc.rts-software.org/doku.php> 
 
 
 #### B. KTC Installation
-(A.) Clone or download the source code from <https://github.com/timed-c/ktc.git>
 
-(B.) Run **make** from the root directory (in this case, the ktc directory)
+(a.) Clone or download the source code from <https://github.com/timed-c/ktc.git>
+
+(b.) Run **make** from the root directory (in this case, the ktc directory)
 
 #### C. Compiling Timed C program
-(A.) Go to the bin directory 
 
-(B.) To view the various options, run ktc with the help command.
+(a.) Go to the bin directory 
+
+(b.) To view the various options, run ktc with the help command.
 
 	./ktc --help
-(C.) In Linux OS, to compile a Timed C file use the following command
+(c.) In Linux OS, to compile a Timed C file use the following command
 	
 	./ktc --enable-ext0 ../test/demo1.c
-(D.) To compile and run a Timed C file use the following command
+(d.) To compile and run a Timed C file use the following command
 	
 	./run.sh ../test/demo1.c
-(E.) In Mac OSX, to compile a Timed C program KTC use the following command
+(e.) In Mac OSX, to compile a Timed C program KTC use the following command
 
 	./ktc --enable-ext0 --gcc=x86_64-pc-linux-gcc ../	 test/demo1.c
 If the path for the cross compiler has not be exported use the complete path in the *--gcc* option as shown below. 
@@ -56,7 +66,8 @@ If the path for the cross compiler has not be exported use the complete path in 
 	./ktc --enable-ext0 --gcc=/usr/local/gcc-4.5.2-for-	linux64/bin/i586-pc-linux-gcc ../test/demo1.c
 
 #### D. Example Timed C programs 
-(A.) The folder called *example* within the *ktc* directory contains the few example programs (these example program are listed in the paper which is is currently under submission at the RTAS 2017 conference). To compile and execute the program use the following command 
+
+(a.) The folder called *example* within the *ktc* directory contains the few example programs (**these example program are listed in the paper which is is currently under submission at the RTAS 2018 conference**). To compile and execute the program use the following command 
 
     ./run.sh <name-of-file>
 
@@ -69,19 +80,19 @@ For example the program implementing periodic loop using sdelay statement is com
 ***
 #### A. Setting up the Raspberry Pi
 
-(A.) Follow the instructions at <https://www.raspberrypi.org/help/quick-start-guide/> to install Raspbian OS on the raspberry pi. For a hassle free setup, make sure you have all the required components as mentioned in the link before you start. Use the official noobs installer to install raspbian. The instructions are available at <https://www.raspberrypi.org/help/noobs-setup/>
+(a.) Follow the instructions at <https://www.raspberrypi.org/help/quick-start-guide/> to install Raspbian OS on the raspberry pi. For a hassle free setup, make sure you have all the required components as mentioned in the link before you start. Use the official noobs installer to install raspbian. The instructions are available at <https://www.raspberrypi.org/help/noobs-setup/>
 
-(B.)This is an optional step, one can download and install the Linux RT Prempt patch on the Raspbian OS. The Linux RT Prempt patch guarantees better real-time performance. Follow the instructions for installing the pre-compiled (RT patch Linux) given at <http://www.frank-durr.de/?p=203>
+(b.)This is an optional step, one can download and install the Linux RT Prempt patch on the Raspbian OS. The Linux RT Prempt patch guarantees better real-time performance. Follow the instructions for installing the pre-compiled (RT patch Linux) given at <http://www.frank-durr.de/?p=203>
 
-(C.) For MAC OSX, install the cross compiler for raspberry pi by following the instructions at <http://www.welzels.de/blog/en/arm-cross-compiling-with-mac-os-x/comment-page-1/>. 
+(c.) For MAC OSX, install the cross compiler for raspberry pi by following the instructions at <http://www.welzels.de/blog/en/arm-cross-compiling-with-mac-os-x/comment-page-1/>. 
 
-(D.) For Linux OS, install the cross compiler for raspberry pi by following the instructions at <https://www.raspberrypi.org/documentation/linux/kernel/building.md> 
+(d.) For Linux OS, install the cross compiler for raspberry pi by following the instructions at <https://www.raspberrypi.org/documentation/linux/kernel/building.md> 
 
 #### C. Compiling to Raspberry Pi Using KTC 
 
-(A.) Go to the bin directory 
+(a.) Go to the bin directory 
 
-(B.) To cross compile Timed C for raspberry pi use the following command
+(b.) To cross compile Timed C for raspberry pi use the following command
 
 	./ktc --enable-ext0 --rasp --gcc=arm-linux-gnueabihf-gcc ../test/demo1.c
 	
@@ -95,19 +106,20 @@ If the path for the cross compiler has not be exported use the complete path in 
 
 #### A. Setting up FreeRTOS on PIC32 
 
-(A.) Download the MPLAB XC Compiler from <http://www.microchip.com/mplab/compilers>. 
+(a.) Download the MPLAB XC Compiler from <http://www.microchip.com/mplab/compilers>. 
 
-(B.) Download Microchip's Integrated Development Environment, MPLAB X IDE, from <http://www.microchip.com/mplab/mplab-x-ide>. Inorder to program your PIC32 microcontroller board using MPLAB you will also need either microchips's chipKIT PGM or PICkit 3 Programmer/Debugger.
+(b.) Download Microchip's Integrated Development Environment, MPLAB X IDE, from <http://www.microchip.com/mplab/mplab-x-ide>. Inorder to program your PIC32 microcontroller board using MPLAB you will also need either microchips's chipKIT PGM or PICkit 3 Programmer/Debugger.
 
-(C.)FreeRTOS is downloaded as a part of the KTC environment from the github which contains the FreeRTOS code from <https://sourceforge.net/projects/freertos/files/latest/download?source=file>
+(c.)FreeRTOS is downloaded as a part of the KTC environment from the github which contains the FreeRTOS code from <https://sourceforge.net/projects/freertos/files/latest/download?source=file>
 
-(D.)Open the RTOSDEMO.X project on MPLAB from the FreeRTOS/Demo directory. Connect your PIC32 board and chipKIT PGM or PICkit 3 Programmer/Debugger to the computer and execute the demo application from MPLAB X IDE.
+(d.)Open the RTOSDEMO.X project on MPLAB from the FreeRTOS/Demo directory. Connect your PIC32 board and chipKIT PGM or PICkit 3 Programmer/Debugger to the computer and execute the demo application from MPLAB X IDE.
 
 #### A. Compiling Timed C program to PIC32
-(A.) Compile the Timed C file using the below command 
+
+(a.) Compile the Timed C file using the below command 
 
 	./ktc --enable-ext1 --freertos --save-temps --gcc=/Applications/microchip/xc32/v1.42/bin/xc32-gcc <NAME-OF-C-FILE> -w 
-(B.) Copy the .cil.c file to the MPLAB project and build it on the MPLAB IDE using MPLAB XC compiler.
+(b.) Copy the .cil.c file to the MPLAB project and build it on the MPLAB IDE using MPLAB XC compiler.
 
 	
 
