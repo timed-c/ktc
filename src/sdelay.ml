@@ -234,10 +234,10 @@ let initSdelayFunctions (f : file)  : unit =
   sdelayfuns.compute_priority <- focf compute_priority_str init_type
 
 	
-let makeSdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location)  =
+let makeSdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location) lv =
   let time_unit = if (L.length argL) = 1 then mkString "NULL" else L.hd (L.tl argL) in
   let f, l, intervl, tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, time_unit, mkAddrOf((var structvar)), (List.hd (List.rev argL))  in
-  [Call(None,v2e sdelayfuns.sdelay_init, [intervl;tunit;s;t_id;], loc)]
+  [Call(lv,v2e sdelayfuns.sdelay_init, [intervl;tunit;s;t_id;], loc)]
 
 let makeSdelayEndInstr (structvar : varinfo) (timervar : varinfo) (tp : varinfo) (signo : int)=
   let s =  mkAddrOf((var structvar)) in
@@ -572,6 +572,14 @@ let getExpNameW e =
 	         |_ -> b 
 *)
 
+let isBinopOperation hstm data =
+	let succTP = retTimingPointSucc hstm data in
+	let tpinstr = getInstruction succTP in 
+	match tpinstr with 
+	|Call(_,Lval(Var vi,_),argList,loc) -> ( match (List.hd argList) with
+							|BinOp(_, _, _, _) -> false
+							|_ -> true)
+	|_ -> false
 
 class policydetail filename data runtime deadline period priority policy list_dl list_pr = object(self) 
 	inherit nopCilVisitor 
@@ -580,12 +588,12 @@ class policydetail filename data runtime deadline period priority policy list_dl
 	(match s.skind with 
 	|Instr il when il <> [] -> (match (List.hd il) with 
 	          				|Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> 
-							if isZeroTimingPointSucc s data then 
+							if (isZeroTimingPointSucc s data) & (isBinopOperation s data) then 
 							   let nb = policyValue data s runtime deadline period priority policy list_dl list_pr in s.skind <- Instr (List.append ((List.hd il ):: nb) (List.tl il)); s
 							else 
 							  s
                   				|Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> 	
-								if isZeroTimingPointSucc s data then 
+								if isZeroTimingPointSucc s data & (isBinopOperation s data)   then 
 								 let nb = policyValue data s runtime deadline period priority policy list_dl list_pr in s.skind <- Instr (List.append ((List.hd il) :: nb) (List.tl il)); s
 								else 
 								   s
@@ -649,7 +657,7 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : 
         let sname = "fdelay" in
         let action [i] =
         match i with
-        |Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = fname) -> makeSdelayInitInstr structvar argList loc
+        |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = fname) -> makeSdelayInitInstr structvar argList loc lv
         |Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = sname) -> makeFdelayInitInstr structvar argList loc ret_jmp (integer signo)
 	|Call(lv ,Lval(Var vi,_), argList, loc) when (vi.vname = "gettime") -> makegettimeInstr lv structvar argList loc
 	(*|Call(_,LVal(Var vi,_),_,loc) when (vi.vname = "next") -> makeNextGoto loc *)

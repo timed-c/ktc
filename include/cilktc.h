@@ -19,7 +19,7 @@
 */
 
 enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
-int policy;
+int policy = 0;
 //#define spolicy(X) if( (X) == EDF) spolicy_edf(); else spolicy_other(); sleep(0)
 #define spolicy(X) policy =X; sdelay(0, ms); 
 #define SEC_TO_NANO 1000000000
@@ -52,9 +52,12 @@ int policy;
 #define invariant(c,i,...) __blockattribute__((invariant((c),(i),__VA_ARGS__)))
 #define post(c) __attribute__((post((c))))
 #define pre(c)  __attribute__((pre((c))))
+extern int period;
+extern int runtime;
+extern int deadline;
 
 #define critical if((void *__attribute__((critical)))0)
-#define next if((void *__attribute__((next)))0) next()
+#define skipdelay if((void *__attribute__((next)))0) next()
 #define exec_child(x) if(x == 0)
 #define cread(chan, ptr)   if((void *__attribute__((read_block))) (sizeof(#chan) > &ptr)){sleep(0);}
 #define cwrite(chan, ptrw) if((void *__attribute__((write_block))) (sizeof(#chan) > ptrw)){sleep(0);}
@@ -62,12 +65,12 @@ int policy;
 #define lvchannel __attribute__((lvchannel))
 #define fifochannel  __attribute__((fifochannel))
 //# task if((void *__attribute__((task)))1)
-#define main() populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort); } void main()
-
-
+#define main() *dummyglobalvariable; int populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort); } void main()
+#define aperiodic(val, ms)  runtime = val; deadline = val; period = val; ktc_set_sched(policy, runtime, period, deadline);
 #define ms "ms"
 #define ns "ns"
 #define sec "sec"
+#define us "micro"
 #define gettime(unit)  ktc_gettime(unit);sdelay(-1, ms)
 
 
