@@ -4,9 +4,10 @@
 
 int  main(){
 	int ov;
+        int i;
 	while(1){
 	   printf("delay 30 ms\n");
-	   sleep(1);
+	   for(int i = 0; i < 10000; i++){printf("%d\n", i);}
 	   ov = sdelay(30, ms);
 	   if(ov > 0){
 		printf("overshot\n");

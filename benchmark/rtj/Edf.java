@@ -1,8 +1,12 @@
 import javax.realtime.*;
 
-public class Fixed_priority {
+public class Edf {
   static public void main(String [] args){
-         RealtimeThread rtt = new RealtimeThread(
+    Scheduler scheduler = FindScheduler.findScheduler("EDFScheduler");
+    if(scheduler == null){
+      System.out.println("No scheduler was found");
+    } else {
+      RealtimeThread rtt = new RealtimeThread(
           null,					    //	Default scheduling Parameters
           new PeriodicParameters(
               null,				    // Begin running at start()
@@ -16,16 +20,14 @@ public class Fixed_priority {
               null,				    //	Default processing group
               new Runnable (){		            //	Logic
             public void run() {
-	while(1){
-              System.out.println("Running " +
-                RealtimeThread.currentRealtimeThread().
-                getScheduler().getPolicyName());}
+              System.out.println("Running least laxity");
             }
           });
-      rtt.setScheduler(rtt.getScheduler());
+      rtt.setScheduler(scheduler);
       rtt.start();
       try{
         rtt.join();
       } catch(Exception e) {}
     }
+  }
 }

@@ -3,12 +3,12 @@
 import javax.realtime.*;
 
 
-public class Sporadic1 {
+public class Sporadic_task {
   public static void main(String[] args)
   {
 
     /* period: 30ms */
-    RelativeTime period = new RelativeTime(30 /* ms */, 0 /* ns */);
+    RelativeTime period = new RelativeTime(3000 /* ms */, 0 /* ns */);
 
     /* release parameters for periodic thread: */
     SporadicParameters sporadicParameters = new SporadicParameters(period);
@@ -19,10 +19,10 @@ public class Sporadic1 {
     {
       public void run()
       {
-        for (int n=1;n<50;n++)
+        while(true)
         {
           
-          System.out.println("Delay 30 ms :" + n);
+          System.out.println("Sporadic task released");
 	  try {
               Thread.sleep(30);
             } catch (InterruptedException ie) {

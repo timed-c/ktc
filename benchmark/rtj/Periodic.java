@@ -11,7 +11,7 @@ public class Periodic {
    {
      public void run()
      {
-       for (int n=1;n<50;n++)
+       while(1) 
        {
          System.out.println("Delay 30 ms :" + n);
 	 waitForNextPeriod();

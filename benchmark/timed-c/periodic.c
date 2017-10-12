@@ -3,9 +3,10 @@
 
 
 int  main(){
-	while(1){
-	   printf("delay 30 ms\n");
-	   sdelay(30, ms);
+ 	int i;
+	while(1){   
+	  printf("delay 30 ms\n");
+	  sdelay(30, ms);
 	}	
 }
 

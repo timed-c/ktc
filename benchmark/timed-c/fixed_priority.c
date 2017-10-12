@@ -21,29 +21,11 @@ task tsk2(){
 
 }
 
-task tsk3(){
-	spolicy(RR_RM);
-	while(1){
-	  printf("Task 3\n");
-	  sdelay(300, ms);
-	}
 
-}
-
-task tsk4(){
-	spolicy(RR_RM);
-	while(1){
-	  printf("Task 4\n");
-	  sdelay(400, ms);
-	}
-
-}
 
 int  main(){
 	tsk1();
 	tsk2();
-	tsk3();
-	tsk4();
 
 }
 

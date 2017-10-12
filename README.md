@@ -1,4 +1,4 @@
-# KTC : A Source-To-Source Compiler for Timed C Programming Language 
+# KTC : A Source-To-Source Compiler for the Timed C Programming Language 
 
 ## Introduction
 ***

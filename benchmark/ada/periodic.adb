@@ -6,12 +6,11 @@ procedure Periodic is
    Interval : Time_Span := Milliseconds(30);
    Next : Time;
 begin
-   Next := Clock;
-   for Iter in 0 .. 50 loop
-     Put(Integer'Image(Iter));	
-     Put_Line(":Delay 30 ms" );
-     Next := Clock + Interval;
+   Next := Clock + Interval;
+   loop 
+     Put_Line("Delay 30 ms" );
      delay until Next;
+      Next := Next + Interval;
    end loop;
 end Periodic;
 

@@ -13,7 +13,7 @@ void main() {
 	srand(SEED);
 	count = 0;
 	pi = 3.14;
-	sdelay(0, "ms");
+	sdelay(0, ms);
 	while(i < 10000000){
 	       x = (double)rand()/RAND_MAX;
 	       y = (double)rand()/RAND_MAX;
@@ -24,7 +24,7 @@ void main() {
 		}
 		i++;
 	}
-	fdelay(60, "ms");
+	fdelay(60, ms);
 	pi = (double)count/niter*4;
 	printf("Value of pi is %g for %d tries", pi, niter);
 }

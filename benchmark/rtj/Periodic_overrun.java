@@ -2,23 +2,17 @@
 
 import javax.realtime.*;
 
-public class Fdelay {
+public class Periodic_overrun {
 
 class Task extends RealtimeThread {
 	public Task () {
 
 	}
 
-	public void run() {
-		int count = 0;
-		long now = System.currentTimeMillis();
-		while(true) {
-			System.out.println("New Instance 100000000" );
-			/*100000000*/
-			for(int i = 0; i < 10000000; i++) {System.out.println(i);}
-	 		boolean ok = waitForNextPeriod();
-			System.out.println(System.currentTimeMillis() - now);
-			now = System.currentTimeMillis();
+	public void run() {	
+		while(true) {	
+			for(int i = 0; i < 1000000000; i++) { System.out.println("" +i);}
+	 		boolean ok = waitForNextPeriod();	
 		}
 
 	}
@@ -34,6 +28,7 @@ class DeadlineMissHandler extends AsyncEventHandler {
 	}
 	public void handleAsyncEvent() {
 		//Handle deadline miss here 
+                 System.out.println("Deadline overshoot\n");
 		PeriodicParameters rel = new PeriodicParameters(new RelativeTime(50, 0)) ;
 		setReleaseParameters(rel);
 		if(sched instanceof RealtimeThread)
@@ -62,7 +57,7 @@ public void Main () {
 }
   public static void main(String[] args)
   {
-	Fdelay m = new Fdelay();
+	Periodic_overrun m = new Periodic_overrun();
 	m.Main();
   }
 }

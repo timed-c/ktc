@@ -40,7 +40,7 @@ task body Calculate_Pi is
   Reset(G, 1);
     select
       delay until Now + Interval;
-      Pi := Cnt/Itr*4.0;  
+      Pi := (Cnt/Itr)*3.14;  
       Put_Line(Float'Image(Pi));
     then abort
        loop

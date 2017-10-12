@@ -55,19 +55,31 @@ task type server is
    pragma Priority(System.Priority'Last);
 end server;
 
-task body tsk1 is 
+task body tsk1 is
+    current : Time := Clock;
+    interval: Time_Span := Milliseconds(200); 
+    next : Time;
 begin
 	release_manager.t1_release;
+        next := current + interval;
 	loop
-	  Put_Line("tsk1");
+	   Put_Line("tsk1");
+           delay until next;
+           next := next + interval;
 	end loop;
 end tsk1;
 
-task body tsk2 is 
+task body tsk2 is
+    current : Time := Clock;
+    interval: Time_Span := Milliseconds(200); 
+    next : Time;
 begin
 	release_manager.t2_release;
+        next := current + interval;
 	loop
 	   Put_Line("tsk2");
+           delay until next;
+           next := next + interval;
 	end loop;
 end tsk2;
 
