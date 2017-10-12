@@ -17,15 +17,20 @@ Install KTC compiler for Timed C. For the instruction in https://github.com/time
 ## 2.  Compiling and Running Test Programs
 ### 1. Ada Program
 Go to the _ada_ folder
+
 Compile : gnatmake _file.adb_
+
 Run : ./file
 ## Timed C
 Go to the _timed-c_ folder
+
 Compile and Run: ./run.sh
 
 ## Real-Time Java
 Go to the _rtj_ folder. Create a subfolder called  _classes_ 
+
 Compile : jamaicac -d classes _file.java_
+
 Run : jamaicavm -cp classes/ _file_
 
 
