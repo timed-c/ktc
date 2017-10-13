@@ -3,11 +3,13 @@
 
 
 int  main(){
-	sdelay(0, "ms");
+	printf("Main: start\n");
+	sdelay(0, ms);
 	sleep(1);
-	sdelay(2, "ms");
+	sdelay(2, ms);
 	sleep(1);
-	fdelay(2, "ms");
+	fdelay(2, ms);
+	printf("Main: end\n");
 	return 1;
 	
 }

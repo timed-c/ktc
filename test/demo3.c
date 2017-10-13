@@ -7,11 +7,12 @@ int  main(){
 	sdelay(0);
 	a = 10;
 	if(a> 10){
-	  fdelay(3, "ms");
+	  fdelay(3, ms);
 	}
-	else
-	   fdelay(4, "ms");
-	sdelay(b, "ms");
+	else{
+	   fdelay(4, ms);
+	}
+	sdelay(b, ms);
 	
 }
 

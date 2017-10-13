@@ -7,7 +7,7 @@ int  main(){
 	sdelay(0);
 	if(a>10)
 	   b = 10;
-	sdelay(b, "ms");
+	sdelay(b, ms);
 	
 }
 

@@ -9,7 +9,7 @@ int  main(){
 	while(a){
 		b =10;
 	}
-	sdelay(b, "ms");
+	sdelay(b, ms);
 	
 }
 

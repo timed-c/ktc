@@ -15,7 +15,7 @@ The following steps have been tested on ubuntu 14.04LTS.
 
 Install the following packages using apt-get. 
 
-	sudo apt-get install ocaml opam ocaml-findlib 	lablgtk2 mercurial ocaml-ocamlgraph
+	sudo apt-get install ocaml opam ocaml-findlib liblablgtk2-gl-ocaml libocamlgraph-ocaml-dev mercurial
 	
 **(b.) CIL dependencies**
 

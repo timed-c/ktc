@@ -3,7 +3,6 @@
 #include<stdlib.h>
 #include<math.h>
 #define SEED 35791246
-#define sec 0 
 
 
 void main() {

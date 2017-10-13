@@ -8,9 +8,9 @@ int  main(){
 	a = 10;
 	b = 16;
 	if(a)
-	sdelay(b, "ms");
+	sdelay(b, ms);
 	else 
-	fdelay(a, "ms");
+	fdelay(a, ms);
 	
 }
 
