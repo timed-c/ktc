@@ -4,7 +4,7 @@ Example of programs implementing the various aspects of real-time system in _Ada
 
 ## 1. Software Required
 
-#### Ada Compiler
+### Ada Compiler
 For linux-based operating system execute the following command on the terminal
         
         sudo apt-get install gnat
@@ -21,12 +21,12 @@ Go to the _ada_ folder
 Compile : gnatmake _file.adb_
 
 Run : ./file
-## Timed C
+### Timed C
 Go to the _timed-c_ folder
 
-Compile and Run: ./run.sh
+Compile and Run: ./run.sh _file.c_
 
-## Real-Time Java
+### Real-Time Java
 Go to the _rtj_ folder. Create a subfolder called  _classes_ 
 
 Compile : jamaicac -d classes _file.java_
