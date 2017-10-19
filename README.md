@@ -8,7 +8,7 @@
 ## Building and Installing KTC
 ***
 ### A. Installing Dependencies
-#### 1.Linux Based Operating System
+#### 1. Linux Based Operating System
 The following steps have been tested on ubuntu 14.04LTS.
 
 **(a.) OCaml dependencies**
@@ -82,7 +82,7 @@ For example the program implementing periodic loop using sdelay statement is com
 
 (a.) Follow the instructions at <https://www.raspberrypi.org/help/quick-start-guide/> to install Raspbian OS on the raspberry pi. For a hassle free setup, make sure you have all the required components as mentioned in the link before you start. Use the official noobs installer to install raspbian. The instructions are available at <https://www.raspberrypi.org/help/noobs-setup/>
 
-(b.)This is an optional step, one can download and install the Linux RT Prempt patch on the Raspbian OS. The Linux RT Prempt patch guarantees better real-time performance. Follow the instructions for installing the pre-compiled (RT patch Linux) given at <http://www.frank-durr.de/?p=203>
+(b.) This is an optional step, one can download and install the Linux RT Prempt patch on the Raspbian OS. The Linux RT Prempt patch guarantees better real-time performance. Follow the instructions for installing the pre-compiled (RT patch Linux) given at <http://www.frank-durr.de/?p=203>
 
 (c.) For MAC OSX, install the cross compiler for raspberry pi by following the instructions at <http://www.welzels.de/blog/en/arm-cross-compiling-with-mac-os-x/comment-page-1/>. 
 
@@ -114,7 +114,7 @@ If the path for the cross compiler has not be exported use the complete path in 
 
 (d.)Open the RTOSDEMO.X project on MPLAB from the FreeRTOS/Demo directory. Connect your PIC32 board and chipKIT PGM or PICkit 3 Programmer/Debugger to the computer and execute the demo application from MPLAB X IDE.
 
-#### A. Compiling Timed C program to PIC32
+#### B. Compiling Timed C program to PIC32
 
 (a.) Compile the Timed C file using the below command 
 

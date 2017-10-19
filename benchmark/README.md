@@ -11,11 +11,11 @@ For linux-based operating system execute the following command on the terminal
 ### Real-Time Java
 Install JamaicaVM Personal Edition. Follow the instructions in https://www.aicas.com/cms/en/downloads
 
-### Timed C
+### Time C
 Install KTC compiler for Timed C. For the instruction in https://github.com/timed-c/ktc/blob/master/README.md
 
 ## 2.  Compiling and Running Test Programs
-### 1. Ada Program
+### Ada Program
 Go to the _ada_ folder
 
 Compile : gnatmake _file.adb_
