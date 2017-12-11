@@ -50,4 +50,6 @@ Run : jamaicavm -cp classes/ _file_
 
 **Note that the _"not supported"_ real-time aspects in Ada is valid only for GCC GNAT. Some of these real-time aspects are supported by AdaCore. Similarly, the _"not supported"_ real-time aspects in RTJS is specific to JamaicaVM Personal Edition.**
 
+### Real-Time Concurrent C (RTCC)
+In the sub-folder RTCC, there are four pseudo-codes of RTCC programs. The files _periodic.cc_, _firm.cc_, and _hard.cc_ contain pseudo-code implementing periodic loop with soft, firm, and hard deadlines respectively. The _process.cc_ is a  pseudo-code from the Concurrent C paper from Gehani and Roome implementing dining philosopher problem. This code lists how processes are created in RTCC and has been modified to include constructs for specifying priority. 
 
