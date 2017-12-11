@@ -26,7 +26,7 @@ let simpsonChanSet = HT.create 34
 let htcChanSet = HT.create 34
 let fifoChanSet = HT.create 34
 let signumb = ref 0
-let policyindex = ref 0
+let policyindex = ref 1
 let lstinstpolicy = ref []
 
 
@@ -579,7 +579,19 @@ let isBinopOperation hstm data =
 	|Call(_,Lval(Var vi,_),argList,loc) -> ( match (List.hd argList) with
 							|BinOp(_, _, _, _) -> false
 							|_ -> true)
-	|_ -> false
+	|_ -> true
+
+let isSameSucc argHead hstm data  =
+	let succi = ( match (argHead) with
+			|Const(CInt64(i, _, _))-> i64_to_int i
+			|_ -> -10) in
+	let succTP = retTimingPointSucc hstm data in
+	let tpinstr = getInstruction succTP in 
+	(match tpinstr with 
+	|Call(_,Lval(Var vi,_),argList,loc) -> ( match (List.hd argList) with
+							|Const(CInt64(i, _, _)) when ((i64_to_int i) = succi) -> false
+							|_ -> true)
+	|_ -> true)
 
 class policydetail filename data runtime deadline period priority policy list_dl list_pr = object(self) 
 	inherit nopCilVisitor 
@@ -588,12 +600,12 @@ class policydetail filename data runtime deadline period priority policy list_dl
 	(match s.skind with 
 	|Instr il when il <> [] -> (match (List.hd il) with 
 	          				|Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> 
-							if (isZeroTimingPointSucc s data) & (isBinopOperation s data) then 
+							if ((isZeroTimingPointSucc s data)) && (isBinopOperation s data) && (isSameSucc (List.hd argList) s data) then 
 							   let nb = policyValue data s runtime deadline period priority policy list_dl list_pr in s.skind <- Instr (List.append ((List.hd il ):: nb) (List.tl il)); s
 							else 
 							  s
                   				|Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> 	
-								if isZeroTimingPointSucc s data & (isBinopOperation s data)   then 
+								if ((isZeroTimingPointSucc s data)) && (isBinopOperation s data) && (isSameSucc (List.hd argList)  s data)  then 
 								 let nb = policyValue data s runtime deadline period priority policy list_dl list_pr in s.skind <- Instr (List.append ((List.hd il) :: nb) (List.tl il)); s
 								else 
 								   s
@@ -929,8 +941,10 @@ class sdelayFunc filename fname fno = object(self)
 		let ftimer = makeLocalVar fdec "ktctimer" (TNamed(ftimer, [])) in             
 		let structname = "timespec" in
                 let ci = findCompinfo filename structname in
+		let sar = E.log "start-time" in
                 let structvar = makeLocalVar fdec "start_time" (TComp(ci,[])) in
 		let tpstructvarinfo = findCompinfo filename "tp_struct" in 
+		let sar = E.log "tp_struct" in
 		let tpstructvar = makeLocalVar fdec "tp" (TComp(tpstructvarinfo,[])) in
 		let sigtype = findTypeinfo filename "sigset_t" in 
 		let org_sig  = makeLocalVar fdec "orig_mask" (TNamed(sigtype, [])) in
@@ -1322,9 +1336,9 @@ let fifoAnalysi f =
         visitCilFile cVis f	
 	 
 let sdelay (f : file) : unit =
-initSdelayFunctions f; mergeTimingPoints f ; timing_basic_block f; addpolicyDetail f; timing_basic_block f;  Cfg.clearFileCFG f; Cfg.computeFileCFG f;  addLabel f;  Cfg.clearFileCFG f; concurrencyA f; 
-List.iter (fun (a,b) -> E.log "(%s %d)" a b) !all_task; fifoAnalysi f; chanReaderWriterAnalysis f; 
-	timingConstructsTransformatn f; concurrencyConstructsTransformatn f ; fillgloballist_pr_dl f;  () 
+initSdelayFunctions f; mergeTimingPoints f ; timing_basic_block f; addpolicyDetail f; timing_basic_block f;  Cfg.clearFileCFG f; Cfg.computeFileCFG f;  addLabel f;  Cfg.clearFileCFG f; concurrencyA f;  E.log "Completed 22";
+(*List.iter (fun (a,b) -> E.log "(%s %d)" a b) !all_task; fifoAnalysi f; chanReaderWriterAnalysis f; *)
+	timingConstructsTransformatn f; E.log "Completed"; concurrencyConstructsTransformatn f ; fillgloballist_pr_dl f;  () 
 
 
 

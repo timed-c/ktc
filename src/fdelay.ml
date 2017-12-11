@@ -12,6 +12,7 @@
 		module AV = Avail
 		module CG = Callgraph
 
+		let fprio = ref 5
 		let debug = ref false
 		let labelHash =  HT.create 64
 		let tp_id = ref 0
@@ -224,6 +225,13 @@
 			(*let addrFun = mkAddrOf(var funvar) in
 			i2s ( Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero; addrFun; Cil.zero;], loc)) *)
 			Call(None, v2e sdelayfuns.task_create, [v2e funvar; (mkString (funvar.vname^handlevar.vname)); (integer 190); (integer 31); v2e idlePrioVar; addrHandle; nullptr; nullptr ], loc)
+
+		let makeTaskCreateInstrVarExp (handlevar : varinfo) (funvar : varinfo) (prioVar : exp) (loc:location) arg= 
+			let addrHandle = mkAddrOf(var handlevar) in
+			let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in 
+			(*let addrFun = mkAddrOf(var funvar) in
+			i2s ( Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero; addrFun; Cil.zero;], loc)) *)
+			Call(None, v2e sdelayfuns.task_create, [v2e funvar; (mkString (funvar.vname^handlevar.vname)); (integer 190); (integer 31); prioVar; addrHandle; nullptr; nullptr ], loc)
 
 		let makeTaskDeleteInstr (handlevar : varinfo)  =
 			let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in
@@ -505,9 +513,21 @@
 									let t3 = E.log "task 3" in
 									let idleVar = findGlobalVar filename.globals "idle_prio" in
 									let t4 = E.log "task 4" in
+									let priovar = 5 - !fprio ; fprio := !fprio - 1 in
+									let intr = makeTaskCreateInstrVarExp xhandleVar vi (integer !fprio) locUnknown arg in
+									let t5 = E.log "task5" in
+									all_handles := xhandleVar  :: (!all_handles); [intr]  
+
+									(*let t1 = E.log "task 1" in
+									let xhandleType = findType filename.globals "TaskHandle_t" in
+									let t2 = E.log "task 2" in
+									let xhandleVar = makeLocalVar fdec ("t_"^string_of_int(List.length !all_handles)) xhandleType in 
+									let t3 = E.log "task 3" in
+									let idleVar = findGlobalVar filename.globals "idle_prio" in
+									let t4 = E.log "task 4" in
 									let intr = makeTaskCreateInstr xhandleVar vi idleVar locUnknown arg in
 									let t5 = E.log "task5" in
-									all_handles := xhandleVar  :: (!all_handles); [intr]
+									all_handles := xhandleVar  :: (!all_handles); [intr]  *)
 			(*|Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = "cread") -> all_read:= fdec.svar.vname ::  (!all_read); [i] *)
 								   
 			|_ -> [i]
