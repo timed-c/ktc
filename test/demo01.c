@@ -1,16 +1,13 @@
 #include<stdio.h>
 #include<cilktc.h>
 
-
-int  main(){
+void main(){
 	printf("Main: start\n");
 	sdelay(0, ms);
 	sleep(1);
 	sdelay(2, ms);
 	sleep(1);
 	fdelay(2, ms);
-	printf("Main: end\n");
-	return 1;
-	
+	printf("Main: end\n");	
 }
 

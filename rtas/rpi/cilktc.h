@@ -13,59 +13,85 @@
 #include <stdbool.h>
 #include <linux/sched.h>
 #include <linux/types.h>
+
 /*#include  "../../FreeRTOSv9.0.0/FreeRTOS/Source/include/FreeRTOS.h"
 #include  "../../FreeRTOSv9.0.0/FreeRTOS/Source/include/task.h"
 #include "../../FreeRTOSv9.0.0/FreeRTOS/Source/include/timers.h"
 */
 
 enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
-int policy = 0;
-extern int setschedvar;
+int policy;
+//extern struct threadmsg message; 
 //#define spolicy(X) if( (X) == EDF) spolicy_edf(); else spolicy_other(); sleep(0)
-#define spolicy(X) setschedvar = 1; policy =X; sdelay(-2103, ms); 
+#define spolicy(X) policy =X; sdelay(0, ms); 
+#define SEC_TO_NANO 1000000000
+#define MILLI_TO_NANO 1000000
+#define MICRO_TO_NANO 1000
+#define MILLI 1000
+#define MICRO 1000000 
+#define NANO  1000000000
+
+#define CONSTRUCTOR __attribute__((constructor))
+
+
+#define ExactRGB(r,g,b) __attribute__((ExactRGB((r),(g),(b))))
+#define LowerRGB(r,g,b) __attribute__((LowerRGB((r),(g),(b))))
+#define UpperRGB(r,g,b) __attribute__((UpperRGB((r),(g),(b))))
+
+#define AddRGB(x,r,g,b) (typeof(x) ExactRGB(r,g,b))x
+
+int runtime;
+int period;
+int deadline;
+struct timespec start_time;
+#define red   __attribute__((red))
+#define green __attribute__((green))
+#define blue  __attribute__((blue))
+#define AddColor(c,x) (typeof(x) c)x
 #define task void* __attribute__((task))
-#define sdelay(intr, ...) sdelay(intr, intr, ##__VA_ARGS__)
-#define stp(pr, dl, unit) sdelay(pr, dl, unit)
-#define fdelay(intr, ...) fdelay(intr, intr, ##__VA_ARGS__)
-#define ftp(pr, dl, unit) fdelay(pr, dl, unit)
-#define gettime(unit)  ktc_gettime(unit);sdelay(-1404, 0)
-#define while(var) int while_var = var; while(while_var)
+
+#define cache_report if((void *__attribute__((cache_report)))0)
+
+//#define sdelay(c)    printf("%d", c)
 
 #define invariant(c,i,...) __blockattribute__((invariant((c),(i),__VA_ARGS__)))
 #define post(c) __attribute__((post((c))))
 #define pre(c)  __attribute__((pre((c))))
-extern int period;
-extern int runtime;
-extern int deadline;
+
+#define critical if((void *__attribute__((critical)))0)
+#define next if((void *__attribute__((next)))0) next()
+#define exec_child(x) if(x == 0)
+//#define cread(chan, ptr)   if((void *__attribute__((read_block))) (sizeof(#chan) > &ptr)){sleep(0);}
+//#define cwrite(chan, ptrw) if((void *__attribute__((write_block))) (sizeof(#chan) > &ptrw)){sleep(0);}
+//#define cinit(chan, val) if((void *__attribute__((init_block))) (sizeof(#chan) > val)){sleep(0);}
+
+/*
+#define cread(chan, ptr)  ktc_fifo_read_th(&chan, &fifolistt);if(fifotail == 40) fifotail = fifotail%40; memcpy(&ptr, fifolistt+fifotail, sizeof(ptr)); printf("message : %d\n", message.data); fifotail++ 
+#define cwrite(chan, ptr); if(fifocount == 40) fifocount = fifocount % 40; memcpy(&fifolistt[fifocount], &ptr, sizeof(ptr)); ktc_fifo_write_th(&chan, fifolistt+fifocount, sizeof(ptr)); fifocount++ 
+#define cinit(chan, val) ktc_fifo_init(&chan)
+#define lvchannel __attribute__((lvchannel)) */
+#define fifochannel  fifolistt[40]; int fifocount =0; int fifotail = 0; struct threadqueue
 
 struct threadqueue {
 	pthread_mutex_t mutex;
 	pthread_cond_t cond;
 };
 
-#define critical if((void *__attribute__((critical)))0)
-#define skipdelay if((void *__attribute__((next)))0) next()
-#define exec_child(x) if(x == 0)
-#define cread(chan, ptr)   if((void *__attribute__((read_block))) (sizeof(#chan) > &ptr)){sleep(0);}
-#define cwrite(chan, ptr) if((void *__attribute__((write_block))) (sizeof(#chan) > &ptr)){sleep(0);}
-#define cinit(chan, val) int tempinitvarktc; if((void *__attribute__((init_block))) (sizeof(#chan) > &tempinitvarktc)){sleep(0);}
-#define lvchannel __attribute__((lvchannel))
-#define fifochannel(c)  c ##ktclist[50]; int c ##ktccount; int c ##ktctail; struct threadqueue  __attribute__((fifochannel)) c
+
+#define cread(chan, ptr) ktc_fifo_read_th(&chan, &ptr)
+#define cwrite(chan, ptr) ktc_fifo_write_th(&chan, ptr)
+#define cinit(chan,ptr)  ktc_fifo_init_th(&chan)
+#define aperiodic(val, ms) runtime = val; period = val; deadline = val; ktc_set_sched(policy, runtime, period, deadline) 
+
 //# task if((void *__attribute__((task)))1)
-#define main() *dummyglobalvariable; int populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort);return 1; } void main()
-#define aperiodic(val, ms)  runtime = val; deadline = val; period = val; ktc_set_sched(policy, runtime, period, deadline);setschedvar = 0; 
-#define ms -3
-#define ns -9
-#define sec 0
-#define us -6
+//#define main() populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort); } void main()
 
 
+#define ms "ms"
+#define ns "ns"
+#define sec "sec"
+#define gettime(unit)  ktc_gettime(unit, &start_time)
 
-struct timespec diff_timespec(struct timespec, struct timespec);
-struct timespec add_timespec(struct timespec, struct timespec);
-int cmp_timespec(struct timespec, struct timespec);
-struct timespec convert_to_timespec(long, int);
-long timespec_to_unit(struct timespec val, int unit);
 
 void *checked_dlsym(void *handle, const char *sym);
 pid_t gettid();
@@ -79,6 +105,13 @@ uint64_t tut_get_time();
 struct timespec* timepecptr;
 timer_t ftimer;
 sigset_t sigtype;
+struct timespec diff_timespec(struct timespec, struct timespec);
+struct timespec add_timespec(struct timespec, struct timespec);
+int cmp_timespec(struct timespec, struct timespec);
+long convert_timespec_to_ms(struct timespec);
+long convert_to_ms(long, char*);
+struct timespec convert_to_timespec(long, char*);
+long timespec_to_unit(struct timespec val, char* unit);
 int ktc_critical_end(sigset_t* orig_mask);
 int ktc_critical_start(sigset_t* orig_mask);
 int ktc_set_sched(int policy, int runtime, int deadline, int period) ;
@@ -91,17 +124,16 @@ struct tp_struct{
         timer_t* tmr;
 };
 
-
+	
 bool boolvar;
 struct tp_struct tp_struct_data;
-int list_pr[500] = {4};
-int list_dl[500] = {4};
+int list_pr[500];
+int list_dl[500];
 void ktc_create_timer(timer_t* ktctimer, struct tp_struct* tp, int num);
 extern int ktc_start_time_init(struct timespec* start_time) ;
-extern long ktc_sdelay_init(int deadline, int period, int unit, struct timespec* start_time, int id ) ;
-extern long ktc_gettime(int unit);
-extern long ktc_fdelay_init(int interval,int period, int unit, struct timespec* start_time, int id, int num, int retjmp);
-extern long ktc_block_signal(int n);
+extern long ktc_sdelay_init(int intrval, char* unit, struct timespec* start_time, int id ) ;
+extern long ktc_gettime(char* unit, struct timespec* start_time);
+extern long ktc_fdelay_init(int interval, char* unit, struct timespec* start_time, int id, int num, int retjmp);
 sigjmp_buf buf_struct;
 
 
@@ -150,15 +182,17 @@ struct sched_attr sae;
 struct fifolist fifoex;
 
 extern int compare_qsort (const void * elem1, const void * elem2);
-extern int populatelist(int num);
 struct cbm* ktc_htc_reserve(struct cab_ds* cab);
 void ktc_htc_putmes(struct cab_ds* cab, struct cbm* buffer);
 cbm* ktc_htc_getmes(struct cab_ds* cab);
 void ktc_htc_unget (struct cab_ds* cab, cbm* buffer);
-int ktc_fifo_init(struct threadqueue *queue);
-void ktc_fifo_write(struct threadqueue *queue, void* fifolistt, int* fifocount, int* fifotail, void* data, int size);
-void  ktc_fifo_read(struct threadqueue *queue, void* fifolistt, int* fifocount, int* fifotail, void* data, int size, struct timespec* wt);
+/*void ktc_fifo_init(struct threadqueue *queue);
+void ktc_fifo_read(struct threadqueue *queue, void *message);
+void ktc_fifo_write(struct threadqueue *queue, void *data, long msgtype);
+*/
+
 void ktc_simpson(int* sdata, int* tdata);
+//`int nelem(struct threadqueue *queue);
 #include <getopt.h>
 size_t s;
 struct option o;
@@ -221,7 +255,7 @@ void register_arr_input(char *name, uint64_t start, int sz, int cnt);
 void register_nt_input(char *name, char *start);
 //int ktc_sdelay_end(char const   *f , int l , int intrval , char *unit ) ;
 //void ktc_sdelay_init(char const   *f , int l ) ;
-int ktc_fdelay_start_timer(int interval, int unit, timer_t ktctimer, struct timespec* start_time);
+int ktc_fdelay_start_timer(int interval, char* unit, timer_t ktctimer, struct timespec* start_time);
 pthread_t pthread_id_example;
 
 
@@ -265,7 +299,6 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("ktc_start_time_init")
 #pragma cilnoremove("ktc_sdelay_init")
 #pragma cilnoremove("ktc_fdelay_init")
-#pragma cilnoremove("ktc_block_signal")
 #pragma cilnoremove("timepecptr")
 #pragma cilnoremove("env")
 #pragma cilnoremove("ftimer")
@@ -273,7 +306,6 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("tp_struct_data")
 #pragma cilnoremove("__sigsetjmp")
 #pragma cilnoremove("pthread_join")
-#pragma cilnoremove("pthread_tryjoin_np")
 #pragma cilnoremove("pthread_create")
 #pragma cilnoremove("ktc_fdelay_start_timer")
 #pragma cilnoremove("ktc_critical_end")

@@ -1,0 +1,7 @@
+#!/bin/bash
+cp $1 temp.c
+sed -i -e 's/\(fifochannel\|BBB\)\([^;]*\)/\1 (\2)/g' $1 
+../../bin/ktc --enable-ext0 --save-temps $1 -w
+mv temp.c $1
+
+

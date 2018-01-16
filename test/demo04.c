@@ -1,16 +1,15 @@
 #include<stdio.h>
 #include<cilktc.h>
-/*Available Var -available inside if*/
+/*Available Var - not available due to while` cond*/
 
 int  main(){
 	int a, b;
 	sdelay(0);
 	a = 10;
-	b = 16;
-	if(a)
+	while(a){
+		b =10;
+	}
 	sdelay(b, ms);
-	else 
-	fdelay(a, ms);
 	
 }
 

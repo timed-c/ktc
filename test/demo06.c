@@ -4,13 +4,13 @@
 
 int  main(){
 	int a, b;
-	sdelay(0);
+	sdelay(2, ms);
 	a = 10;
 	b = 16;
 	if(a)
-	fdelay(b, ms);
+		fdelay(b, ms);
 	else 
-	sdelay(a, ms);
+		sdelay(a, ms);
 	fdelay(10, ms);
 	
 }

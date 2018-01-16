@@ -427,6 +427,8 @@ let isTimingPoint (i : instr) : bool =
    match i with
     | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "fdelay") -> true
     | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "sdelay")  -> true
+    | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_fdelay_init_free") -> true
+    | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_sdelay_init_free") -> true
     | _ -> false
 
 let addVarDelay il =
@@ -489,10 +491,15 @@ module TS = Set.Make(struct
 
 let addSucc s = 
 	match s.skind with 
-	|Instr il -> if (List.length il = 1 &&  isTimingPoint (List.hd il)) then 
-				TS.singleton s
-		     else
-			 	TS.empty
+	(*|Instr il when List.length il = 1 &&  isTimingPoint (List.hd il)) ->
+				TS.singleton s *)
+	|Instr il when (List.exists isTimingPoint il) ->  let snew = List.find isTimingPoint il  in
+							if (isFirm (List.hd il)) then
+								(TS.singleton (i2s snew))
+							else
+							 	TS.singleton s  
+							  (* TS.union (TS.singleton s) (TS.singleton (i2s snew))*)
+						 
 	|_ -> TS.empty
 
 		(*	
@@ -525,20 +532,20 @@ module TPSucc = struct
 
   let funcExitData = TS.empty
 
-  let combineStmtStartData (stm:stmt) ~(old:t) (now:t) =
-    if ((not(TS.compare old now = 0)) && TS.cardinal old = 0)
+  let combineStmtStartData (stm:stmt) ~(old:t) (now:t) = 
+   if ((not(TS.compare old now = 0)) && TS.cardinal old = 0)
     then Some(TS.union old now)
-    else None
+    else None 
 
   let combineSuccessors t1 t2 = TS.union t1 t2
 
-  let doStmt stmt = DF.Default  
-		
+  let doStmt stmt = DF.Default
   let doInstr i vs = DF.Default
 
   let filterStmt stm1 stm2 = true
 
 end
+
 
 module TSucc = DF.BackwardsDataFlow(TPSucc)
 
@@ -580,12 +587,13 @@ let getStmtTPSucc (data: TS.t IH.t) (s: stmt) : TS.t =
 let retTimingPoint s =
 	match s.skind with
 	| Instr il ->  begin
-                        if List.length il = 1  && (isTimingPoint (List.hd il)) then
+                        if (List.exists isTimingPoint il) then
                                 true
                         else
                                 false
                       end
         |_ -> false
+
 let retFirm s =
 	match s.skind with
 	| Instr il ->  begin
@@ -599,20 +607,27 @@ let retFirm s =
 
 let checkSuccs (data: TS.t IH.t) (s: stmt) =
 	let tsuccsofs = getStmtTPSucc data s in
+		let totalSucc = TS.filter retTimingPoint tsuccsofs in
 		let firmsucc = TS.filter retFirm tsuccsofs  in
-			if TS.cardinal firmsucc > 1 then begin
+			(if (TS.cardinal firmsucc > 1) then 
 				let loc = get_stmtLoc s.skind in
-				  (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "conflicting firm timing point for %a" dn_stmt s) 
-		end
+				  (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "conflicting firm timing point 1") 
+			else
+			begin
+				if ((TS.cardinal firmsucc > 0) && (TS.cardinal totalSucc > 1)) then 
+  				let loc = get_stmtLoc s.skind in
+				  (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "conflicting firm timing point 2") end) 
+		
 let checkFirmSuccs (data: TS.t IH.t) (s: stmt) = 
-        let tsuccsofs = getStmtTPSucc data s in
+        let tsuccsofs = getStmtTPSucc data s in	
+	let totalSucc = TS.filter retTimingPoint tsuccsofs in
+	(*let p = E.log "%d;" (TS.cardinal totalSucc) in *)
                 let firmsucc = TS.filter retFirm tsuccsofs in
                         if TS.cardinal firmsucc > 0 then
 				true
 			else
 			        false
-let retTimingPointSucc s data =
-	let pp = E.log "retTimingPointSucc" in
+let retTimingPointSucc s data =	
 	let tsuccsofs = getStmtTPSucc data s in
 	let succSet = TS.filter retTimingPoint tsuccsofs in
 	let succList = TS.elements succSet in

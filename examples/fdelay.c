@@ -28,7 +28,7 @@ void main(){
   while(1){
      countIteration();
      sense();
-     fdelay(30, ms);
+     fdelay(30, ms); 
   }
 }
 

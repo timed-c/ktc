@@ -102,6 +102,9 @@ sub collectOneArgument {
 	elsif($arg eq "--rasp"){
 	$self->{RASP} = 1;
 	}
+	elsif($arg eq "--link"){
+	$self->{LINK1} = 1;
+	}
 	elsif ($arg eq "--help" || $arg eq "-help") {
         $self->printVersion();
         $self->printHelp();
@@ -209,6 +212,7 @@ sub link_after_cil {
 	}	
   
 }
+  if($self->{LINK1} == 1){
     if (scalar @srcs == 0) {
         print STDERR "ktc: no input files\n";
         return 0;
@@ -228,6 +232,9 @@ sub link_after_cil {
                         "-locamlyices",
                         "-lstdc++",
                         "-lm",
+			"-lpthreads",
+			"-lrt",
+			"-w",
                         "/usr/local/lib/libyices.a";
         }
         else {
@@ -245,11 +252,15 @@ sub link_after_cil {
 	   }else {push @libs, "-ldl";} 
 	}
         else {
-          push @libs, "-ldl", "-lrt";
+          push @libs, "-ldl", "-lrt", "-lm", "-lpthread";
         }
         return $self->SUPER::link_after_cil(\@srcs, $dest, $ppargs,
                                             \@cargs, \@libs);
     }
+ }
+ else{
+   return 0;
+ }
  }
 }
 

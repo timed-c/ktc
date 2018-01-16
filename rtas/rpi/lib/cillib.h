@@ -19,7 +19,7 @@
 */
 
 enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
-int policy = 0;
+extern int policy;
 extern int setschedvar;
 //#define spolicy(X) if( (X) == EDF) spolicy_edf(); else spolicy_other(); sleep(0)
 #define spolicy(X) setschedvar = 1; policy =X; sdelay(-2103, ms); 
@@ -52,7 +52,7 @@ struct threadqueue {
 #define lvchannel __attribute__((lvchannel))
 #define fifochannel(c)  c ##ktclist[50]; int c ##ktccount; int c ##ktctail; struct threadqueue  __attribute__((fifochannel)) c
 //# task if((void *__attribute__((task)))1)
-#define main() *dummyglobalvariable; int populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort);return 1; } void main()
+#define main() *dummyglobalvariable; int populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort); } void main()
 #define aperiodic(val, ms)  runtime = val; deadline = val; period = val; ktc_set_sched(policy, runtime, period, deadline);setschedvar = 0; 
 #define ms -3
 #define ns -9
@@ -94,14 +94,13 @@ struct tp_struct{
 
 bool boolvar;
 struct tp_struct tp_struct_data;
-int list_pr[500] = {4};
-int list_dl[500] = {4};
+extern int list_pr[500] ;
+extern int list_dl[500] ;
 void ktc_create_timer(timer_t* ktctimer, struct tp_struct* tp, int num);
 extern int ktc_start_time_init(struct timespec* start_time) ;
 extern long ktc_sdelay_init(int deadline, int period, int unit, struct timespec* start_time, int id ) ;
 extern long ktc_gettime(int unit);
 extern long ktc_fdelay_init(int interval,int period, int unit, struct timespec* start_time, int id, int num, int retjmp);
-extern long ktc_block_signal(int n);
 sigjmp_buf buf_struct;
 
 
@@ -157,7 +156,7 @@ cbm* ktc_htc_getmes(struct cab_ds* cab);
 void ktc_htc_unget (struct cab_ds* cab, cbm* buffer);
 int ktc_fifo_init(struct threadqueue *queue);
 void ktc_fifo_write(struct threadqueue *queue, void* fifolistt, int* fifocount, int* fifotail, void* data, int size);
-void  ktc_fifo_read(struct threadqueue *queue, void* fifolistt, int* fifocount, int* fifotail, void* data, int size, struct timespec* wt);
+void  ktc_fifo_read(struct threadqueue *queue, void* fifolistt, int* fifocount, int* fifotail, void* data, int size, int wt);
 void ktc_simpson(int* sdata, int* tdata);
 #include <getopt.h>
 size_t s;
@@ -265,7 +264,6 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("ktc_start_time_init")
 #pragma cilnoremove("ktc_sdelay_init")
 #pragma cilnoremove("ktc_fdelay_init")
-#pragma cilnoremove("ktc_block_signal")
 #pragma cilnoremove("timepecptr")
 #pragma cilnoremove("env")
 #pragma cilnoremove("ftimer")
