@@ -17,10 +17,10 @@ ktcutil:
 	@cp _build/src/ktcutil.cmxa libs/.
 
 ktcoption:
-	@ocamlbuild  -no-hygiene  -cflags '-w -a' -use-ocamlfind -package cil -Is $(DIRS) ktcoptions.cma > log
-	@ocamlbuild  -no-hygiene -cflags '-w -a' -use-ocamlfind -package cil -Is $(DIRS) ktcoptions.cmxa > log
-	@ocamlbuild  -no-hygiene -cflags '-w -a' -use-ocamlfind -package cil -Is $(DIRS) cilktc.cma > log
-	@ocamlbuild  -no-hygiene -cflags '-w -a' -use-ocamlfind -package cil -Is $(DIRS) cilktc.cmxa 
+	@ocamlbuild -cflags '-w -a'  -no-hygiene -use-ocamlfind -package cil -Is $(DIRS) ktcoptions.cma > log
+	@ocamlbuild  -cflags '-w -a' -no-hygiene -use-ocamlfind -package cil -Is $(DIRS) ktcoptions.cmxa > log
+	@ocamlbuild  -cflags '-w -a' -no-hygiene -use-ocamlfind -package cil -Is $(DIRS) cilktc.cma > log
+	@ocamlbuild  -cflags '-w -a' -no-hygiene -use-ocamlfind -package cil -Is $(DIRS) cilktc.cmxa 
 	@rm -f bytes.ml
 	@cp _build/src/ktcoptions.cma libs/. 
 	@cp _build/src/ktcoptions.cmxa libs/.
@@ -28,7 +28,7 @@ ktcoption:
 
 
 native:
-	@ocamlbuild -no-hygiene -cflags '-w -a' -use-ocamlfind -package cil  -Is $(DIRS) main.native 
+	@ocamlbuild -cflags '-w -a' -no-hygiene  -use-ocamlfind -package cil  -Is $(DIRS) main.native 
 	@rm -f main.native 
 	@cd bin; cp ../_build/src/main.native ktcexe
 
