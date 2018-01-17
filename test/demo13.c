@@ -1,15 +1,18 @@
 #include<stdio.h>
 #include<cilktc.h>
-/*Timing point with integer resolution*/
+/*Overshot using stp*/
 
 void main(){
 	int i, j;
 	int a , b;
 	for(i = 0; i < 100000000; i++){}
-	a = sdelay(0, ms);
+	a = sdelay(300, ms);
 	printf("overshoot %d\n", a);
 	for(i = 0; i < 100000000; i++){}
-	a = stp(0, 30, ms);
+	a = stp(0, 300, ms);
+	printf("overshoot %d\n", a);
+	for(i = 0; i < 100000000; i++){}
+	a = stp(300, 0, ms);
 	printf("overshoot %d\n", a);
         printf("End \n");
 }

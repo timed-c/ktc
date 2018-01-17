@@ -4,6 +4,7 @@
 
 int  main(){
 	int a, b;
+	printf("Start \n");
 	sdelay(0);
         printf("End \n");
 	return 0;	

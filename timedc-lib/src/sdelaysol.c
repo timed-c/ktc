@@ -221,14 +221,14 @@ long ktc_sdelay_init(int deadline, int period, int unit, struct timespec* start_
 			wait_time = add_timespec((*start_time), interval_time);
 			deadline_timespec = add_timespec((*start_time), deadline_timespec);
 			clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &wait_time, NULL);
-			overshot_timespec = diff_timespec(end_time, deadline_timespec); /*elapsed_time here is the obershot*/
+			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); /*elapsed_time here is the obershot*/
 			*start_time = wait_time;
 			return (timespec_to_unit(overshot_timespec, unit));
 		}
 		if(cmp_timespec(interval_time, elapsed_time) == 0){
 			wait_time = add_timespec((*start_time), interval_time);
 			deadline_timespec = add_timespec((*start_time), deadline_timespec);
-			overshot_timespec = diff_timespec(end_time, deadline_timespec); 
+			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); 
 			*start_time = wait_time;
 			return (timespec_to_unit(overshot_timespec, unit));
 		}
@@ -237,7 +237,38 @@ long ktc_sdelay_init(int deadline, int period, int unit, struct timespec* start_
 			elapsed_time = diff_timespec(end_time, wait_time); /*elapsed_time here is the obershot*/
 			deadline_timespec = add_timespec((*start_time), deadline_timespec);
 			*start_time = add_timespec(wait_time, elapsed_time);
-			overshot_timespec = diff_timespec(end_time, deadline_timespec); 
+			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); 
+			(void) clock_gettime(CLOCK_REALTIME, &et);
+			return (timespec_to_unit(overshot_timespec, unit));
+		}
+	}
+	if(period < deadline){
+		struct timespec end_time, elapsed_time, wait_time, interval_time, et, deadline_timespec, overshot_timespec;
+		interval_time = convert_to_timespec(period, unit);
+		deadline_timespec = convert_to_timespec(deadline, unit);
+		(void) clock_gettime(CLOCK_REALTIME, &end_time);
+		elapsed_time = diff_timespec(end_time, (*start_time));
+		if(cmp_timespec(interval_time, elapsed_time) == 1){
+			wait_time = add_timespec((*start_time), interval_time);
+			deadline_timespec = add_timespec((*start_time), deadline_timespec);
+			clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &wait_time, NULL);
+			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); /*elapsed_time here is the obershot*/
+			*start_time = wait_time;
+			return (timespec_to_unit(overshot_timespec, unit));
+		}
+		if(cmp_timespec(interval_time, elapsed_time) == 0){
+			wait_time = add_timespec((*start_time), interval_time);
+			deadline_timespec = add_timespec((*start_time), deadline_timespec);
+			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); 
+			*start_time = wait_time;
+			return (timespec_to_unit(overshot_timespec, unit));
+		}
+		if(cmp_timespec(interval_time, elapsed_time) == -1){
+			wait_time = add_timespec((*start_time), interval_time);
+			elapsed_time = diff_timespec(end_time, wait_time); /*elapsed_time here is the obershot*/
+			deadline_timespec = add_timespec((*start_time), deadline_timespec);
+			*start_time = add_timespec(wait_time, elapsed_time);
+			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); 
 			(void) clock_gettime(CLOCK_REALTIME, &et);
 			return (timespec_to_unit(overshot_timespec, unit));
 		}

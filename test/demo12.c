@@ -1,6 +1,6 @@
 #include<stdio.h>
 #include<cilktc.h>
-/*Timing point with integer resolution*/
+/*Checking overshot*/
 
 void main(){
 	int i, j;
