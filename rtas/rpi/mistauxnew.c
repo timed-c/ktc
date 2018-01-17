@@ -105,7 +105,7 @@ void executeTCAux(struct_tcmist timedCmd){
 	struct timeval tv;
     	gettimeofday(&tv, NULL);	
 	printf("\nEXE %d executed at %d\n", timedCmd.aTime-strttme, tv.tv_sec-strttme);
-	fprintf(fp, "\nEXE %d executed at %d\n", timedCmd.aTime-strttme, tv.tv_sec-strttme);
+	fprintf(fp, "\nEXE : TC with time tag %d is executed at %d\n", timedCmd.aTime-strttme, tv.tv_sec-strttme);
 }
 
 void printTrace(){
@@ -201,7 +201,7 @@ int initTime(){
 	gettimeofday(&tv, NULL);
 	strttme = tv.tv_sec;
 	printf("\nTC ret %d at %d\n", strttme);
-	fprintf(fp,"\nTC ret %d at %d\n", strttme);
+	fprintf(fp,"\nTC retrieved at %d has time tag %d\n", strttme);
 	
 }
 

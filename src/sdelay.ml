@@ -592,7 +592,7 @@ match e with
 
 let getExpNameR e = 
         match e with
-        |BinOp(_, SizeOfStr s1, e1, _) -> typeofe e1; (s1, e1)
+        |BinOp(_, SizeOfStr s1, e1, _) -> (*typeofe e1;*) (s1, e1)
         (*|BinOp(_, Const(CStr c1), Const(CStr c2), _) -> (c1, c2) *)
         | _ -> E.s (E.bug "Wrong format of read block") ; ("e", Cil.zero)
 (*let getExpNameR e = 
