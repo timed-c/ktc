@@ -1,6 +1,6 @@
 #!/bin/bash
 rm mistrasp.c
-sudo rm log.txt
+sudo rm *.txt
 cp $1 mistrasp.c
 sudo make clean 
 make
