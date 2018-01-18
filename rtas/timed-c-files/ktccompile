@@ -1,7 +1,10 @@
 #!/bin/bash
 cp $1 temp.c
-sed -i -e 's/\(fifochannel\|BBB\)\([^;]*\)/\1 (\2)/g' $1 
-../../bin/ktc --enable-ext0 --save-temps $1 -w
+sed -i -e 's/\(fifochannel\|BBB\)\([^;]*\)/\1 (\2)/g' $1
+if [ "$#" -eq 1 ];
+then
+  ../../bin/ktc --enable-ext0 --save-temps $1 -w
+else
+   ../../bin/ktc --enable-ext0 --save-temps --link $1 -w
+fi	
 mv temp.c $1
-
-

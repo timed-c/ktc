@@ -39,7 +39,7 @@ void computePath(int* a){
  printf("completed\n");
 }
 
-int main(){sdelay(0, ms);sdelay(0, ms);sdelay(0, ms);
+int main(){
   int a[100];
   computePath(a);
 
