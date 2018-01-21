@@ -1,3 +1,16 @@
+ /*H**********************************************************************
+* FILENAME :        trxvu_uplink_mod.ino          
+*
+* DESCRIPTION :
+*       Arduino sketch for uplink radio simulator.
+*
+* AUTHOR :    Johan Enberg 
+*
+* MODIFIED :  Saranya Natarajam
+*
+*
+*H*/
+
 extern "C" {
   #include "debug2.h"
   #include "I2Cslave.h"

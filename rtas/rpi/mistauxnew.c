@@ -140,27 +140,27 @@ int decodeTCMISTGetTime(uint8_t* packet){
 		count++;	
 		if(count == 1){
 			printf("\nTC ret %d at %d\n", tv.tv_sec- strttme, strttme + 40 - strttme);
-			fprintf(fp, "\nTC ret %d at %d\n", tv.tv_sec- strttme, strttme + 40 - strttme);
+			fprintf(fp, "\nTC ret : TC with time tag %d retrieved at %d\n", tv.tv_sec- strttme, strttme + 40 - strttme);
 			return(strttme + 40);
 		}
 		if(count == 2){
 			printf("\nTC ret %d at %d\n", tv.tv_sec- strttme, strttme + 50 - strttme);
-			fprintf(fp, "\nTC ret %d at %d\n", tv.tv_sec- strttme, strttme + 50 - strttme);
+			fprintf(fp, "\nTC ret : TC with time tag %d retrieved at %d\n", tv.tv_sec- strttme, strttme + 50 - strttme);
 			return(strttme + 50);
 		}
 		if(count == 3){
 			printf("\nTC ret %d at %d\n", tv.tv_sec- strttme, strttme + 90 - strttme);
-			fprintf(fp, "\nTC ret %d at %d\n", tv.tv_sec- strttme, strttme + 90 - strttme);
+			fprintf(fp, "\nTC ret : TC with time tag %d retrieved at  %d at %d\n", tv.tv_sec- strttme, strttme + 90 - strttme);
 			return(strttme+ 90);
 		}
 		if(count == 4){
 			printf("\nTC ret %d at %d\n", tv.tv_sec- strttme, strttme + 110 - strttme);
-			fprintf(fp, "\nTC ret %d at %d\n", tv.tv_sec- strttme, strttme + 110 - strttme);
+			fprintf(fp, "\nTC ret : TC with time tag %d retrieved at %d\n", tv.tv_sec- strttme, strttme + 110 - strttme);
 			return(strttme + 110);
 		}
 		if(count == 5){
 			printf("\nTC ret %d at %d\n", tv.tv_sec- strttme, strttme + 120 - strttme);
-			fprintf(fp, "\nTC ret %d at %d\n", tv.tv_sec- strttme, strttme + 120 - strttme);
+			fprintf(fp, "\nTC ret : TC with time tag %d retrieved at %d\n", tv.tv_sec- strttme, strttme + 120 - strttme);
 			return(strttme + 120);
 		}
 		
@@ -169,7 +169,7 @@ int decodeTCMISTGetTime(uint8_t* packet){
 	else{
 		gettimeofday(&tv, NULL);
 		printf("\nTC ret %d at %d\n", tv.tv_sec -strttme, tv.tv_sec - strttme);
-		fprintf(fp, "\nTC ret %d at %d\n", tv.tv_sec -strttme, tv.tv_sec - strttme);	
+		fprintf(fp, "\nTC ret : TC with time tag %d retrieved at %d\n", tv.tv_sec -strttme, tv.tv_sec - strttme);	
 		return (tv.tv_sec);
 	}
 }

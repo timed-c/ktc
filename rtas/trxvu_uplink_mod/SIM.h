@@ -15,4 +15,4 @@
 // Recive buffer
 #define MAX_KISS_FRAME_SIZE 230
 
-#endif SIM_H
+#endif //SIM_H
