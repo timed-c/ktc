@@ -1,25 +1,43 @@
-/*The main function implements a simple function that uses two sdelay timing points. Note that time between the start of the function and the first sdelay (line 11) takes 20 ms, even if the execution of initialize() takes less than 20 ms. Similarly, the time between the first and second sdelay (line 13) is 50 ms.*/
+/*A function implementing two task with EDF scheduling policy*/
 
 #include<stdio.h>
 #include<cilktc.h>
+#include<stdlib.h>
 
-int initialize();
-int sense();
 
-int main(){
-    initialize();
-    sdelay(20, ms);
-    sense();
-    sdelay(50, ms);
+void senseA(){
+   int i;
+   printf("senseA\n");
+   for(i = 0; i < 10000; i++){}
 }
 
-int initialize(){
-  printf("intializing\n");
+void senseB(){
+   int i;
+   printf("senseB\n");
+   for(i = 0; i < 50000; i++){}
 }
 
-int sense(){
-  int i;
-  for(i = 0; i < 1000; i++){}
+void initialize(){}
+
+task foo(){ 
+   spolicy(EDF);
+   while(1){
+      senseA();
+      sdelay(30, ms);
+   }
 }
 
+task bar(){
+  spolicy(EDF);
+  while(1){
+     senseB();
+     sdelay(50, ms);
+     sdelay(15, ms);
+  }
+}
+void main(){
+  initialize();
+  foo();
+  bar();
+}
 
