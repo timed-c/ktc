@@ -16,29 +16,17 @@ The following steps have been tested on ubuntu 14.04LTS.
 Install the following packages using apt-get. 
 
 	sudo apt-get install ocaml opam ocaml-findlib liblablgtk2-gl-ocaml libocamlgraph-ocaml-dev mercurial
+
+**(a.) Install CIL**
+
+Follow instructions below.
+
+	opam init
+	opam config env
+	opam depext conf-m4.1
+	opam install cil
+	eval $(opam config env)
 	
-**(b.) CIL dependencies**
-
-Follow the instructions at <https://github.com/cil-project/cil> to install and build CIL.
-
-#### 2. MAC OSX 
-
-The following steps have been tested on OSX El Capitan. 
-
-**(a.) OCaml dependencies**
-
-Install the following packages using MacPorts. 
-
-	sudo port install ocaml opam ocaml-findlib lablgtk2 mercurial ocaml-ocamlgraph
-**(b.) CIL dependencies**
-
-Follow the instructions at <https://github.com/cil-project/cil> to install and build CIL.
-
-**(c.) A C compiler that supports Real-Time POSIX standards** 
-
-Mac OSX does not provide support for Real-Time POSIX APIs. To build a Timed C application for a linux based operating system download the Linux cross compiler for Mac OSX from <http://crossgcc.rts-software.org/doku.php> 
-
-
 ### B. KTC Installation
 
 (a.) Clone or download the source code from <https://github.com/timed-c/ktc.git>
