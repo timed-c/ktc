@@ -1,0 +1,12 @@
+ TC ret : TC retrieved at 9  with time tag 9
+ TC ret : TC retrieved at 12  with time tag 12
+ TC ret : TC  retrieved at 15 with time tag 40
+ TC ret : TC  retrieved at 21 with time tag 50
+ TC ret : TC retrieved at 26  with time tag 26
+ TC ret : TC retrieved at 35  with time tag 35
+ TC ret : TC retrieved at 38  with time tag 38
+ TC ret : TC retrieved at 44  with time tag 44
+ TC ret : TC  retrieved at 56 with time tag 90
+ TC ret : TC retrieved at 62  with time tag 62
+ TC ret : TC retrieved at 65  with time tag 65
+ TC ret : TC retrieved at 68  with time tag 68

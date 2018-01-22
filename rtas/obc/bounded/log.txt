@@ -1,0 +1,220 @@
+ADCS : 0
+ADCS : 1
+ADCS : 2
+mistRetrive 3
+ADCS : 3
+ADCS : 4
+ADCS : 5
+mistRetrive 6
+reading from i2c: 11
+0a d6 c8 00 05 19 0f 01 01 47 4c finished reading
+packet : 1 : 15
+ TC ret : TC retrieved at 6  with time tag 6
+EXE :TC with time tag 6 is executed at 6
+mistExecute 6
+ADCS : 6
+ADCS : 7
+ADCS : 8
+mistRetrive 9
+ADCS : 9
+ADCS : 10
+ADCS : 11
+mistRetrive 12
+reading from i2c: 17
+0a d6 c9 00 0b 19 0f 09 01 03 38 6d 43 a9 00 73 bd finished reading
+packet : 9 : 15
+ TC ret : TC  retrieved at 12 with time tag 40
+ADCS : 12
+ADCS : 13
+ADCS : 14
+mistRetrive 14
+ADCS : 15
+mistExecute 16
+ADCS : 16
+ADCS : 17
+mistRetrive 17
+reading from i2c: 17
+0a d6 ca 00 0b 19 0f 09 01 03 38 6d 43 b3 00 50 a0 finished reading
+packet : 9 : 15
+ TC ret : TC  retrieved at 18 with time tag 50
+ADCS : 18
+ADCS : 19
+mistExecute 20
+ADCS : 20
+mistRetrive 20
+ADCS : 21
+ADCS : 22
+ADCS : 23
+mistRetrive 23
+reading from i2c: 11
+0a d6 cb 00 05 19 0f 01 01 9f ce finished reading
+packet : 1 : 15
+ TC ret : TC retrieved at 23  with time tag 23
+mistExecute 23
+EXE :TC with time tag 23 is executed at 24
+mistExecute 24
+ADCS : 24
+ADCS : 25
+ADCS : 26
+mistRetrive 26
+reading from i2c: 11
+0a d6 cb 00 05 19 0f 01 01 9f ce finished reading
+packet : 1 : 15
+ TC ret : TC retrieved at 26  with time tag 26
+ADCS : 27
+mistExecute 27
+EXE :TC with time tag 26 is executed at 27
+mistExecute 28
+ADCS : 28
+ADCS : 29
+mistRetrive 29
+HK : 29
+ADCS : 30
+ADCS : 31
+mistExecute 31
+ADCS : 32
+mistRetrive 32
+reading from i2c: 11
+0a d6 cc 00 05 19 0f 01 01 86 8a finished reading
+packet : 1 : 15
+ TC ret : TC retrieved at 32  with time tag 32
+ADCS : 33
+ADCS : 34
+ADCS : 35
+mistRetrive 35
+mistExecute 35
+EXE :TC with time tag 32 is executed at 35
+mistExecute 35
+ADCS : 36
+ADCS : 37
+ADCS : 38
+mistRetrive 38
+ADCS : 39
+mistExecute 39
+ADCS : 40
+mistExecute 40
+EXE :TC with time tag 40 is executed at 40
+mistExecute 40
+ADCS : 41
+mistRetrive 41
+ADCS : 42
+ADCS : 43
+ADCS : 44
+mistRetrive 44
+reading from i2c: 11
+0a d6 cd 00 05 19 0f 01 01 3e eb finished reading
+packet : 1 : 15
+ TC ret : TC retrieved at 44  with time tag 44
+mistExecute 44
+EXE :TC with time tag 44 is executed at 44
+mistExecute 44
+ADCS : 45
+ADCS : 46
+ADCS : 47
+mistRetrive 47
+ADCS : 48
+mistExecute 48
+ADCS : 49
+ADCS : 50
+mistRetrive 50
+mistExecute 50
+EXE :TC with time tag 50 is executed at 50
+mistExecute 50
+ADCS : 51
+ADCS : 52
+ADCS : 53
+mistRetrive 53
+reading from i2c: 17
+0a d6 ce 00 0b 19 0f 09 01 03 38 6d 43 db 00 d7 8e finished reading
+packet : 9 : 15
+ TC ret : TC  retrieved at 53 with time tag 90
+ADCS : 54
+ADCS : 55
+ADCS : 56
+mistRetrive 56
+ADCS : 57
+mistExecute 57
+ADCS : 58
+ADCS : 59
+mistRetrive 59
+HK : 59
+ADCS : 60
+ADCS : 61
+mistExecute 61
+ADCS : 62
+mistRetrive 62
+reading from i2c: 11
+0a d6 cf 00 05 19 0f 01 01 5e 08 finished reading
+packet : 1 : 15
+ TC ret : TC retrieved at 62  with time tag 62
+ADCS : 63
+ADCS : 64
+ADCS : 65
+mistRetrive 65
+reading from i2c: 11
+0a d6 cf 00 05 19 0f 01 01 5e 08 finished reading
+packet : 1 : 15
+ TC ret : TC retrieved at 65  with time tag 65
+mistExecute 65
+EXE :TC with time tag 62 is executed at 65
+mistExecute 65
+EXE :TC with time tag 65 is executed at 65
+mistExecute 65
+ADCS : 66
+ADCS : 67
+ADCS : 68
+mistRetrive 68
+reading from i2c: 11
+0a d6 d0 00 05 19 0f 01 01 e3 9a finished reading
+packet : 1 : 15
+ TC ret : TC retrieved at 68  with time tag 68
+ADCS : 69
+mistExecute 69
+EXE :TC with time tag 68 is executed at 69
+mistExecute 69
+ADCS : 70
+ADCS : 71
+mistRetrive 71
+ADCS : 72
+ADCS : 73
+mistExecute 73
+ADCS : 74
+mistRetrive 74
+ADCS : 75
+ADCS : 76
+ADCS : 77
+mistRetrive 77
+mistExecute 77
+ADCS : 78
+ADCS : 79
+ADCS : 80
+mistRetrive 80
+ADCS : 81
+mistExecute 81
+ADCS : 82
+ADCS : 83
+mistRetrive 83
+ADCS : 84
+ADCS : 85
+mistExecute 85
+ADCS : 86
+mistRetrive 86
+ADCS : 87
+ADCS : 88
+ADCS : 89
+mistRetrive 89
+HK : 89
+mistExecute 89
+ADCS : 90
+mistExecute 90
+EXE :TC with time tag 90 is executed at 90
+mistExecute 90
+ADCS : 91
+ADCS : 92
+mistRetrive 92
+ADCS : 93
+ADCS : 94
+ADCS : 95
+mistRetrive 95
+ADCS : 96
+
