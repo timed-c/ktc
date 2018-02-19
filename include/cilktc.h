@@ -27,13 +27,19 @@ extern int setschedvar;
 #define sdelay(intr, ...) sdelay(intr, intr, ##__VA_ARGS__)
 #define stp(pr, dl, unit) sdelay(pr, dl, unit)
 #define fdelay(intr, ...) fdelay(intr, intr, ##__VA_ARGS__)
-#define ftp(pr, dl, unit) fdelay(pr, dl, unit)
+#define ftp(pr, dl, unit) if (pr == 0) skipdelay;  fdelay(pr, dl, unit)
 #define gettime(unit)  ktc_gettime(unit);sdelay(-1404, 0)
 #define while(var) int while_var = var; while(while_var)
 
 #define invariant(c,i,...) __blockattribute__((invariant((c),(i),__VA_ARGS__)))
 #define post(c) __attribute__((post((c))))
 #define pre(c)  __attribute__((pre((c))))
+
+#define SOFT_PERIODIC_LOOP(time, unit, ov, func) \
+			while(1){\
+				func();\
+				 ov = sdelay(time, unit);\
+			}
 extern int period;
 extern int runtime;
 extern int deadline;

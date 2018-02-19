@@ -10,7 +10,7 @@ int  main(){
 	if(a)
 		fdelay(b, ms);
 	else 
-		sdelay(a, ms);
+		fdelay(a, ms);
 	fdelay(10, ms);
 	
 }

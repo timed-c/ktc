@@ -7,28 +7,23 @@ int sense(){
   int i;
   static int count = 0;
   count++;
+  countIteration();
   if(count % 2 == 0){
-  	for(i = 0; i < (100000000); i++){}
+  	for(i = 0; i < (1000000000); i++){}
   }
   else{
 	for(i = 0; i < (1000); i++){}
   }
-  printf(" sense completed");
+  printf(" sense completed\n");
 
 }
 
 int countIteration(){
 	static int i = 0;
 	i++;
-	printf("\n%d :", i);
+	printf("iteration %d\n ", i);
 
 }
 
-void main(){
-  while(1){
-     countIteration();
-     sense();
-     fdelay(30, ms); 
-  }
-}
+#include "fdelay.main"
 

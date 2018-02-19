@@ -19,25 +19,7 @@ void senseB(){
 
 void initialize(){}
 
-task foo(){ 
-   spolicy(EDF);
-   while(1){
-      senseA();
-      sdelay(30, ms);
-   }
-}
+#include "spolicy.main"
 
-task bar(){
-  spolicy(EDF);
-  while(1){
-     senseB();
-     sdelay(50, ms);
-     sdelay(15, ms);
-  }
-}
-void main(){
-  initialize();
-  foo();
-  bar();
-}
+
 

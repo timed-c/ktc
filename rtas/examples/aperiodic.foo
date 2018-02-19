@@ -1,0 +1,11 @@
+task foo(){
+  int a;
+  spolicy(FIFO_RM);
+  aperiodic(3000, ms);
+  while(1){
+    a = compute();
+    sdelay(a, ms);
+  }
+}
+
+

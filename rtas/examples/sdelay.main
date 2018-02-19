@@ -1,0 +1,8 @@
+int main(){
+  initialize();
+  sdelay(20, ms);
+  sense();
+  sdelay(50, ms);
+}
+
+

@@ -9,14 +9,5 @@ int sense(){
   printf("Sense completed\n");
 }
 
-void main(){
-   unsigned int ov;
-   while(1){
-      sense();
-      ov = sdelay(60, ms);
-      while(ov > 0){
-      	ov=sdelay(60-ov%60, ms);
-      }
-   }
-}
+#include "sdelay-overshot-correction.main"
 

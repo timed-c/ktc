@@ -10,16 +10,5 @@ int control(){
    printf("control completed\n");
 }
 
-void compute(){
-  control();
-  sdelay(30, ms);
-}
-
-void main(){
-  int a;
-  compute();
-  fdelay(50, ms);
-  printf("end of main\n");
-
-}
+#include "nested-timing-point.main"
 

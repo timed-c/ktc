@@ -1,0 +1,9 @@
+void compute(){
+  control();
+  sdelay(30, ms);
+}
+void main(){
+  int a;
+  compute();
+  fdelay(50, ms);
+}

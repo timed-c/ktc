@@ -66,8 +66,7 @@ task executeTC(){
    tcnext.rx_length = 0;
    t = gettime(sec);
    cread(tcChan, tcnext);
-   skipdelay;
-   fdelay(tctime-t, sec);
+   ftp(0, tctime-t, sec);
    if(tcnext.rx_length != 0){
      push(prioq, &tcnext);
    }

@@ -14,18 +14,11 @@ void senseA(){
 int compute(){
    static int count;
    count++;
-   return (count); 
+   printf("compute\n");
+   return (count * 1000); 
 }
 
-task foo(){
-  int a;
-  spolicy(FIFO_RM);
-  aperiodic(3000, ms);
-  while(1){
-     a = compute();
-     sdelay(a*1000, ms);
-  }
-}
+#include "aperiodic.foo"
 
 task bar(){
   spolicy(FIFO_RM);

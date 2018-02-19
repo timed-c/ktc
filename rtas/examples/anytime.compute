@@ -1,0 +1,11 @@
+void computePath(int* a){ 
+  int b[100];
+  initialize(a);
+  while(1){
+    computeAnytime(b, a);
+    critical{
+      memcpy(a, b, 100);
+    }
+  }  
+  fdelay(100, ms);
+}

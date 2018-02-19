@@ -13,7 +13,7 @@ int foo(){
 void main(){
    int x;
     x = foo(); 
-    if(x)
+    if(x){
        computeA();
        fdelay(10, us);
     }

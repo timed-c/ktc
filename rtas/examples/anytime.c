@@ -24,24 +24,12 @@ int initialize(int* a){
     }
 }
 
-void computePath(int* a){ 
-  int b[100];
-  int i = 1;
-  initialize(a);
-  sdelay(0, ms);
-  while(i){
-     computeAnytime(b, a);
-     critical{
-        memcpy(a, b, 100);
-   }
- }  
- fdelay(100, ms);
- printf("completed\n");
-}
+#include "anytime.compute"
 
 int main(){
   int a[100];
   computePath(a);
+  printf("end\n");
 
 }
 

@@ -10,15 +10,4 @@ int foo(){
   return 1;
 }
 
-void main(){
-   int x;
-    x = foo(); 
-    if(x)
-       computeA();
-       fdelay(10, us);
-    }
-    else{
-        computeB();
-        fdelay(50, us);
-   }
-}
+#include "fdelay-error.main"

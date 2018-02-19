@@ -9,6 +9,7 @@ int sense(){
   int i;
   static int count = 0;
   count++;
+  printf("sense\n");
   if(count % 2 == 0)
   	for(i = 0; i < (100000000); i++){}
   else 
@@ -16,12 +17,4 @@ int sense(){
 
 }
 
-void main(){
-  unsigned int ov;
-  while(1){
-    sense();
-    ov = sdelay(60, ms);
-    printf("Amount of overshoot %d\n", ov);
-  }
-}
-
+#include "sdelay-overshot.main"

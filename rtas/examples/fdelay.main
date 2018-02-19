@@ -1,0 +1,7 @@
+void main(){
+  while(1){ 
+    sense();
+    fdelay(30, ms); 
+  }
+}
+
