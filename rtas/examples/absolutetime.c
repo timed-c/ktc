@@ -17,13 +17,5 @@ int actuate(){
  printf("Actuate executed at %d\n", t);
 	
 }
-int main(){
-  long tcomp, tnow;
-  tcomp = acutateAtTime();
-  tnow = gettime(sec);
-  printf("Time now %d\n", tnow);
-  printf("Please wait......\n", tnow);
-  sdelay(tcomp - tnow, sec);
-  actuate();
-}
+
 

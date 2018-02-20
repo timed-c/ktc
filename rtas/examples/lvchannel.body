@@ -1,0 +1,21 @@
+int lvchannel chan1;
+task bar(){
+  int c;
+  while(1){
+    c = sense();
+    cwrite(chan1, c);
+  }
+}
+task foo(){
+  int d;
+  while(1){
+    cread(chan1, d);
+    compute(d);
+    sdelay(60, ms);
+  }
+}
+void main(){ 
+  bar();
+  foo();
+}
+

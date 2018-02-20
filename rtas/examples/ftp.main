@@ -1,0 +1,8 @@
+void main(){
+  unsigned int ov;
+  int i;
+  while(1){
+    sense(); 
+    ftp(60, 10, ms);
+  }
+}
