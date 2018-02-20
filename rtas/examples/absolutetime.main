@@ -1,0 +1,7 @@
+int main(){
+  long tcomp, tnow;
+  tcomp = acutateAtTime();
+  tnow = gettime(sec);
+  sdelay(tcomp - tnow, sec);
+  actuate();
+}

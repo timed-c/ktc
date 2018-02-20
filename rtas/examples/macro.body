@@ -1,0 +1,6 @@
+#define SOFT_PERIODIC_LOOP(expr, n, func)\
+          while(1){func(); sdelay(expr, n);}
+
+void main(){
+	SOFT_PERIODIC_LOOP(60, ms, sense);
+}
