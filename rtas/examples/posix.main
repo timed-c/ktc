@@ -31,7 +31,7 @@ void main(){
     perror("timer_create");
     exit(0);
   }
-  (void)clock_gettime(CLOCK_REALTIME,&start_time);	
+  clock_gettime(CLOCK_REALTIME,&start_time);	
   add_timespec(&(i.it_value ), start_time, interval_timespec);
   i.it_interval.tv_sec = 0;
   i.it_interval.tv_nsec = 0;
