@@ -1,9 +1,7 @@
 void main(){
-  static int count = 0;
-  int i; 
   while(1){ 
     sense();
     fdelay(30, ms);
-   }
+  }
 }
 
