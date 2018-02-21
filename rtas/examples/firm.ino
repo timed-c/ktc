@@ -11,8 +11,7 @@ void callback(){
 void loop() {
   int i;
   i = setjmp(env);
-  if (i != 0){
-     handle_deadline();//handle overrun
+  if (i != 0){ 
      goto lbl;
   }
   sense();//read from sensor

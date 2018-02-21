@@ -14,8 +14,7 @@ procedure Firm is
      Next := Clock + Interval;
      loop
       select
-        delay until Next; 
-        Handle_Deadline; --handle overrun
+        delay until Next;  
       then abort
         Sense; --read from sensor	
       end select;

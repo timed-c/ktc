@@ -44,7 +44,6 @@ void main(){
     ret_jmp = sigsetjmp(env, 1);
     waiting_for_signal = 1;
     if(ret_jmp != 0){
-      handle_deadline();//handle overrun
       goto JMP;
      }
     sense(); //read from sensor

@@ -7,8 +7,7 @@ public class Firm extends RealtimeThread {
     obj.sense();//read from sensor 
   }                  
   public void interruptAction(
-    AsynchronouslyInterruptedException ai) {
-    obj.handle_deadline();//handle overrun
+    AsynchronouslyInterruptedException ai) { 
  }}
  public void run(){
     RelativeTime intr = new RelativeTime(30, 0);
