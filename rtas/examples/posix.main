@@ -1,10 +1,8 @@
 ﻿int waiting_for_signal;
 jmp_buf env;
-void timer_signal_handler(int sig, siginfo_t *extra, void *cruft){
-  static int count = 0;
-  count++;
+void timer_signal_handler(int sig, siginfo_t* extra, void* cruft){
   if(waiting_for_signal == 1){
-    siglongjmp(env, count);
+    siglongjmp(env, 3);
   }
   waiting_for_signal = 0;
 }
@@ -17,7 +15,7 @@ void main(){
   struct sigaction sa;
   struct sigevent timer_event;
   timer_t mytimer;
-  convert_to_timespec(&interval_timespec,30,"ms");
+  convert_to_timespec(&interval_timespec, 3, "ms");
   sa.sa_flags = SA_SIGINFO;
   sa.sa_sigaction = timer_signal_handler;
   if(sigaction(SIGRTMIN, &sa, NULL) < 0){
@@ -42,13 +40,11 @@ void main(){
   while(1){
     ret_jmp = sigsetjmp(env, 1);
     waiting_for_signal = 1;
-    if(ret_jmp != 0){
-      goto JMP;
+    if(ret_jmp == 0){
+      sense(); //read from sensor
     }
-    sense(); //read from sensor
-    JMP:
-    clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME,&i.it_value, NULL);
     waiting_for_signal = 0;
+    clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME,&i.it_value, NULL);
     add_timespec(&(i.it_value ), i.it_value,interval_timespec);
     i.it_interval.tv_sec = 0;
     i.it_interval.tv_nsec = 0;

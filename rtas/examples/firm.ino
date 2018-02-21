@@ -15,12 +15,11 @@ void loop() {
   int i;
   tinit = millis();
   i = setjmp(env);
-  if (i != 0){
-     goto lbl;
+  if (i == 0){
+     sense();//read from sensor
   }
-  sense();//read from sensor
+  Timer1.stop();
   delay(30 - (millis() - tinit));
-  lbl:
   Timer1.restart();
 }
 
