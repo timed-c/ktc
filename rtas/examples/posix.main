@@ -44,10 +44,10 @@ void main(){
     ret_jmp = sigsetjmp(env, 1);
     waiting_for_signal = 1;
     if(ret_jmp != 0){
-      handle_deadline();
+      handle_deadline();//handle overrun
       goto JMP;
      }
-    sense();
+    sense(); //read from sensor
     JMP:
     clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME,&i.it_value, NULL);
     waiting_for_signal = 0;

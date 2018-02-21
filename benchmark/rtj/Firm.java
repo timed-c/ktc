@@ -12,7 +12,7 @@ public class Firm extends RealtimeThread {
     obj.handle_deadline();}
  }
  public void run(){
-    RelativeTime intr = new RelativeTime(1, 0);
+    RelativeTime intr = new RelativeTime(30, 0);
     Timed timed = new Timed(intr);
     TimedOp interuptible = new TimedOp();	
     while(true){
@@ -22,7 +22,7 @@ public class Firm extends RealtimeThread {
   }
   public static void main(String[] args){
     Firm fd = new Firm();
-    RelativeTime period = new RelativeTime(30, 0);
+    RelativeTime period = new RelativeTime(1, 0);
     PeriodicParameters periodicParameters =
     new PeriodicParameters(null,period, null,null,null, null);
     fd.setReleaseParameters(periodicParameters);

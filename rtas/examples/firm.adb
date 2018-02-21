@@ -1,10 +1,8 @@
 pragma Task_Dispatching_Policy(FIFO_Within_Priorities);
-
 with Ada.Text_Io; use Ada.Text_Io;
 with Ada.Real_Time; use Ada.Real_Time;
 with Ada.Real_Time.Timing_Events; use Ada.Real_Time.Timing_Events;
 with Example1; use Example1;
-
 procedure Firm is 
   task type Periodic_Firm is
       pragma Priority(5);
@@ -17,9 +15,9 @@ procedure Firm is
      loop
       select
         delay until Next; 
-        Handle_Deadline;
+        Handle_Deadline; --handle deadline overrun
       then abort
-        Sense;	
+        Sense; --read from sensor	
       end select;
       delay until Next;
       Next := Next + Interval;

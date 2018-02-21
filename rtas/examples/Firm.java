@@ -1,18 +1,17 @@
 import javax.realtime.*;
-import classes.*;
 public class Firm extends RealtimeThread {
   First obj = new First();
   class TimedOp implements Interruptible {
   public void run(AsynchronouslyInterruptedException ai)
   throws AsynchronouslyInterruptedException {
-    obj.sense();
+    obj.sense();//read from sensor 
   }                  
   public void interruptAction(
     AsynchronouslyInterruptedException ai) {
-    obj.handle_deadline();}
- }
+    obj.handle_deadline();//handle overrun
+ }}
  public void run(){
-    RelativeTime intr = new RelativeTime(1, 0);
+    RelativeTime intr = new RelativeTime(30, 0);
     Timed timed = new Timed(intr);
     TimedOp interuptible = new TimedOp();	
     while(true){
