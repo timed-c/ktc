@@ -3,7 +3,7 @@
 void main(){
     while(1){
         every (100) 
-	    for(i = 0; i < 100000; i++){}	
+	    sense();	
   	else 
-            printf("Deadline miss");
+            handle_deadline();
 } 
