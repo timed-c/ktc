@@ -26,8 +26,8 @@ extern int setschedvar;
 #define task void* __attribute__((task))
 #define sdelay(intr, ...) sdelay(intr, intr, ##__VA_ARGS__)
 #define stp(pr, dl, unit) sdelay(pr, dl, unit)
-#define fdelay(intr, ...) fdelay(intr, intr, ##__VA_ARGS__)
 #define ftp(pr, dl, unit) if (pr == 0) skipdelay;  fdelay(pr, dl, unit)
+#define fdelay(intr, ...) fdelay(intr, intr, ##__VA_ARGS__)
 #define gettime(unit)  ktc_gettime(unit);sdelay(-1404, 0)
 #define while(var) int while_var = var; while(while_var)
 

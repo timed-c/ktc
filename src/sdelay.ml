@@ -295,12 +295,18 @@ let makeCriticalEndInstr (sigvar : varinfo) (loc: location)=
         let argSig = mkAddrOf (var sigvar) in
         i2s ( Call(None, v2e sdelayfuns.critical_end, [argSig;], loc) )
 
-let makePthreadCreateInstr (threadvar : varinfo) (funvar : varinfo) (loc:location)= 
+let makePthreadCreateInstr (threadvar : varinfo) (funvar : varinfo) argList (loc:location)= 
 	let addrThread = mkAddrOf(var threadvar) in
 	let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in
 	(*let addrFun = mkAddrOf(var funvar) in
 	i2s ( Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero; addrFun; Cil.zero;], loc)) *)
+	let ret = if (L.length argList) = 0 then 
 	Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero; (mkAddrOf (var funvar)); nullptr;], loc)
+	else
+	Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero; (mkAddrOf (var funvar)); L.hd argList;], loc)
+	in ret
+
+
 
 let makePthreadJoinInstr fdec (threadvar : varinfo)  =
 	let threadvoidptr = makeLocalVar fdec (threadvar.vname^"_join") (voidPtrType) in
@@ -383,7 +389,7 @@ let policyValue data hstm runtime deadline period priority policy list_dl list_p
 
 
 
-let maketimerfdelayStmt structvar argL tpstructvar timervar retjmp firmStmt =
+let maketimerfdelayStmt structvar argList tpstructvar timervar retjmp firmStmt =
 	 let offset' = match tpstructvar.vtype with
 			   | TComp (cinfo, _) -> Field (getCompField cinfo "env", NoOffset) in
 	 let waitingOffset = match tpstructvar.vtype with
@@ -391,8 +397,9 @@ let maketimerfdelayStmt structvar argL tpstructvar timervar retjmp firmStmt =
 	let waitingConditionStmt = mkStmtOneInstr(Set((Var tpstructvar, waitingOffset), Cil.zero, locUnknown)) in	
 	let buf = Lval(Var tpstructvar, offset') in
 	let i = Cil.one in
-	let time_unit = L.nth argL 3 in 
-	let intr, tunit, timr, s = L.nth argL 2, time_unit, v2e timervar, v2e structvar in
+ 	let argL = if L.length argList < 5 then argList else (L.tl argList) in 
+	let time_unit = L.nth argL 2 in 
+	let intr, tunit, timr, s = L.nth argL 1, time_unit, v2e timervar, v2e structvar in
 	let sigInt = Call(Some(var retjmp), v2e sdelayfuns.sig_setjmp, [buf;i;], locUnknown) in
 	let letjmpto = findgoto labelHash firmStmt in 
 	(*let goto_label = dummyStmt in *)
@@ -749,7 +756,7 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : 
                                                         let pthread_id_str = "pthread_t" in
                                                         let pthread_id_type = findTypeinfo filename pthread_id_str in
                                                         let pthread_var = makeLocalVar fdec ("t_"^string_of_int(List.length !all_threads)) (TNamed(pthread_id_type, [])) in
-                                                        let intr = makePthreadCreateInstr pthread_var vi locUnknown  in
+                                                        let intr = makePthreadCreateInstr pthread_var vi argList locUnknown  in
                                                         all_threads:= pthread_var :: (!all_threads); [intr]
 	(*|Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = "cread") -> all_read:= fdec.svar.vname ::  (!all_read); [i] *)
                                                    

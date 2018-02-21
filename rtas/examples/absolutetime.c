@@ -4,7 +4,7 @@
 #include<cilktc.h>
 
 
-int acutateAtTime(){
+int actuateAtTime(){
  long t;
  t = gettime(sec);
   printf("Executed acutate at %d\n", t+6);
@@ -18,4 +18,4 @@ int actuate(){
 	
 }
 
-
+#include "absolutetime.main"

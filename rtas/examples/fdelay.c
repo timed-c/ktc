@@ -7,7 +7,7 @@ int sense(){
   int i;
   static int count = 0;
   count++;
-  countIteration();
+  printf("iteration %d\n ", count++);
   if(count % 2 == 0){
   	for(i = 0; i < (1000000000); i++){}
   }
@@ -18,12 +18,7 @@ int sense(){
 
 }
 
-int countIteration(){
-	static int i = 0;
-	i++;
-	printf("iteration %d\n ", i);
 
-}
 
 #include "fdelay.main"
 
