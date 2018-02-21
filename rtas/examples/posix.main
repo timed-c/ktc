@@ -43,18 +43,18 @@ void main(){
     ret_jmp = sigsetjmp(env, 1);
     waiting_for_signal = 1;
     if(ret_jmp != 0){
-	 handle_deadline();
-         goto JMP;
-     }
-  sense();
-JMP:
-   clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, 
+      handle_deadline();
+      goto JMP;
+    }
+    sense();
+    JMP:
+    clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, 
 		   &i.it_value, NULL);
-   waiting_for_signal = 0;
-   add_timespec(&(i.it_value ), i.it_value, 
+    waiting_for_signal = 0;
+    add_timespec(&(i.it_value ), i.it_value, 
 	        interval_timespec);
-   i.it_interval.tv_sec = 0;
-   i.it_interval.tv_nsec = 0;
-   timer_settime(mytimer, TIMER_ABSTIME, &i, NULL); 
+    i.it_interval.tv_sec = 0;
+    i.it_interval.tv_nsec = 0;
+    timer_settime(mytimer, TIMER_ABSTIME, &i, NULL); 
   }
 }
