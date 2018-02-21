@@ -4,6 +4,5 @@ void main(){
       sense();//read from sensor	
     else 
       handle_deadline();//handle overrun
-
   }
 } 

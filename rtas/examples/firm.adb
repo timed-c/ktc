@@ -15,7 +15,7 @@ procedure Firm is
      loop
       select
         delay until Next; 
-        Handle_Deadline; --handle deadline overrun
+        Handle_Deadline; --handle overrun
       then abort
         Sense; --read from sensor	
       end select;

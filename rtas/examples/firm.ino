@@ -12,10 +12,10 @@ void loop() {
   int i;
   i = setjmp(env);
   if (i != 0){
-     handle_deadline();
+     handle_deadline();//handle overrun
      goto lbl;
   }
-  sense();
+  sense();//read from sensor
   lbl:
   Timer1.restart();
 }
