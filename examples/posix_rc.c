@@ -1,0 +1,60 @@
+﻿void timer_signal_handler(int sig, siginfo_t *extra,
+			  void *cruft){
+ static int count = 0;
+ count++;
+ if(waiting_for_signal == 1){
+   siglongjmp(env, count);
+ }
+ waiting_for_signal = 0;
+}
+void main(){
+ struct timespec start_time, interval_timespec;
+ long interval;
+ char* unit;
+ int  ret_jmp;
+ struct itimerspec i;
+ struct sigaction sa;
+ struct sigevent timer_event;
+ timer_t mytimer;
+ convert_to_timespec(&interval_timespec, 30, "ms");
+ sa.sa_flags = SA_SIGINFO;
+ sa.sa_sigaction = timer_signal_handler;
+ if(sigaction(SIGRTMIN, &sa, NULL) < 0){
+   perror("sigaction");
+   exit(0);
+ }
+ timer_event.sigev_notify = SIGEV_SIGNAL;
+ timer_event.sigev_signo = SIGRTMIN;
+ timer_event.sigev_value.sival_ptr = (void*) &mytimer;
+ if(timer_create(CLOCK_REALTIME,&timer_event,&mytimer)<0)
+ {
+   perror("timer_create");
+   exit(0);
+ }
+ (void) clock_gettime(CLOCK_REALTIME, &start_time);	
+  add_timespec(&(i.it_value ), start_time, interval_timespec);
+  i.it_interval.tv_sec = 0;
+  i.it_interval.tv_nsec = 0;
+  if(timer_settime(mytimer, TIMER_ABSTIME, &i, NULL) < 0 ){
+    perror("timer_setitimer");
+    exit(0);
+  }
+  while(1){
+    ret_jmp = sigsetjmp(env, 1);
+    waiting_for_signal = 1;
+    if(ret_jmp != 0){
+	 handle_deadline();
+         goto JMP;
+     }
+  sense();
+JMP:
+   clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, 
+		   &i.it_value, NULL);
+   waiting_for_signal = 0;
+   add_timespec(&(i.it_value ), i.it_value, 
+	        interval_timespec);
+   i.it_interval.tv_sec = 0;
+   i.it_interval.tv_nsec = 0;
+   timer_settime(mytimer, TIMER_ABSTIME, &i, NULL); 
+  }
+}
