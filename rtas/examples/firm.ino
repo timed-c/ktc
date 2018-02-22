@@ -2,7 +2,7 @@
 #include "DueTimer.h"
 jmp_buf env;
 unsigned long tinit = 0;
-int timer_interrupt = 0;
+volatile int timer_interrupt = 0;
 void callback(){
   timer_interrupt = 1;
 }
@@ -16,7 +16,7 @@ void loop() {
   tinit = millis();
   i = setjmp(env);
   if(i == 0){
-     sense();
+    sense();//read from sensor
   }
   Timer3.stop();
   timer_interrupt = 0;
