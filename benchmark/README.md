@@ -36,7 +36,7 @@ Run : jamaicavm -cp classes/ _file_
 
 ## 3. Description of the programs
 | Program        | Description                 | Ada  | Timed C  |RTJS   |RTCC  |
-| ------------- |-----------------------------  | -----|-----| -----|
+| ------------- |-----------------------------  | -----|-----| -----| -----|
 |periodic       |periodic loop with soft deadline| supported| supported| supported|  supported|
 |periodic_overrun|periodic loop implementing soft deadline  with overrun detection and phase correction| supported | supported | supported| supported|
 |firm            |periodic loop with firm deadline| supported| supported| supported| supported|
