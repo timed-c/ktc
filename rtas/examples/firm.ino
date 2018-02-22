@@ -15,7 +15,7 @@ void loop() {
   int i;
   tinit = millis();
   i = setjmp(env);
-  if (i == 0){
+  if(i == 0){
      sense();//read from sensor
   }
   Timer1.stop();
