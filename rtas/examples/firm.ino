@@ -1,26 +1,27 @@
 #include <setjmp.h>
-#include "TimerOne.h"
+#include "DueTimer.h"
 jmp_buf env;
 unsigned long tinit = 0;
-void setup(){
-  Timer1.initialize();  
-  Timer1.setPeriod(30000);//30ms
-  Timer1.attachInterrupt(callback);  
-  Timer1.start();
-}
+int timer_interrupt = 0;
 void callback(){
-  longjmp(env, 2);
+  timer_interrupt = 1;
+}
+void setup(){
+  Timer3.setPeriod(30000);//30ms
+  Timer3.attachInterrupt(callback);  
+  Timer3.start();
 }
 void loop() {
-  int i;
+  int i=0;
   tinit = millis();
   i = setjmp(env);
   if(i == 0){
-     sense();//read from sensor
+     sense();
   }
-  Timer1.stop();
+  Timer3.stop();
+  timer_interrupt = 0;
   delay(30 - (millis() - tinit));
-  Timer1.restart();
+  Timer3.start();
 }
 
 
