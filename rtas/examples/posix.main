@@ -1,4 +1,5 @@
-﻿int waiting_for_signal;
+﻿/*Code using POSIX API*/
+int waiting_for_signal;
 jmp_buf env;
 void timer_signal_handler(int sig, siginfo_t* extra, void* cruft){
   if(waiting_for_signal == 1){
