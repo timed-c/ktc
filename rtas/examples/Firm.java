@@ -20,7 +20,7 @@ public class Firm extends RealtimeThread {
   }
   public static void main(String[] args){
     Firm fd = new Firm();
-    RelativeTime period = new RelativeTime(30, 0);
+    RelativeTime period = new RelativeTime(30,0);
     PeriodicParameters periodicParameters =
     new PeriodicParameters(null,period, null,null,null, null);
     fd.setReleaseParameters(periodicParameters);

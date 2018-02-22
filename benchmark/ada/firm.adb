@@ -11,13 +11,13 @@ procedure Firm is
   end Periodic_Firm;
   task body Periodic_Firm is
      Next : Time;
-     Interval : Time_Span := Milliseconds(30);  
+     Interval : Time_Span := Milliseconds(1);  
   begin
      Next := Clock + Interval;
      loop
       select
-        delay until Next; 
-        Handle_Deadline;
+        delay until Next;
+	Put("-");
       then abort
         Sense;	
       end select;

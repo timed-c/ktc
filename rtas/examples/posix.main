@@ -16,7 +16,7 @@ void main(){
   struct sigaction sa;
   struct sigevent timer_event;
   timer_t mytimer;
-  convert_to_timespec(&interval_timespec, 3, "ms");
+  convert_to_timespec(&interval_timespec,3,"ms");
   sa.sa_flags = SA_SIGINFO;
   sa.sa_sigaction = timer_signal_handler;
   if(sigaction(SIGRTMIN, &sa, NULL) < 0){
