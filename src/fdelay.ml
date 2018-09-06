@@ -533,7 +533,8 @@ class sdelayReportAdder filename fdec structvar jmpvar timervar ret_jmp data fna
 							let t3 = E.log "task 3" in
 							let idleVar = findGlobalVar filename.globals "idle_prio" in
 							let t4 = E.log "task 4" in
-							let priovar = 5 - !fprio ; fprio := !fprio - 1 in
+							let priovar = 5 - !fprio in
+							let _ = if (!fprio > 0) then fprio := !fprio - 1 in
 							let intr = makeTaskCreateInstrVarExp xhandleVar vi (integer !fprio) locUnknown arg in
 							let t5 = E.log "task5" in
 							all_handles := xhandleVar  :: (!all_handles); [intr]  
