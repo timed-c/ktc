@@ -67,7 +67,8 @@ typedef void * xQueueHandle;
 //#define cread(chan, ptr); if((void *__attribute__((read_block))) (sizeof(#chan) > &ptr)) {sleep(0);}
 #define cread(chan, ptr)   xQueueReceive( chan, &( ptr ), ( portMAX_DELAY ))
 #define cwrite(chan, ptr)   xQueueSend( chan, &( ptr ), 0)
-#define cinit(chan, val) chan = xQueueCreate(200, sizeof(val) )
+#define cinit(chan, val) chan = xQueueCreate(20, sizeof(val) )
+#define cread_wait(chan, ptr, val)   xQueueReceive( chan, &( ptr ), val)
 //#define main() populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort); } void main()
 //#define aperiodic(x, ms)  printf("");sdelay(x, ms); int i =0; while(i){sdelay(0, ms);} printf("aperiodic\n")
 void ktc_fdelay();
@@ -88,6 +89,7 @@ void skipdelay();
 #define gettime(ms)  ktc_gettime(&start_time) 
 //#define prioritychannel xQueueHandle
 #define fifochannel sardummy; xQueueHandle
+#define cread_wait(chan, ptr, val)   xQueueReceive( chan, &( ptr ), val)
 
 enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
 int policy;
