@@ -238,14 +238,17 @@ let makeTaskCreateInstr (handlevar : varinfo) (funvar : varinfo) (idlePrioVar : 
   let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in 
 	(*let addrFun = mkAddrOf(var funvar) in
 	i2s ( Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero; addrFun; Cil.zero;], loc)) *)
-  Call(None, v2e sdelayfuns.task_create, [v2e funvar; (mkString (funvar.vname^handlevar.vname)); (integer 190); (integer 31); v2e idlePrioVar; addrHandle; nullptr; nullptr ], loc)
+  Call(None, v2e sdelayfuns.task_create, [v2e funvar; (mkString (funvar.vname^handlevar.vname)); (integer 1024); arg; v2e idlePrioVar; addrHandle; nullptr; nullptr ], loc)
 
-let makeTaskCreateInstrVarExp (handlevar : varinfo) (funvar : varinfo) (prioVar : exp) (loc:location) arg= 
+let makeTaskCreateInstrVarExp (handlevar : varinfo) (funvar : varinfo) (prioVar : exp) (loc:location) argList =
+  let arg = (match argList with 
+             | [] -> (Cil.mkCast Cil.zero Cil.voidPtrType) 
+             | h::rest -> h ) in 
   let addrHandle = mkAddrOf(var handlevar) in
   let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in 
 	(*let addrFun = mkAddrOf(var funvar) in
 	i2s ( Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero; addrFun; Cil.zero;], loc)) *)
-  Call(None, v2e sdelayfuns.task_create, [v2e funvar; (mkString (funvar.vname^handlevar.vname)); (integer 190); (integer 31); prioVar; addrHandle; nullptr; nullptr ], loc)
+  Call(None, v2e sdelayfuns.task_create, [v2e funvar; (mkString (funvar.vname^handlevar.vname)); (integer 1024); arg ; prioVar; addrHandle; nullptr; nullptr ], loc)
 
 let makeTaskDeleteInstr (handlevar : varinfo)  =
   let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in
