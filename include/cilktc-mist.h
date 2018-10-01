@@ -86,7 +86,7 @@ extern   TickType_t start_time ;
 void skipdelay();
 #define lvchannel __attribute__((lvchannel))
 #//define fifochannel  __attribute__((fifochannel))
-#define gettime(ms)  ktc_gettime(&start_time) 
+#define gettime(ms)  ktc_gettime(&start_time, #ms) 
 //#define prioritychannel xQueueHandle
 #define fifochannel sardummy; xQueueHandle
 #define cread_wait(chan, ptr, val)   xQueueReceive( chan, &( ptr ), val)
