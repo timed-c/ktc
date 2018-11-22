@@ -86,6 +86,7 @@ mutable task_delete : varinfo;
 mutable fifo_init : varinfo;
 mutable fifo_read : varinfo;
 mutable fifo_write : varinfo;
+mutable vtask_delete : varinfo;
 mutable ktc_start_scheduler : varinfo;
 }
 
@@ -105,6 +106,7 @@ task_delete  = dummyVar;
 fifo_init = dummyVar;
 fifo_read = dummyVar;
 fifo_write = dummyVar;
+vtask_delete = dummyVar;
 ktc_start_scheduler = dummyVar;
 }
 
@@ -123,6 +125,7 @@ let task_delete_str = "vTaskDelete"
 let fifo_init_str = "ktc_fifo_init"
 let fifo_read_str =  "ktc_fifo_read"
 let fifo_write_str = "ktc_fifo_write"
+let vtask_delete_str = "vTaskDelete"
 let ktc_start_scheduler_str = "ktc_start_scheduler"
 
 
@@ -140,6 +143,7 @@ let sdelay_function_names = [
   fifo_init_str;
   fifo_read_str;
   fifo_write_str;
+  vtask_delete_str;
   ktc_start_scheduler_str;
 
 ]
@@ -200,7 +204,8 @@ let initSdelayFunctions (f : file)  : unit =
   sdelayfuns.fifo_init <- focf fifo_init_str init_type;
   sdelayfuns.fifo_read <- focf fifo_read_str init_type;
   sdelayfuns.ktc_start_scheduler <- focf ktc_start_scheduler_str void_type;
-  sdelayfuns.fifo_write <- focf fifo_write_str init_type
+  sdelayfuns.vtask_delete <- focf vtask_delete_str void_type;
+   sdelayfuns.fifo_write <- focf fifo_write_str init_type
 
   
 
@@ -426,6 +431,20 @@ let findTasks fglobal =
 			| _ -> ()
 	)
 	| _ -> ()
+
+
+
+let addtaskdelete slist =
+  let delete_inst = Call(None, v2e sdelayfuns.vtask_delete, [ Cil.zero;], locUnknown)  in
+  let revList = List.rev slist in
+  let last_stmt  = List.hd revList in
+  let is_ret = (match last_stmt.skind with 
+                |Return(_,_) -> true
+                |_ -> false) in
+  let with_ret_rev = (List.append [mkStmtOneInstr delete_inst] (List.tl revList)) in
+  let with_ret = List.append (List.rev with_ret_rev) [last_stmt] in
+  let without_ret = List.append slist [mkStmtOneInstr delete_inst] in
+  if is_ret then with_ret else without_ret
 
 (* lvchannel commenting out*)
 (*
@@ -773,13 +792,17 @@ class sdelayFunc filename fname = object(self)
 		let modifysdelay = new sdelayReportAdder filename fdec timevar jmpvar ftimer ret_jmp data fname  in
 		(*E.log "passed this";*)
 		let kk = E.log "Done" in
-                let schedular_inst = Call(None, v2e sdelayfuns.ktc_start_scheduler, [], locUnknown)  in 
-		fdec.sbody <- visitCilBlock modifysdelay fdec.sbody;  
+                let schedular_inst = Call(None, v2e sdelayfuns.ktc_start_scheduler, [], locUnknown)  in
+                              fdec.sbody <- visitCilBlock modifysdelay fdec.sbody;  
 		fdec.sbody.bstmts <- List.append init_start fdec.sbody.bstmts;	
                 fdec.sbody.bstmts <- addTaskDelete fdec.sbody.bstmts [mkStmtOneInstr schedular_inst]; 
+                fdec.sbody.bstmts <- addtaskdelete fdec.sbody.bstmts ;
 		ChangeTo(fdec)
 
 end
+
+
+
 
 (*again commenting out lvchanels*)
 (*

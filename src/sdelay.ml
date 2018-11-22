@@ -115,8 +115,8 @@ let sdelayfuns = {
   simsp_equal = dummyVar;
   spolicy_set = dummyVar;
   compute_priority = dummyVar;
-   nelem = dummyVar;
-   blocksignal = dummyVar;
+  nelem = dummyVar;
+  blocksignal = dummyVar;
 
 }
 
@@ -247,7 +247,8 @@ let initSdelayFunctions (f : file)  : unit =
 
 
 let makeSdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location) lv =
-  let time_unit = if ((L.length argL) = 3 && not (isZero (L.hd argL))) then (E.s (E.error "%s:%d: error : unknown resolution of timing point" loc.file loc.line)) else (L.nth argL 2) in
+  (*let time_unit = if ((L.length argL) = 3 && not (isZero (L.hd argL))) then (E.s (E.error "%s:%d: error : unknown resolution of timing point" loc.file loc.line)) else (L.nth argL 2) in*)
+  let time_unit = (L.nth argL 2) in
   let f, l, deadline, period ,tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, (L.nth argL 1), time_unit, mkAddrOf((var structvar)), (List.hd (List.rev argL))  in
   [Call(lv,v2e sdelayfuns.sdelay_init, [deadline;period;tunit;s;t_id;], loc)]
 
@@ -740,14 +741,14 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : 
         let sname = "fdelay" in
         let action [i] =
         match i with
-	|Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "nelem") ->  let arg = List.hd argList in
+	(*|Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "nelem") ->  let arg = List.hd argList in
 									     let channame = (match arg with 
 											   |Lval(Var vi, _) -> vi.vname) in
 									     let fifothrdqu = findGlobalVar filename.globals channame in
 						   			     let fifochanlist = findGlobalVar filename.globals (channame^"ktclist") in
 						                             let fifocount = findGlobalVar filename.globals (channame^"ktccount") in
 						                             let fifotail= findGlobalVar filename.globals (channame^"ktctail") in	
-					                                     makeelemInstr  fifothrdqu fifocount fifotail lv loc 
+					                                     makeelemInstr  fifothrdqu fifocount fifotail lv loc *)
         |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> if L.length argList < 5 then makeSdelayInitInstr structvar argList loc lv else makeSdelayInitInstr structvar (L.tl argList) loc lv 
         |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> if L.length argList < 5 then makeFdelayInitInstr structvar argList loc ret_jmp (integer signo) tpstructvar lv else makeFdelayInitInstr structvar (L.tl argList) loc ret_jmp (integer signo) tpstructvar  lv
 	|Call(lv ,Lval(Var vi,_), argList, loc) when (vi.vname = "gettime") -> makegettimeInstr lv structvar argList loc

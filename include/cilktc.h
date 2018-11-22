@@ -54,10 +54,12 @@ struct threadqueue {
 #define exec_child(x) if(x == 0)
 #define cread(chan, ptr)   if((void *__attribute__((read_block))) (sizeof(#chan) > &ptr)){sleep(0);}
 #define cwrite(chan, ptr) if((void *__attribute__((write_block))) (sizeof(#chan) > &ptr)){sleep(0);}
-#define cinit(chan, val) int tempinitvarktc; if((void *__attribute__((init_block))) (sizeof(#chan) > &tempinitvarktc)){sleep(0);}
+%#define cinit(chan, val) int tempinitvarktc; if((void *__attribute__((init_block))) (sizeof(#chan) > &tempinitvarktc)){sleep(0);}
+cinit(chan, val) chan = pipe_new(sizeof(val), )
 #define lvchannel __attribute__((lvchannel))
-#define fifochannel(c)  c ##ktclist[50]; int c ##ktccount; int c ##ktctail; struct threadqueue  __attribute__((fifochannel)) c
+//#define fifochannel(c)  c ##ktclist[50]; int c ##ktccount; int c ##ktctail; struct threadqueue  __attribute__((fifochannel)) c
 //# task if((void *__attribute__((task)))1)
+#define fifochannel(c) c; pipe_t* c ##pipe; pipe_consumer_t* c ##cons; pipe_producer_t* c ##pros;
 #define main() *dummyglobalvariable; int populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort);return 1; } void main()
 #define aperiodic(val, ms)  runtime = val; deadline = val; period = val; ktc_set_sched(policy, runtime, period, deadline);setschedvar = 0; 
 #define ms -3

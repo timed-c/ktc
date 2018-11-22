@@ -162,7 +162,7 @@ long ktc_sdelay_init_free(int intrval, char* unit, TickType_t *start_time, int i
 void ktc_start_time_init_free(TickType_t *start_time);
 int ktc_fdelay_start_timer_free(int interval, char* unit,TimerHandle_t  ktctimer, TickType_t start_time);
 long ktc_fdelay_init_free(int interval, char* unit, TickType_t* start_time, TimerHandle_t  ktctimer, int retjmp, int id);
-long ktc_gettime(TickType_t* start_time);
+long ktc_gettime(TickType_t* start_time, char unit);
 extern struct timer_env* timer_env_array[50];
 extern int compare_qsort (const void * elem1, const void * elem2);
 extern void populatelist(int num);
