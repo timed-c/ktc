@@ -37,13 +37,13 @@ sub new {
     # Select the most recent executable
     my $mtime_asm = int((stat("$bin/ktcexe"))[9]);
     my $mtime_byte = int((stat("$bin/ktcexe"))[9]);
-    my $use_debug = 
+    my $use_debug =
             grep(/--bytecode/, @args) ||
             grep(/--ocamldebug/, @args) ||
             ($mtime_asm < $mtime_byte);
-    if ($use_debug) { 
+    if ($use_debug) {
         $ENV{"OCAMLRUNPARAM"} = "b" . $ENV{"OCAMLRUNPARAM"}; # Print back trace
-    } 
+    }
 
     # Save choice in global vars for printHelp (can be called from Cilly::new)
      $Ktc::compiler = "$bin/ktcexe" ;
@@ -63,7 +63,7 @@ sub new {
     # Override Cilly's default
     $self->{SEPARATE} = 1;
 
-  
+
     $self->{CONCOLICLIB} = "$lib/libconcolic_callbacks.$self->{LIBEXT}";
 
     bless $self, $class;
@@ -78,6 +78,7 @@ sub processArguments {
     $self->setDefaultArguments;
     $self->collectArgumentList(@args);
     push @{$self->{KTCLIBS}}, "$lib/libktc.$self->{LIBEXT}";
+    push @{$self->{KTCLIBSLOG}}, "$lib/liblogs.$self->{LIBEXT}";
     push @{$self->{KTCLIBSRASP}}, "$lib/libktcrasp.$self->{LIBEXT}";
     push @{$self->{KTCLIBFREERTOS}}, "$lib/libktcfree.$self->{LIBEXT}";
     return $self;
@@ -154,7 +155,7 @@ sub preprocess_before_cil {
 	} else{
 		 unshift @args, $self->{INCARG} . $::ktchome . "/include";
 	}
-	
+
     return $self->SUPER::preprocess_before_cil($src, $dest, \@args);
 }
 
@@ -209,8 +210,8 @@ sub link_after_cil {
 	}
 	else{
 		push @libs, "-lrt", "-lpthread";
-	}	
-  
+	}
+
 }
   if($self->{LINK1} == 1){
     if (scalar @srcs == 0) {
@@ -249,7 +250,7 @@ sub link_after_cil {
         if ($self->{DARWIN}) {
            if($self->{FREERTOS} == 1){
 		 push @libs;
-	   }else {push @libs, "-ldl";} 
+	   }else {push @libs, "-ldl";}
 	}
         else {
           push @libs, "-ldl", "-lrt", "-lm", "-lpthread";
@@ -272,7 +273,7 @@ sub linktolib {
         print STDERR "ktc: no input files\n";
         return 0;
     } else {
-       push @libs, @{$self->{KTCLIBS}};
+       push @libs, @{$self->{KTCLIBS}}, @{$self->{KTCLIBSLOG}};
        return $self->SUPER::linktolib(\@srcs, $dest, $ppargs,
                                        $ccargs, $ldargs);
     }
@@ -310,7 +311,7 @@ Front end:
   --freertos		Compiling for Free RTOS.
 
 EOF
-    $self->runShell(@cmd); 
+    $self->runShell(@cmd);
 }
 
 1;

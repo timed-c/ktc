@@ -1,4 +1,4 @@
-(* This file extends tututil.ml from the CIL Template project by Zach Anderson *) 
+(* This file extends tututil.ml from the CIL Template project by Zach Anderson *)
 
 open Cil
 open Pretty
@@ -86,11 +86,11 @@ let split ?(re : string = "[ \t]+") (line : string) : string list =
 
 
 let unrollType2dArray vtype =
-	match vtype with 
-	| TArray(TArray(t,_,_),_,_) -> t 
+	match vtype with
+	| TArray(TArray(t,_,_),_,_) -> t
 	| _ -> E.s (E.bug "Not 2-D matrix"); vtype
 
-let onlyFunctions (fn : fundec -> location -> unit) (g : global) : unit = 
+let onlyFunctions (fn : fundec -> location -> unit) (g : global) : unit =
   match g with
   | GFun(f, loc) -> fn f loc
   | _ -> ()
@@ -221,7 +221,7 @@ let rec findFunction (gl : global list) (fname : string) : fundec =
 *)
 
 let findLocalVar (sl : varinfo list) (varname : string) : varinfo =
-	List.find (fun vi -> if vi.vname = varname then true else false) sl 
+	List.find (fun vi -> if vi.vname = varname then true else false) sl
 
 let rec findGlobalVar (gl : global list) (varname : string) : varinfo =
   match gl with
@@ -279,8 +279,8 @@ let findCompinfo (f : file) (ciname : string) : compinfo =
    in
       search f.globals
 
- 
-	
+
+
 let findTypeinfo (f : file) (tpname : string) : typeinfo =
     let rec search glist =
         match glist with
@@ -324,7 +324,7 @@ module AV = struct
 
         let combinePredecessors (s: stmt) ~(old: VS.t) (avl: VS.t) : VS.t option =
         let u, d = UD.computeUseDefStmtKind s.skind in
-        let d' = VS.union d avl in 
+        let d' = VS.union d avl in
         if VS.subset old d' then
                 None
         else
@@ -351,28 +351,28 @@ let printSucc s tsucc =
 
 
 let printSuccToFile oc s  tsucc  =
-        Printf.fprintf oc "\n\t%d -> %d" s.sid tsucc.sid 
+        Printf.fprintf oc "\n\t%d -> %d" s.sid tsucc.sid
 
 let printAvailCFG s tsucc  =
-	match s.skind with 
+	match s.skind with
 	| Instr il when List.length il = 1->  begin
-			match List.hd il with 
-			|Call(_, Lval(Var vi, _),_,_) when vi.vname = "fdelay" -> E.log "\n%d [label= \"%s\"]" s.sid vi.vname; List.iter (printSucc s) tsucc 
+			match List.hd il with
+			|Call(_, Lval(Var vi, _),_,_) when vi.vname = "fdelay" -> E.log "\n%d [label= \"%s\"]" s.sid vi.vname; List.iter (printSucc s) tsucc
         		|Call(_, Lval(Var vi, _),_,_) when vi.vname = "sdelay" -> E.log "\n%d [label= \"%s\"]" s.sid vi.vname; List.iter (printSucc s) tsucc
 			|_ -> E.log ""
 				end
         |_ -> E.log ""
 
 let printTimeCFG oc s tsucc  =
-	(*let h = fprintf oc "diagraph Timed_CFG {" in *) 
+	(*let h = fprintf oc "diagraph Timed_CFG {" in *)
         match s.skind with
-        | Instr il when List.length il = 1->   
-                        begin 
+        | Instr il when List.length il = 1->
+                        begin
 			match List.hd il with
-                        |Call(_, Lval(Var vi, _),_,_) when vi.vname = "fdelay" -> Printf.fprintf oc "\n%d [label= \"%s\"]"  s.sid vi.vname; List.iter (printSuccToFile oc s) tsucc   
-                        |Call(_, Lval(Var vi, _),_,_) when vi.vname = "sdelay" -> Printf.fprintf oc "\n%d [label= \"%s\"]"  s.sid vi.vname ; List.iter (printSuccToFile oc s) tsucc 
-                        |_ ->  Printf.fprintf oc "" 
-                        end        
+                        |Call(_, Lval(Var vi, _),_,_) when vi.vname = "fdelay" -> Printf.fprintf oc "\n%d [label= \"%s\"]"  s.sid vi.vname; List.iter (printSuccToFile oc s) tsucc
+                        |Call(_, Lval(Var vi, _),_,_) when vi.vname = "sdelay" -> Printf.fprintf oc "\n%d [label= \"%s\"]"  s.sid vi.vname ; List.iter (printSuccToFile oc s) tsucc
+                        |_ ->  Printf.fprintf oc ""
+                        end
         |_ -> Printf.fprintf oc ""
 
 let printAvail s =
@@ -388,8 +388,8 @@ let printAvail s =
 
 let computeAvail ?(doCFG:bool=false) (f: fundec)  =
   (* We must prepare the CFG info first *)
-	let ch = open_out "timed_graph.dot" in 
-	let y = 
+	let ch = open_out "timed_graph.dot" in
+	let y =
         if doCFG then begin
                  prepareCFG f;
                 computeCFGInfo f false
@@ -402,18 +402,18 @@ let computeAvail ?(doCFG:bool=false) (f: fundec)  =
                 (* We start with only the start block *)
                 IH.add AV.stmtStartData start.sid  d;  Avail.compute [start];
                  (* Dump the dominators information *)
-	
+
            List.iter
-		
+
              (fun s ->
                let savail = getStmtAvail AV.stmtStartData s in
 		ignore (printAvail s
 		 (*ignore (E.log "Available for %d: %a\n" s.sid*)
                          AV.pretty (savail))
              )f.sallstmts
-	
+
 	   end
-	in 
+	in
 	  close_out ch
 
 let isFirm (i : instr) : bool =
@@ -432,18 +432,18 @@ let isTimingPoint (i : instr) : bool =
     | _ -> false
 
 let addVarDelay il =
-	let ret = VS.empty in 
-	match il with 
-	 | Call (_, Lval (Var vf, _), _, _) -> VS.add vf ret  
-	 | _ -> ret 
- 
+	let ret = VS.empty in
+	match il with
+	 | Call (_, Lval (Var vf, _), _, _) -> VS.add vf ret
+	 | _ -> ret
+
 let computeAvailOfStmt data s il =
   let savail = getStmtAvail data s in
 	let vardelay = addVarDelay il in
         let u, d  =  UD.computeUseDefInstr il in
 	let suse = VS.diff u vardelay in
-	   if VS.is_empty suse then begin 
-               true 
+	   if VS.is_empty suse then begin
+               true
 		end
         else
 	    begin
@@ -451,12 +451,12 @@ let computeAvailOfStmt data s il =
 	    end
 
 let checkAvail data s il =
-	if not(computeAvailOfStmt data s il) then begin 
+	if not(computeAvailOfStmt data s il) then begin
 			let loc = get_stmtLoc s.skind in
                         (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "undefined variable in  %a" dn_instr il)
 end
 
-let checkAvailOfStmt f  = 
+let checkAvailOfStmt f  =
 	IH.clear AV.stmtStartData;
          match f.sbody.bstmts with
         | [] -> () (* function has no body *)
@@ -474,40 +474,40 @@ let checkAvailOfStmt f  =
              )f.sallstmts ; *)
 	  List.iter
 
-             (fun s -> match s.skind with 
+             (fun s -> match s.skind with
 			| Instr il -> if (List.length il = 1 &&  isTimingPoint (List.hd il)) then
 					checkAvail AV.stmtStartData s (List.hd il)
-				 
+
 			| _ -> ()
              )f.sallstmts
            end
 
-		 
 
-module TS = Set.Make(struct 
+
+module TS = Set.Make(struct
                         type t = Cil.stmt
                         let compare v1 v2 = Pervasives.compare v1.sid v2.sid
                      end)
 
-let addSucc s = 
-	match s.skind with 
+let addSucc s =
+	match s.skind with
 	(*|Instr il when List.length il = 1 &&  isTimingPoint (List.hd il)) ->
 				TS.singleton s *)
 	|Instr il when (List.exists isTimingPoint il) ->  let snew = List.find isTimingPoint il  in
 							if (isFirm (List.hd il)) then
 								(TS.singleton (i2s snew))
 							else
-							 	TS.singleton s  
+							 	TS.singleton s
 							  (* TS.union (TS.singleton s) (TS.singleton (i2s snew))*)
-						 
+
 	|_ -> TS.empty
 
-		(*	
+		(*
 let tsuccStm slist tsucc=
-	match slist with 
+	match slist with
 	|h::t -> begin
 		 if (addSucc h)  then
-		  	 
+
 		end
 	|_ -> ()
 
@@ -519,8 +519,8 @@ module TPSucc = struct
   type t = TS.t
 
 
-  let pretty () (tsucc: t) = 
-    dprintf "{%a}" 
+  let pretty () (tsucc: t) =
+    dprintf "{%a}"
       (docList (fun s -> dprintf "%d" s.sid))
       (TS.elements tsucc)
 (*
@@ -532,10 +532,10 @@ module TPSucc = struct
 
   let funcExitData = TS.empty
 
-  let combineStmtStartData (stm:stmt) ~(old:t) (now:t) = 
+  let combineStmtStartData (stm:stmt) ~(old:t) (now:t) =
    if ((not(TS.compare old now = 0)) && TS.cardinal old = 0)
     then Some(TS.union old now)
-    else None 
+    else None
 
   let combineSuccessors t1 t2 = TS.union t1 t2
 
@@ -557,17 +557,17 @@ class nullAdderClass data = object(self)
 
   method vstmt s =
     all_stmts := s :: (!all_stmts); begin
-    match s.skind with  
+    match s.skind with
    |Return _ -> IH.add data s.sid TS.empty
-   |_ ->   
-    let addAsSucc = if List.length s.succs > 0  then 
-			List.map addSucc s.succs 
+   |_ ->
+    let addAsSucc = if List.length s.succs > 0  then
+			List.map addSucc s.succs
 		    else
-			[TS.empty] 
+			[TS.empty]
 		in
-   let addSet = if (List.for_all (TS.is_empty) (addAsSucc)) then 
+   let addSet = if (List.for_all (TS.is_empty) (addAsSucc)) then
 			TS.empty
-		else 
+		else
 			List.fold_left (TS.union) (TS.empty) (addAsSucc) in
                 IH.add data s.sid  addSet
 	end;
@@ -577,7 +577,7 @@ end
 
 let null_adder fdec data =
   all_stmts := []; ignore(visitCilFunction (new nullAdderClass data) fdec);
-  !all_stmts 
+  !all_stmts
 
 
 let getStmtTPSucc (data: TS.t IH.t) (s: stmt) : TS.t =
@@ -599,27 +599,27 @@ let retFirm s =
 	| Instr il ->  begin
 			if List.length il = 1  && (isFirm (List.hd il)) then
 				true
-			else 
-				false 
+			else
+				false
 		      end
-	|_ -> false 
-	
+	|_ -> false
+
 
 let checkSuccs (data: TS.t IH.t) (s: stmt) =
 	let tsuccsofs = getStmtTPSucc data s in
 		let totalSucc = TS.filter retTimingPoint tsuccsofs in
 		let firmsucc = TS.filter retFirm tsuccsofs  in
-			(if (TS.cardinal firmsucc > 1) then 
+			(if (TS.cardinal firmsucc > 1) then
 				let loc = get_stmtLoc s.skind in
-				  (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "conflicting firm timing point 1") 
+				  (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "conflicting firm timing point 1")
 			else
 			begin
-				if ((TS.cardinal firmsucc > 0) && (TS.cardinal totalSucc > 1)) then 
+				if ((TS.cardinal firmsucc > 0) && (TS.cardinal totalSucc > 1)) then
   				let loc = get_stmtLoc s.skind in
-				  (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "conflicting firm timing point 2") end) 
-		
-let checkFirmSuccs (data: TS.t IH.t) (s: stmt) = 
-        let tsuccsofs = getStmtTPSucc data s in	
+				  (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "conflicting firm timing point 2") end)
+
+let checkFirmSuccs (data: TS.t IH.t) (s: stmt) =
+        let tsuccsofs = getStmtTPSucc data s in
 	let totalSucc = TS.filter retTimingPoint tsuccsofs in
 	(*let p = E.log "%d;" (TS.cardinal totalSucc) in *)
                 let firmsucc = TS.filter retFirm tsuccsofs in
@@ -627,7 +627,7 @@ let checkFirmSuccs (data: TS.t IH.t) (s: stmt) =
 				true
 			else
 			        false
-let retTimingPointSucc s data =	
+let retTimingPointSucc s data =
 	let tsuccsofs = getStmtTPSucc data s in
 	let succSet = TS.filter retTimingPoint tsuccsofs in
 	let succList = TS.elements succSet in
@@ -641,11 +641,11 @@ let isZeroTimingPointSucc s data =
 	let tsuccsofs = getStmtTPSucc data s in
 	let succSet = TS.filter retTimingPoint tsuccsofs in
 	let succList = TS.elements succSet in
-	if List.length succList = 1 then 
+	if List.length succList = 1 then
 				true
                            else
 				false
-				
+
 
 
 
@@ -654,11 +654,11 @@ let  retFirmSucc s data =
         let firmsucc = TS.filter retFirm tsuccsofs  in
 	let firmsuccList = TS.elements firmsucc in
 	let intrfirmSucc = if List.length firmsuccList = 1 then List.hd firmsuccList
-			   else 
+			   else
 			dummyStmt in
-		intrfirmSucc 
-	 		                    
-let computeTPSucc ?(doCFG:bool=true) (f: fundec)  = 
+		intrfirmSucc
+
+let computeTPSucc ?(doCFG:bool=true) (f: fundec)  =
         if doCFG then begin
                  prepareCFG f;
                 computeCFGInfo f false
@@ -666,8 +666,8 @@ let computeTPSucc ?(doCFG:bool=true) (f: fundec)  =
         IH.clear TPSucc.stmtStartData;
 	let a = null_adder f TPSucc.stmtStartData in
            TSucc.compute a ;
-	
-                 (* Dump the dominators information *) 
+
+                 (* Dump the dominators information *)
          List.iter
 
              (fun s ->
@@ -699,13 +699,13 @@ let checkTPSucc ?(doCFG:bool=true) (f: fundec) fil  =
                let tsuc = getStmtTPSucc TPSucc.stmtStartData s in
 			     	(*(printAvailCFG s (TS.elements tsuc));*)
 			 	 (printTimeCFG ch s (TS.elements tsuc))
-	 )f.sallstmts; fprintf ch "\n}"; close_out ch; 
+	 )f.sallstmts; fprintf ch "\n}"; close_out ch;
 
 	List.iter
 
 	(fun s -> match s.skind with
                         | Instr il -> if (List.length il = 1 &&  isTimingPoint (List.hd il)) then
-                                        checkSuccs TPSucc.stmtStartData s 
+                                        checkSuccs TPSucc.stmtStartData s
 
                         | _ -> ()
              )f.sallstmts; TPSucc.stmtStartData
@@ -713,13 +713,14 @@ let checkTPSucc ?(doCFG:bool=true) (f: fundec) fil  =
 
 let rec getruntime exp  =
 	match exp with
-	|BinOp(PlusA, e1, e2, _) -> getruntime e2 
-	| _ as e -> e 
+	|BinOp(PlusA, e1, e2, _) -> getruntime e2
+	| _ as e -> e
 
-let rec getdl exp = 
-	getruntime exp 
+let rec getdl exp =
+	getruntime exp
 
-let getperiod exp = 
+let getperiod exp =
 	exp
 
-	
+
+

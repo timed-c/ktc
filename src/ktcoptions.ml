@@ -17,7 +17,7 @@ let warnVararg: bool ref = ref false
 let home : string ref = ref ""
 let merge : bool ref = ref false
 
-let num_ext = 2
+let num_ext = 3
 let enable_ext : bool ref array = Array.init num_ext (fun i -> ref false)
 
 
@@ -25,7 +25,7 @@ let options_ref = ref []
 
 let align () =
   let options = !options_ref in
-  
+
   let left = try
       options
       |> List.map fst3
@@ -34,28 +34,28 @@ let align () =
       |> List.hd
     with Not_found -> 0
   in
-  
+
   let left = left + 4 in
-  
+
   let width = 78 - left in
-  
+
   let rec wrap str =
     if String.length str <= width then str else
-    
+
     let break, skip =
       try let break = String.rindex_from str width ' ' in
         try String.index (String.sub str 0 break) '\n', 1
         with Not_found -> break, 1
       with Not_found -> width, 0
     in
-    
+
     let lstr, rstr =
       String.sub str 0 break,
       String.sub str (break + skip) (String.length str - break - skip)
     in
     lstr ^ "\n" ^ String.make left ' ' ^ wrap rstr
   in
-  
+
   List.map (fun (arg, action, str) ->
     if arg = "" then arg, action, "\n" ^ str ^ "\n"
     else let pre = String.make (left - String.length arg - 3) ' ' in
@@ -67,7 +67,7 @@ let ext_options =
   Array.mapi (fun i br -> if i = 0 then
     ("--enable-ext"^(string_of_int i),
      Arg.Set br,
-     "Enable source-to-source transformation to POSIX") else 
+     "Enable source-to-source transformation to POSIX") else
 	("--enable-ext"^(string_of_int i),
      Arg.Set br,
      "Enable source-to-source transformatin to FreeRTOS"
@@ -83,7 +83,7 @@ let ext_options =
 *)
 let options = ext_options @ [
 
-  
+
   "", Arg.Unit (fun () -> ()), "General:";
   "--out", Arg.Set_string outFile, "Set the name of the output file";
   "--home", Arg.Set_string home, "Set the name of ktc's home directory";
@@ -100,7 +100,7 @@ let options = ext_options @ [
      try
        let machineModel = Sys.getenv "CIL_MACHINE" in
        Cil.envMachine := Some (Machdepenv.modelParse machineModel);
-     with 
+     with
        Not_found ->
 	 ignore (Errormsg.error "CIL_MACHINE environment variable is not set")
      | Failure msg ->

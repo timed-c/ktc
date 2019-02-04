@@ -22,7 +22,7 @@ enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
 int policy = 0;
 extern int setschedvar;
 //#define spolicy(X) if( (X) == EDF) spolicy_edf(); else spolicy_other(); sleep(0)
-#define spolicy(X) setschedvar = 1; policy =X; sdelay(-2103, ms); 
+#define spolicy(X) setschedvar = 1; policy =X; sdelay(-2103, ms);
 #define task void* __attribute__((task))
 #define sdelay(intr, ...) sdelay(intr, intr, ##__VA_ARGS__)
 #define stp(pr, dl, unit) sdelay(pr, dl, unit)
@@ -54,14 +54,14 @@ struct threadqueue {
 #define exec_child(x) if(x == 0)
 #define cread(chan, ptr)   if((void *__attribute__((read_block))) (sizeof(#chan) > &ptr)){sleep(0);}
 #define cwrite(chan, ptr) if((void *__attribute__((write_block))) (sizeof(#chan) > &ptr)){sleep(0);}
-%#define cinit(chan, val) int tempinitvarktc; if((void *__attribute__((init_block))) (sizeof(#chan) > &tempinitvarktc)){sleep(0);}
-cinit(chan, val) chan = pipe_new(sizeof(val), )
+//#define cinit(chan, val) int tempinitvarktc; if((void *__attribute__((init_block))) (sizeof(#chan) > &tempinitvarktc)){sleep(0);}
+//cinit(chan, val) chan = pipe_new(sizeof(val), )
 #define lvchannel __attribute__((lvchannel))
 //#define fifochannel(c)  c ##ktclist[50]; int c ##ktccount; int c ##ktctail; struct threadqueue  __attribute__((fifochannel)) c
 //# task if((void *__attribute__((task)))1)
 #define fifochannel(c) c; pipe_t* c ##pipe; pipe_consumer_t* c ##cons; pipe_producer_t* c ##pros;
 #define main() *dummyglobalvariable; int populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort);return 1; } void main()
-#define aperiodic(val, ms)  runtime = val; deadline = val; period = val; ktc_set_sched(policy, runtime, period, deadline);setschedvar = 0; 
+#define aperiodic(val, ms)  runtime = val; deadline = val; period = val; ktc_set_sched(policy, runtime, period, deadline);setschedvar = 0;
 #define ms -3
 #define ns -9
 #define sec 0
@@ -122,8 +122,8 @@ typedef struct cbm{
 struct cab_ds{
 	struct cbm* free;
 	struct cbm* mrb;
-	int maxcbm; 
-	
+	int maxcbm;
+
 };
 
 cbm cabmsgv;
@@ -297,7 +297,15 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("list_pr")
 #pragma cilnoremove("populatelist")
 #pragma cilnoremove("sched_getattr")
+#pragma cilnoremove("log_trace_end_id")
+#pragma cilnoremove("log_trace_release")
+#pragma cilnoremove("log_trace_execution")
+#pragma cilnoremove("log_trace_arrival")
+#pragma cilnoremove("log_trace_init_tp")
+#pragma cilnoremove("log_trace_init")
+#pragma cilnoremove("clock_gettime")
 #pragma cilnoremove("sae")
+#pragma cilnoremove("fopen")
 extern int autotest_finished;
 //extern int ktc_sdelay_end(char const   *f , int l , int intrval , char *unit ) ;
 //extern long ktc_sdelay_init(char const   *f , int l, int intrval, char* unit, struct timespec* start_time ) ;

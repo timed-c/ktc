@@ -13,9 +13,9 @@ let outputFile (f : C.file) : unit =
   if !O.outFile <> "" then
     try
       let c = open_out !O.outFile in
-      
+
       C.print_CIL_Input := false;
-      Stats.time "printCIL" 
+      Stats.time "printCIL"
         (C.dumpFile (!C.printerForMaincil) c !O.outFile) f;
       close_out c
     with _ ->
@@ -24,26 +24,28 @@ let outputFile (f : C.file) : unit =
 let processOneFile (cil: C.file) : unit =
   if !(O.enable_ext.(0)) then Sdelay.sdelay cil;
   if !(O.enable_ext.(1)) then Fdelay.sdelay cil;
+  if !(O.enable_ext.(2)) then Profile.sdelay cil;
+  if !(O.enable_ext.(3)) then Tfg.sdelay cil;
   outputFile cil
 ;;
 
 let main () =
-  
+
   C.print_CIL_Input := true;
 
-  
+
   C.insertImplicitCasts := false;
 
-  
+
   C.lineLength := 100000;
 
-  
+
   C.warnTruncate := false;
 
-  
+
   E.colorFlag := true;
 
-  
+
   Cabs2cil.doCollapseCallCast := true;
 
   let usageMsg = "Usage: ktc [options] source-files" in
@@ -59,12 +61,12 @@ let main () =
   in
 
   processOneFile one
-;;  
+;;
 
 
-begin 
-  try 
-    main () 
+begin
+  try
+    main ()
   with
   | F.CabsOnly -> ()
   | E.Error -> ()
