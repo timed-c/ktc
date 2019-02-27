@@ -8,6 +8,7 @@ RUN opam config env
 RUN opam depext conf-m4.1
 RUN opam install cil
 RUN opam install yojson
+RUN opam install csv
 RUN echo $(opam config env)
 
 COPY . /opt/ktc
