@@ -28,6 +28,7 @@ extern int setschedvar;
 #define stp(pr, dl, unit) sdelay(pr, dl, unit)
 #define ftp(pr, dl, unit) if (pr == 0) skipdelay;  fdelay(pr, dl, unit)
 #define fdelay(intr, ...) fdelay(intr, intr, ##__VA_ARGS__)
+
 #define gettime(unit)  ktc_gettime(unit);sdelay(-1404, 0)
 #define while(var) int while_var = var; while(while_var)
 
@@ -298,6 +299,7 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("populatelist")
 #pragma cilnoremove("sched_getattr")
 #pragma cilnoremove("log_trace_end_id")
+#pragma cilnoremove("log_trace_abort_time")
 #pragma cilnoremove("log_trace_release")
 #pragma cilnoremove("log_trace_execution")
 #pragma cilnoremove("log_trace_arrival")

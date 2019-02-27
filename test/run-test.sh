@@ -5,7 +5,7 @@ test_execute()
 {
 ./ktccompile $1 2> log
  if [ $? = 0 ]; then
-    ./a.out &> log 
+    ./a.out &> log
     if [ $? = 0 ]; then
        echo $1 passed
     else
@@ -23,7 +23,7 @@ test_execute()
 
 test_error()
 {
-../bin/ktc --enable-ext0 --link --save-temps $1 2> log
+../bin/ktc --enable-ext0 -std=c99 --link --save-temps $1 2> log
  if [ $? = 1 ]; then
     echo $1 passed
  else

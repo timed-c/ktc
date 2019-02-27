@@ -10,17 +10,17 @@ all:   ktcutil ktcoption native
 ktcutil:
 	@rm -f -r libs
 	@mkdir libs
-	@ocamlbuild -no-hygiene -cflags '-w -a' -use-ocamlfind -pkgs 'cil,yojson' -Is $(DIRS) ktcutil.cma
-	@ocamlbuild   -no-hygiene -cflags '-w -a' -use-ocamlfind -pkgs 'cil,yojson' -Is $(DIRS) ktcutil.cmxa
+	@ocamlbuild -no-hygiene -cflags '-w -a' -use-ocamlfind -pkgs 'cil,yojson,csv' -Is $(DIRS) ktcutil.cma
+	@ocamlbuild   -no-hygiene -cflags '-w -a' -use-ocamlfind -pkgs 'cil,yojson,csv' -Is $(DIRS) ktcutil.cmxa
 	@rm -f bytes.ml
 	@cp _build/src/ktcutil.cma libs/.
 	@cp _build/src/ktcutil.cmxa libs/.
 
 ktcoption:
-	@ocamlbuild -cflags '-w -a'  -no-hygiene -use-ocamlfind -pkgs 'cil,yojson'  -Is $(DIRS) ktcoptions.cma > log
-	@ocamlbuild  -cflags '-w -a' -no-hygiene -use-ocamlfind -pkgs 'cil,yojson'  -Is $(DIRS) ktcoptions.cmxa > log
-	@ocamlbuild  -cflags '-w -a' -no-hygiene -use-ocamlfind -pkgs 'cil,yojson'  -Is $(DIRS) cilktc.cma > log
-	@ocamlbuild  -cflags '-w -a' -no-hygiene -use-ocamlfind -pkgs 'cil,yojson' -Is $(DIRS) cilktc.cmxa
+	@ocamlbuild -cflags '-w -a'  -no-hygiene -use-ocamlfind -pkgs 'cil,yojson,csv'  -Is $(DIRS) ktcoptions.cma > log
+	@ocamlbuild  -cflags '-w -a' -no-hygiene -use-ocamlfind -pkgs 'cil,yojson,csv'  -Is $(DIRS) ktcoptions.cmxa > log
+	@ocamlbuild  -cflags '-w -a' -no-hygiene -use-ocamlfind -pkgs 'cil,yojson,csv'  -Is $(DIRS) cilktc.cma > log
+	@ocamlbuild  -cflags '-w -a' -no-hygiene -use-ocamlfind -pkgs 'cil,yojson,csv' -Is $(DIRS) cilktc.cmxa
 	@rm -f bytes.ml
 	@cp _build/src/ktcoptions.cma libs/.
 	@cp _build/src/ktcoptions.cmxa libs/.
@@ -28,7 +28,7 @@ ktcoption:
 
 
 native:
-	@ocamlbuild -cflags '-w -a' -no-hygiene  -use-ocamlfind -pkgs 'cil,yojson'  -Is $(DIRS) main.native
+	@ocamlbuild -cflags '-w -a' -no-hygiene  -use-ocamlfind -pkgs 'cil,yojson,csv'  -Is $(DIRS) main.native
 	@rm -f main.native
 	@cd bin; cp ../_build/src/main.native ktcexe
 
