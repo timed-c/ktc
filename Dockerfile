@@ -19,6 +19,9 @@ RUN ls -la
 RUN eval $(opam config env) && make
 WORKDIR /opt/ktc/test
 RUN eval $(opam config env) && bash run-test.sh
+WORKDIR /opt/ktc/profile-test
+RUN eval $(opam config env) && bash run-end-docker.sh test1.c
+
 
 # `opam config env`
 ENV CAML_LD_LIBRARY_PATH="/root/.opam/system/lib/stublibs:/usr/lib/ocaml/stublibs"
