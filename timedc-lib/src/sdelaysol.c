@@ -1,7 +1,7 @@
-#define _GNU_SOURCE   
-#include <stdint.h>   
-#include <pthread.h>  
-#include <dlfcn.h>    
+#define _GNU_SOURCE
+#include <stdint.h>
+#include <pthread.h>
+#include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -27,7 +27,7 @@ pthread_mutex_t mt;
 	return syscall(314, pid, attr, flags);
  }
 
-int compare_qsort (const void * elem1, const void * elem2) 
+int compare_qsort (const void * elem1, const void * elem2)
 {
     int f = *((int*)elem1);
     int s = *((int*)elem2);
@@ -49,7 +49,7 @@ int ktc_set_sched(int policy, int runtime, int period, int deadline){
 	sa.size = sizeof(sa);
         sa.sched_flags = 0;
         sa.sched_nice = 0;
-    	
+
 	if(policy == EDF){
 		sa.sched_priority = 0;
 		sa.sched_policy = SCHED_DEADLINE;
@@ -101,7 +101,7 @@ int ktc_set_sched(int policy, int runtime, int period, int deadline){
 	if(&sa == NULL){
 		printf("this is null");
 	}
-	 if( (err = sched_setattr(0, &sa, flag)) == -1) { 
+	 if( (err = sched_setattr(0, &sa, flag)) == -1) {
 		 perror("error");
 		 printf("%d\n", errno);
 	}
@@ -109,7 +109,7 @@ int ktc_set_sched(int policy, int runtime, int period, int deadline){
 
 long ktc_gettime(int unit){
 	struct timespec st;
-	long ret;		
+	long ret;
 	(void) clock_gettime(CLOCK_REALTIME, &st);
 	ret = timespec_to_unit(st, unit);
 	return ret;
@@ -155,7 +155,7 @@ long ktc_sdelay_init(int intrval, int unit, struct timespec* start_time, int id)
 	if(cmp_timespec(interval_time, elapsed_time) == -1){
 	//	printf("intr < elapsd\n");
 		wait_time = add_timespec((*start_time), interval_time);
-		elapsed_time = diff_timespec(end_time, wait_time); 
+		elapsed_time = diff_timespec(end_time, wait_time);
 		*start_time = add_timespec(wait_time, elapsed_time);
 		(void) clock_gettime(CLOCK_REALTIME, &et);
 		//printf("Time At Timing Point - %lld.%.9ld\n", (long long)(start_time->tv_sec), (start_time->tv_nsec)) ;
@@ -228,7 +228,7 @@ long ktc_sdelay_init(int deadline, int period, int unit, struct timespec* start_
 		if(cmp_timespec(interval_time, elapsed_time) == 0){
 			wait_time = add_timespec((*start_time), interval_time);
 			deadline_timespec = add_timespec((*start_time), deadline_timespec);
-			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); 
+			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec);
 			*start_time = wait_time;
 			return (timespec_to_unit(overshot_timespec, unit));
 		}
@@ -237,7 +237,7 @@ long ktc_sdelay_init(int deadline, int period, int unit, struct timespec* start_
 			elapsed_time = diff_timespec(end_time, wait_time); /*elapsed_time here is the obershot*/
 			deadline_timespec = add_timespec((*start_time), deadline_timespec);
 			*start_time = add_timespec(wait_time, elapsed_time);
-			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); 
+			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec);
 			(void) clock_gettime(CLOCK_REALTIME, &et);
 			return (timespec_to_unit(overshot_timespec, unit));
 		}
@@ -259,7 +259,7 @@ long ktc_sdelay_init(int deadline, int period, int unit, struct timespec* start_
 		if(cmp_timespec(interval_time, elapsed_time) == 0){
 			wait_time = add_timespec((*start_time), interval_time);
 			deadline_timespec = add_timespec((*start_time), deadline_timespec);
-			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); 
+			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec);
 			*start_time = wait_time;
 			return (timespec_to_unit(overshot_timespec, unit));
 		}
@@ -268,7 +268,7 @@ long ktc_sdelay_init(int deadline, int period, int unit, struct timespec* start_
 			elapsed_time = diff_timespec(end_time, wait_time); /*elapsed_time here is the obershot*/
 			deadline_timespec = add_timespec((*start_time), deadline_timespec);
 			*start_time = add_timespec(wait_time, elapsed_time);
-			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); 
+			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec);
 			(void) clock_gettime(CLOCK_REALTIME, &et);
 			return (timespec_to_unit(overshot_timespec, unit));
 		}
@@ -281,7 +281,7 @@ long ktc_sdelay_init(int deadline, int period, int unit, struct timespec* start_
 int ktc_start_time_init(struct timespec* start_time)
 {
 	(void) clock_gettime(CLOCK_REALTIME, start_time);
-	return 0; 
+	return 0;
 }
 /*
 void main(){
@@ -301,7 +301,7 @@ void timer_signal_handler(int sig, siginfo_t *extra, void *cruft){
       if(tp->waiting != 1){
 		tp->waiting = 0;
 		siglongjmp(tp->env, 1);
-	} 
+	}
 }
 
 void  ktc_create_timer(timer_t* ktctimer, struct tp_struct* tp, int num){
@@ -310,7 +310,7 @@ void  ktc_create_timer(timer_t* ktctimer, struct tp_struct* tp, int num){
 	sigfillset(&sa.sa_mask);
         sa.sa_flags = SA_SIGINFO;
 	sa.sa_sigaction = timer_signal_handler;
-	
+
 	if(sigaction((SIGRTMIN+10+num), &sa, NULL) < 0){
                 perror("sigaction");
                 exit(0);
@@ -336,10 +336,10 @@ long ktc_block_signal(int n){
 	sigaddset(&set, SIGRTMIN+10+1);
 	sigaddset(&set, SIGRTMIN+10+2);
 	sigaddset(&set, SIGRTMIN+10+3);
-	sigaddset(&set, SIGRTMIN+10+4);	
+	sigaddset(&set, SIGRTMIN+10+4);
 	sigaddset(&set, SIGRTMIN+10+5);
 	sigaddset(&set, SIGRTMIN+10+6);
-	sigaddset(&set, SIGRTMIN+10+7);	
+	sigaddset(&set, SIGRTMIN+10+7);
 	pthread_sigmask(SIG_BLOCK, &set, NULL);
 
 }
@@ -353,42 +353,42 @@ long ktc_fdelay_init(int interval, int period, int unit, struct timespec* start_
 		sigset_t allsigs;
 		sigfillset(&allsigs);
 		sigdelset(&allsigs, SIGRTMIN+10+num);
-        	sigsuspend(&allsigs);
-		if(period > interval){	
-			clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &wait_time, NULL);			
+        sigsuspend(&allsigs);
+		if(period > interval){
+			clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &wait_time, NULL);
 		}
 		(void) clock_gettime(CLOCK_REALTIME, &time_now);
 		elapsed_time_ts = diff_timespec(time_now, *start_time);
-        	elapsed_time_int = timespec_to_unit(elapsed_time_ts, unit);
+        elapsed_time_int = timespec_to_unit(elapsed_time_ts, unit);
 		if(elapsed_time_int < 1 ){
-		        *start_time = wait_time;	
+		    *start_time = wait_time;
 			return 0;
 		}
 		else{
 			(void) clock_gettime(CLOCK_REALTIME, start_time);
-			return elapsed_time_int; 
+			return elapsed_time_int;
 		}
 	}
 	else{
 		/* A case of next*/
-		if(period < interval){	
+		if(period < interval){
 			(void) clock_gettime(CLOCK_REALTIME, start_time);
 			return -1;
 		}
 		else{
 		/* A case of timer expiry*/
-			*start_time = wait_time;	
+			*start_time = wait_time;
 			return 0;
 		}
 	}
-		
-	
+
+
 }
 
 int ktc_fdelay_start_timer(int interval, int unit, timer_t ktctimer, struct timespec* start_time){
 	struct timespec interval_timespec;
         struct itimerspec i;
-	
+
 	interval_timespec = convert_to_timespec(interval, unit);
         i.it_value = add_timespec((*start_time), interval_timespec);
         i.it_interval.tv_sec = 0;
@@ -397,8 +397,8 @@ int ktc_fdelay_start_timer(int interval, int unit, timer_t ktctimer, struct time
                                 perror("timer_setitimer");
                                 exit(0);
         }
-	//(*start_time) = add_timespec( (*start_time), interval_timespec); 
-	
+	//(*start_time) = add_timespec( (*start_time), interval_timespec);
+
 }
 
 int ktc_critical_start(sigset_t* orig_mask){
@@ -415,14 +415,14 @@ int ktc_critical_end(sigset_t* orig_mask){
 		perror ("sigprocmask");
 		return 1;
 	}
- 
+
 }
 
 cbm* ktc_htc_getmes(struct cab_ds* cab){
 	cbm* p;
 	p = cab->mrb;
 	p->use = p->use + 1;
-	return p;	
+	return p;
 }
 
 void ktc_htc_unget (struct cab_ds* cab, cbm* buffer){
@@ -467,7 +467,7 @@ void creadFourSlotIntChan(int* data, int* value, int* slot, int *latest, int *re
         index = slot[pair];
         value = &(data[pair][index]);
 }
-/* 
+/*
 void main(){
 	struct tp_struct tp;
 	int ret_jmp;
@@ -475,7 +475,7 @@ void main(){
 	struct timespec start_time, interval_timespec;
 	struct itimerspec i;
 	create_timer(&ktctimer, &tp);
-	
+
 	ret_jmp = __sigsetjmp(tp.env, 1);
 	interval_timespec = convert_to_timespec(3, "ms");
 	ktc_start_time_init(&start_time);
@@ -483,14 +483,14 @@ void main(){
 	i.it_value = add_timespec(start_time, interval_timespec);
         i.it_interval.tv_sec = 0;
 	i.it_interval.tv_nsec = 0;
-	printf("jgd0"); 
-	if(timer_settime(ktctimer, TIMER_ABSTIME, &i, NULL) < 0){  
+	printf("jgd0");
+	if(timer_settime(ktctimer, TIMER_ABSTIME, &i, NULL) < 0){
                                 perror("timer_setitimer");
                                 exit(0);
         }
 	printf("sleeping\n");
 	sleep(1);
-	tp.waiting = 1;	
+	tp.waiting = 1;
 	ktc_fdelay_init(3, "ms", &start_time);
 }*/
 
@@ -507,14 +507,14 @@ void ktc_htc_putmes(struct cab_ds* cab, struct cbm* buffer){
 		cab->free = cab->mrb;
 	}
 	cab->mrb = buffer;
-	
+
 }
 
 void  ktc_fifo_read(struct threadqueue *queue, void* fifolistt, int* fifocount, int* fifotail, void* data, int size, int d){
 
 	int wt = 0;
 	pthread_mutex_lock(&queue->mutex);
-	while(*fifotail == *fifocount){	
+	while(*fifotail == *fifocount){
 		if(wt != 0){
 		//     pthread_cond_timedwait(&queue->cond, &queue->mutex, &wt);
 		  //   *wt = 0;
@@ -522,9 +522,9 @@ void  ktc_fifo_read(struct threadqueue *queue, void* fifolistt, int* fifocount, 
 		     return ;
 		}
 		else
-		     pthread_cond_wait(&queue->cond, &queue->mutex);					
+		     pthread_cond_wait(&queue->cond, &queue->mutex);
 	}
-	
+
 	memcpy(data, fifolistt+(*fifotail), size);
 
 	(*fifotail)++;
@@ -541,7 +541,7 @@ void ktc_fifo_write(struct threadqueue *queue, void* fifolistt, int* fifocount, 
 	if(*fifotail == *fifocount)
 		pthread_cond_broadcast(&queue->cond);
 	(*fifocount)++;
-	pthread_mutex_unlock(&queue->mutex);	  
+	pthread_mutex_unlock(&queue->mutex);
 }
 
 int ktc_fifo_init(struct threadqueue *queue){

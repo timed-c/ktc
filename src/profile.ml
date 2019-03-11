@@ -291,11 +291,12 @@ let initSdelayFunctions (f : file)  : unit =
   sdelayfuns.compute_priority <- focf compute_priority_str init_type
 
 
-let makeSdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location) lv =
+let makeSdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc : location) lv =
   (*let time_unit = if ((L.length argL) = 3 && not (isZero (L.hd argL))) then (E.s (E.error "%s:%d: error : unknown resolution of timing point" loc.file loc.line)) else (L.nth argL 2) in*)
   let time_unit = (L.nth argL 2) in
+  let logname = findLocalVar fdec.slocals ("ktclog") in
   let f, l, deadline, period ,tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, (L.nth argL 1), time_unit, mkAddrOf((var structvar)), (List.hd (List.rev argL))  in
-  [Call(lv,v2e sdelayfuns.sdelay_init, [deadline;period;tunit;s;t_id;], loc)]
+  [Call(lv,v2e sdelayfuns.sdelay_init, [deadline;period;tunit;s;t_id], loc)]
 
 let makeelemInstr chan tail head lv loc =
   [Call(lv,v2e sdelayfuns.nelem, [mkAddrOf(var chan); Lval(var head); Lval(var tail)], loc)]
@@ -352,13 +353,15 @@ let makeSdelayEndInstr (structvar : varinfo) (timervar : varinfo) (tp : varinfo)
   [mkStmtOneInstr timer_init]
 *)
 
-let makeFdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location) (retjmp) (signo) tpstructvar lv : instr list =
+let makeFdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc : location) (retjmp) (signo) tpstructvar lv : instr list =
   let time_unit = if ((L.length argL) = 3 && not (isZero (L.hd argL))) then mkString  (E.s (E.error "%s:%d: error : unknown resolution of timing point" loc.file loc.line))  else (L.nth argL 2) in
   let f, l, deadline, period, tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, (L.nth argL 1), time_unit, mkAddrOf((var structvar)), (List.hd(List.rev argL)) in
   let waitingOffset = match tpstructvar.vtype with
 		      | TComp (cinfo, _) -> Field (getCompField cinfo "waiting", NoOffset) in
   let waitingConditionInstr = Set((Var tpstructvar, waitingOffset), Cil.one, locUnknown) in
-  [waitingConditionInstr; Call(lv,v2e sdelayfuns.fdelay_init, [deadline;period;tunit;s;t_id;(v2e retjmp); signo;], loc)]
+  let logname = findLocalVar fdec.slocals ("ktclog") in
+  [waitingConditionInstr; Call(lv,v2e sdelayfuns.fdelay_init,
+  [deadline;period;tunit;s;t_id;(v2e retjmp); signo], loc)]
 
 let makegettimeInstr lv (structvar : varinfo) (argL : exp list) loc =
 	let tunit, s =  L.hd argL, mkAddrOf((var structvar)) in
@@ -907,11 +910,12 @@ class fProfilingAdder filename fdec = object(self)
                let trace_release_instr = makeLogTraceRelease (v2e logname)
                (v2e lastarrival) (v2e itime) (mkAddrOf (var stime))
                (List.nth argList 1) locUnknown in
-                let trace_abort_instr = makeLogTraceAbortTime (v2e flog)
-               (v2e lastarrival) (v2e stime) (List.nth argList 2) (v2e count_var) locUnknown in
+                (*let trace_abort_instr = makeLogTraceAbortTime (v2e flog)
+               (v2e lastarrival) (v2e stime) (List.nth argList 2) (v2e
+               count_var) locUnknown in *)
                let trace_end_instr = makeLogTraceExecution (v2e logname) (v2e
                stime) locUnknown in
-               [trace_end_instr; trace_abort_instr; i; inc_count_instr; previous_id_instr;
+               [trace_end_instr; (*trace_abort_instr;*) i; inc_count_instr; previous_id_instr;
                trace_arrival_instr; trace_release_instr]
               (*  else
                    (let trace_arrival_instr = makeLogTraceArrival (v2e logname)
@@ -975,8 +979,12 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : 
 						                             let fifocount = findGlobalVar filename.globals (channame^"ktccount") in
 						                             let fifotail= findGlobalVar filename.globals (channame^"ktctail") in
 					                                     makeelemInstr  fifothrdqu fifocount fifotail lv loc *)
-    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> if L.length argList < 5 then makeSdelayInitInstr structvar argList loc lv else makeSdelayInitInstr structvar (L.tl argList) loc lv
-    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> if L.length argList < 5 then makeFdelayInitInstr structvar argList loc ret_jmp (integer signo) tpstructvar lv else makeFdelayInitInstr structvar (L.tl argList) loc ret_jmp (integer signo) tpstructvar  lv
+    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> if
+        L.length argList < 5 then makeSdelayInitInstr fdec structvar argList loc
+        lv else makeSdelayInitInstr fdec structvar (L.tl argList) loc lv
+    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> if
+        L.length argList < 5 then makeFdelayInitInstr fdec structvar argList loc
+        ret_jmp (integer signo) tpstructvar lv else makeFdelayInitInstr fdec structvar (L.tl argList) loc ret_jmp (integer signo) tpstructvar  lv
 	|Call(lv ,Lval(Var vi,_), argList, loc) when (vi.vname = "gettime") -> makegettimeInstr lv structvar argList loc
 	(*|Call(_,LVal(Var vi,_),_,loc) when (vi.vname = "next") -> makeNextGoto loc *)
 	|Call(_,Lval(Var vi,_),argList,_) when (isFunTask vi) ->
