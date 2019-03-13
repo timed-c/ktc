@@ -6,4 +6,4 @@ name=$1
 /home/saranya/Dokument/tools/analysis_tool/timed-c-e2e-sched-analysis/build/nptest -r job.csv > output
 cp job.rta.csv output.rta
 cp job.csv input
-/home/saranya/Dokument/tools/analysis_tool/timed-c-e2e-sched-analysis/sensitivity/progprog
+/home/saranya/Dokument/tools/analysis_tool/timed-c-e2e-sched-analysis/sensitivity/bin/sensitivity
