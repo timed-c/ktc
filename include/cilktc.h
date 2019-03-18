@@ -30,7 +30,7 @@ extern int setschedvar;
 #define fdelay(intr, ...) fdelay(intr, intr, ##__VA_ARGS__)
 
 #define gettime(unit)  ktc_gettime(unit);sdelay(-1404, 0)
-#define while(var) int while_var = var; while(while_var)
+//#define while(var) int while_var = var; while(while_var)
 
 #define invariant(c,i,...) __blockattribute__((invariant((c),(i),__VA_ARGS__)))
 #define post(c) __attribute__((post((c))))

@@ -718,7 +718,7 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
 		else{
 			(void) clock_gettime(CLOCK_REALTIME, start_time);
             if(pid != 0)
-                fprintf(fp, "%d", elapsed_time_int);
+                fprintf(fp, "%d,", elapsed_time_int);
 			return elapsed_time_int;
 		}
 	}
@@ -726,11 +726,13 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
 		/* A case of next*/
 		if(period < interval){
 			(void) clock_gettime(CLOCK_REALTIME, start_time);
+             fprintf(fp, "%d,", prf_zero);
 			return -1;
 		}
 		else{
 		/* A case of timer expiry*/
 			*start_time = wait_time;
+             fprintf(fp, "%d,", prf_zero);
 			return 0;
 		}
 	}
