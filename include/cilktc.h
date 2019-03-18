@@ -107,7 +107,9 @@ int list_pr[500] = {4};
 int list_dl[500] = {4};
 void ktc_create_timer(timer_t* ktctimer, struct tp_struct* tp, int num);
 extern int ktc_start_time_init(struct timespec* start_time) ;
+extern long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec* start_time, int id, FILE* fp, int pid) ;
 extern long ktc_sdelay_init(int deadline, int period, int unit, struct timespec* start_time, int id ) ;
+extern long ktc_fdelay_init_profile(int interval,int period, int unit, struct timespec* start_time, int id, int num, int retjmp, FILE* fp, int pid);
 extern long ktc_gettime(int unit);
 extern long ktc_fdelay_init(int interval,int period, int unit, struct timespec* start_time, int id, int num, int retjmp);
 extern long ktc_block_signal(int n);
@@ -274,6 +276,8 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("ktc_start_time_init")
 #pragma cilnoremove("ktc_sdelay_init")
 #pragma cilnoremove("ktc_fdelay_init")
+#pragma cilnoremove("ktc_sdelay_init_profile")
+#pragma cilnoremove("ktc_fdelay_init_profile")
 #pragma cilnoremove("ktc_block_signal")
 #pragma cilnoremove("timepecptr")
 #pragma cilnoremove("env")

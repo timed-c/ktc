@@ -143,10 +143,10 @@ let sdelayfuns = {
 
 
 
-let sdelay_init_str = "ktc_sdelay_init"
+let sdelay_init_str = "ktc_sdelay_init_profile"
 let start_timer_init_str   = "ktc_start_time_init"
 (*let start_timer_init_str   = "sdelay"*)
-let fdelay_init_str = "ktc_fdelay_init"
+let fdelay_init_str = "ktc_fdelay_init_profile"
 let gettime_str = "ktc_gettime"
 let timer_create_str  = "ktc_create_timer"
 let sig_setjmp_str = "__sigsetjmp"
@@ -295,8 +295,10 @@ let makeSdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc : loca
   (*let time_unit = if ((L.length argL) = 3 && not (isZero (L.hd argL))) then (E.s (E.error "%s:%d: error : unknown resolution of timing point" loc.file loc.line)) else (L.nth argL 2) in*)
   let time_unit = (L.nth argL 2) in
   let logname = findLocalVar fdec.slocals ("ktclog") in
+     let count_var  = findLocalVar fdec.slocals ("ktccount") in
   let f, l, deadline, period ,tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, (L.nth argL 1), time_unit, mkAddrOf((var structvar)), (List.hd (List.rev argL))  in
-  [Call(lv,v2e sdelayfuns.sdelay_init, [deadline;period;tunit;s;t_id], loc)]
+  [Call(lv,v2e sdelayfuns.sdelay_init, [deadline;period;tunit;s;t_id;v2e
+  logname; v2e count_var], loc)]
 
 let makeelemInstr chan tail head lv loc =
   [Call(lv,v2e sdelayfuns.nelem, [mkAddrOf(var chan); Lval(var head); Lval(var tail)], loc)]
@@ -318,9 +320,9 @@ loc =
     interval;resolution;arrival_pointer], loc)
 
 
-let makeLogTraceAbortTime file_pointer atime stime interval id loc =
+let makeLogTraceAbortTime file_pointer loc =
     Call(None,v2e sdelayfuns.log_trace_abort_time,
-    [file_pointer;atime;stime;interval;id], loc)
+    [file_pointer], loc)
 
 let makeLogTraceExecution file_pointer stime loc =
     Call(None,v2e sdelayfuns.log_trace_execution, [file_pointer;stime], loc)
@@ -360,8 +362,9 @@ let makeFdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc : loca
 		      | TComp (cinfo, _) -> Field (getCompField cinfo "waiting", NoOffset) in
   let waitingConditionInstr = Set((Var tpstructvar, waitingOffset), Cil.one, locUnknown) in
   let logname = findLocalVar fdec.slocals ("ktclog") in
+  let count_var  = findLocalVar fdec.slocals ("ktccount") in
   [waitingConditionInstr; Call(lv,v2e sdelayfuns.fdelay_init,
-  [deadline;period;tunit;s;t_id;(v2e retjmp); signo], loc)]
+  [deadline;period;tunit;s;t_id;(v2e retjmp); signo; v2e logname; v2e count_var], loc)]
 
 let makegettimeInstr lv (structvar : varinfo) (argL : exp list) loc =
 	let tunit, s =  L.hd argL, mkAddrOf((var structvar)) in
@@ -530,8 +533,8 @@ let instrTimingPoint (i : instr) : bool =
 
 let instrTimingPointAftr (i : instr) : bool =
    match i with
-    | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_sdelay_init") ->  true
-    | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "ktc_fdelay_init")  -> true
+    | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_sdelay_init_profile") ->  true
+    | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "ktc_fdelay_init_profile")  -> true
     | _ -> false
 
 (*
@@ -897,8 +900,9 @@ class fProfilingAdder filename fdec = object(self)
                 fdec.slocals ("ktcitime")) else (makeLocalVar fdec ("ktcitime")
                 (TComp(logstart,[]))) in
                 [i]
-        |Call(_,Lval(Var vi,_),argList, loc) when ((vi.vname = "ktc_sdelay_init" ||
-        vi.vname = "ktc_fdelay_init") & (fdec.svar.vname <> "main")) -> (*if
+        |Call(_,Lval(Var vi,_),argList, loc) when ((vi.vname =
+            "ktc_sdelay_init_profile" ||
+        vi.vname = "ktc_fdelay_init_profile") & (fdec.svar.vname <> "main")) -> (*if
             (isdeadlineInfinity argList < 2147483640) then *)
                let inc_count_instr = counter <- counter + 1; Set((Var(count_var),
                NoOffset), BinOp(PlusA, v2e id_var, (integer counter), intType), locUnknown) in
@@ -1353,8 +1357,11 @@ class profileTask filename = object(self)
         locUnknown in *)
         let trace_end_instr = makeLogTraceExecution (v2e logname_var) (v2e
         execution_start_var) locUnknown in
+        let trace_abort_instr = makeLogTraceAbortTime (v2e logname_var)
+        locUnknown in
         let return_stmnt_in_func = List.hd (List.rev fdec.sbody.bstmts) in
-        let add_end_instr_without_return = (mkStmtOneInstr trace_end_instr) ::
+        let add_end_instr_without_return = List.append (List.rev [mkStmtOneInstr
+        trace_end_instr; mkStmtOneInstr trace_abort_instr])
              (List.tl (List.rev fdec.sbody.bstmts)) in
         let add_end_instr_with_return = return_stmnt_in_func ::
              (add_end_instr_without_return) in

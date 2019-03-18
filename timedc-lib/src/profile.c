@@ -1,20 +1,18 @@
-#define _GNU_SOURCE
+#include <stdio.h>
 #include <stdint.h>
+#include <unistd.h>
+#include <time.h>
+#include <setjmp.h>
 #include <pthread.h>
 #include <dlfcn.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <cillib.h>
 #include <signal.h>
-#include <setjmp.h>
-#include <time.h>
 #include <pthread.h>
-#include <errno.h>
+#include <stdbool.h>
 #include <linux/sched.h>
-#include <string.h> /* memset */
-#include <unistd.h> /* close */
-
+#include <linux/types.h>
+#include <cillib.h>
 
 pthread_mutex_t mt;
 
@@ -103,7 +101,7 @@ int ktc_set_sched(int policy, int runtime, int period, int deadline){
 	}
 	 if( (err = sched_setattr(0, &sa, flag)) == -1) {
 		 perror("error");
-		 printf("%d\n", errno);
+		 printf("%d\n", err);
 	}
 }
 
@@ -578,9 +576,10 @@ void ktc_simpson(int* sdata, int* tdata){
 }
 
 
-long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec* start_time, int id, FILE* fp){
+long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec* start_time, int id, FILE* fp, int pid){
     int profile = 0;
-    fprintf(fp, "%d,", profile);
+    if(pid != 0)
+        fprintf(fp, "%d,", profile);
 	/*condition for gettime*/
 	if(period == -2103){
 		return 0;
@@ -692,7 +691,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 
 
 
-long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec* start_time, int id, int retjmp, int num, FILE* fp) {
+long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec* start_time, int id, int retjmp, int num, FILE* fp, int pid) {
 	struct timespec time_now, elapsed_time_ts;
 	int elapsed_time_int;
 	struct timespec wait_time, period_timespec;
@@ -712,12 +711,14 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
         elapsed_time_int = timespec_to_unit(elapsed_time_ts, unit);
 		if(elapsed_time_int < 1 ){
 		    *start_time = wait_time;
-            fprintf(fp, "%d,", prf_zero);
+            if(pid != 0)
+                fprintf(fp, "%d,", prf_zero);
 			return 0;
 		}
 		else{
 			(void) clock_gettime(CLOCK_REALTIME, start_time);
-            fprintf(fp, "%d", elapsed_time_int);
+            if(pid != 0)
+                fprintf(fp, "%d", elapsed_time_int);
 			return elapsed_time_int;
 		}
 	}

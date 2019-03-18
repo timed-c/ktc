@@ -24,6 +24,7 @@ type edge_info =
   release : string;
   jitter : string;
   execution : string;
+  abort : string;
   dst : string;
 }
 
@@ -47,6 +48,8 @@ let lstinstpolicy = ref []
 let jnodeslist = ref []
 let jtasklist = ref []
 let csvlist = ref []
+let abortlist = ref []
+
 
 let critical_str = "critical"
 let next_str = "next"
@@ -974,7 +977,20 @@ let rec unrollToHyper hp tlist task_list =
 let to_csv_string ilist =
     List.map (fun a -> (string_of_int a)) ilist
 
-let findHyperperiod tlist =
+let rec create_abort_csv alist jlist nlst =
+    match jlist with
+    | hx :: rst -> let tid = List.hd hx in
+                  let texists = List.exists (fun a -> if (List.hd a = tid) then true else false) alist in
+
+                  let auxlist = (if (texists) then
+                      (let ax = List.find (fun a -> if (List.hd a = tid) then true else false) alist  in
+                  [tid; List.nth hx 1; List.nth hx 6; List.nth hx 6; List.nth ax 2; List.nth ax 3] :: nlst)
+                      else nlst) in
+                  create_abort_csv alist rst auxlist
+    | [] -> nlst
+
+
+let findHyperperiod tlist alist =
     let task_arrival_pair = List.map (fun a -> ((List.nth a 0), (int_of_string
     (List.nth a 1)))) tlist in
     let task_list = List.map (fun a -> List.nth a 0) tlist in
@@ -985,12 +1001,17 @@ let findHyperperiod tlist =
     let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min";
     "Cost max"; "Deadline"; "Priority"] :: ncsv in
     let _ = Csv.save "job.csv" nncsv
-    in ()
+    in
+    let abortcsv = create_abort_csv alist ncsv [] in
+    let abortncsv = ["Task ID"; "Job ID"; "TMIN"; "TMAX"; "CMIN";
+    "CMAX"] :: abortcsv in
+    let _ = Csv.save "action.csv" abortncsv
+in ()
 
 let read_data fname =
   Csv.load fname
-  |> List.map (function [src; arrival; release; jitter; execution; dst] -> {src;
-  arrival; release; jitter; execution; dst}
+  |> List.map (function [src; arrival; release; jitter; execution; abort; dst] -> {src;
+  arrival; release; jitter; execution; abort; dst}
                       | _ -> failwith "read_data: incorrect file")
 
 let filter_edges s d t =
@@ -1039,6 +1060,17 @@ let findJitter tname src =
     0 in
     maxjitter
 
+let findExecutionAbortTime tname src =
+    let tnew = read_data tname in
+    let t = List.rev (List.tl (List.rev tnew)) in
+    let noheader = List.tl t in
+    let edge_list = filter_nodes (src) noheader in
+    let max_abort = List.fold_right maxEx (List.map (fun a -> a.abort) edge_list)
+    0 in
+    let min_abort = List.fold_right minEx (List.map (fun a -> a.abort) edge_list)
+    1000000000000 in
+    (max_abort, min_abort)
+
 
 let tfgFindID jnodes =
  List.length jnodes
@@ -1049,6 +1081,12 @@ let addJsonNodes jnodes arrival_time deadline kind tname d =
     let id = tfgFindID jnodes in
     let j = findJitter tname  (string_of_int (id+1)) in
     let (wcet,bcet) = findExecutionTimeSrc tname (string_of_int (id+1)) in
+    let (min_abort, max_abort) = findExecutionAbortTime tname (string_of_int
+    (id+1)) in
+    let _ = if (max_abort <> 0) then
+        (abortlist :=  [tname; (string_of_int arrival_time); (string_of_int
+        min_abort); (string_of_int max_abort); (string_of_int deadline)] ::
+        !abortlist) in
     (csvlist := ([tname; (string_of_int arrival_time); (string_of_int j);
     (string_of_int bcet); (string_of_int wcet); (string_of_int deadline)]) ::
         !csvlist);
@@ -1560,7 +1598,8 @@ class tfgMinusForTask filename = object(self)
         (if (fdec.svar.vname = "main") then (Yojson.Safe.to_file
         "tfg_minus.json")
         (`List(!jtasklist))); (Csv.save "input.csv" !csvlist);
-        (if (fdec.svar.vname = "main") then ( findHyperperiod !csvlist)); (Csv.save "input.csv" !csvlist);
+        (if (fdec.svar.vname = "main") then ( findHyperperiod !csvlist
+        !abortlist)); (Csv.save "input.csv" !csvlist);
         ()) in
 
        (* let _ = (if (List.length !jnodeslist > 0) then
