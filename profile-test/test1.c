@@ -13,8 +13,7 @@ void mrad2deg(int k);
 void mSolveCubic(int k);
 void musqrt(int k);
 
-FILE dfile;
-/*
+
 task tsk_foo(){
     int i;
     for(i=0;i<50;i++){
@@ -32,15 +31,13 @@ task tsk_bar(){
     }
 
 }
-*/
+
 
 task tsk_far(){
     int i =0;
     sdelay(0, ms);
     while(i < 50){
-        critical{
-          rad2deg(100);
-        }
+        rad2deg(100);
         fdelay(60, ms);
         i++;
     }
@@ -50,8 +47,8 @@ task tsk_far(){
 
 int main(){
     long unsigned int targ = 10;
-   // tsk_foo();
-   // tsk_bar();
+    tsk_foo();
+    tsk_bar();
     tsk_far();
     printf("main--end\n");
 }

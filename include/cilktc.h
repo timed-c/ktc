@@ -30,7 +30,6 @@ extern int setschedvar;
 #define fdelay(intr, ...) fdelay(intr, intr, ##__VA_ARGS__)
 
 #define gettime(unit)  ktc_gettime(unit);sdelay(-1404, 0)
-//#define while(var) int while_var = var; while(while_var)
 
 #define invariant(c,i,...) __blockattribute__((invariant((c),(i),__VA_ARGS__)))
 #define post(c) __attribute__((post((c))))
@@ -139,6 +138,7 @@ struct fifolist{
 	pthread_mutex_t mutx;
 };
 
+
 struct sched_attr {
 	__u32 size;
 
@@ -159,6 +159,7 @@ struct sched_attr {
 
 struct sched_attr sae;
 struct fifolist fifoex;
+//struct log_struct lfile;
 
 extern int compare_qsort (const void * elem1, const void * elem2);
 extern int populatelist(int num);
@@ -292,6 +293,7 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("ktc_critical_end")
 #pragma cilnoremove("ktc_critical_start")
 #pragma cilnoremove("fifoex")
+//#pragma cilnoremove("lfile")
 #pragma cilnoremove("ktc_fifo_init")
 #pragma cilnoremove("ktc_fifo_read")
 #pragma cilnoremove("ktc_fifo_write")
@@ -312,6 +314,15 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("clock_gettime")
 #pragma cilnoremove("sae")
 #pragma cilnoremove("fopen")
+#pragma cilnoremove("fclose")
+#pragma cilnoremove("plog_trace_end_id")
+#pragma cilnoremove("plog_trace_abort_time")
+#pragma cilnoremove("plog_trace_release")
+#pragma cilnoremove("plog_trace_execution")
+#pragma cilnoremove("plog_trace_arrival")
+#pragma cilnoremove("plog_trace_init_tp")
+#pragma cilnoremove("plog_trace_init")
+#pragma cilnoremove("plog_write_to_file")
 extern int autotest_finished;
 //extern int ktc_sdelay_end(char const   *f , int l , int intrval , char *unit ) ;
 //extern long ktc_sdelay_init(char const   *f , int l, int intrval, char* unit, struct timespec* start_time ) ;
