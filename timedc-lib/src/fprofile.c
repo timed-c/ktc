@@ -424,7 +424,7 @@ void  ktc_create_timer(timer_t* ktctimer, timer_t tid, struct tp_struct* tp, int
                  perror("timer_create");
                  exit(0);
         }
-          printf("    *sival_ptr = 0x%lx\n", (long) *ktctimer);
+          //printf("    *sival_ptr = 0x%lx\n", (long) *ktctimer);
     }
 }
 
@@ -439,7 +439,7 @@ int ktc_fdelay_start_timer(int interval, int unit, timer_t ktctimer, struct time
                                 perror("timer_setitimer");
                                 exit(0);
         }
-     printf("start_timer  0x%lx\n", (long) ktctimer);
+     //printf("start_timer  0x%lx\n", (long) ktctimer);
 	//(*start_time) = add_timespec( (*start_time), interval_timespec);
 
 }
