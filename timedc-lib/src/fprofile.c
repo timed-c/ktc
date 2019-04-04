@@ -8,12 +8,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
-#include <pthread.h>
 #include <stdbool.h>
 #include <linux/sched.h>
 #include <linux/types.h>
 #include <cillib.h>
 #include <string.h>
+#include <errno.h>
 
 struct log_struct{
     int src;
@@ -307,14 +307,14 @@ void main(){
 void timer_signal_handler(int sig, siginfo_t *extra, void *cruft){
      struct tp_struct* tp ;
 	tp =  (struct tp_struct*) extra->si_value.sival_ptr;
-	//printf("Timer Handle\n");
+	printf("Timer Handle\n");
       if(tp->waiting != 1){
 		tp->waiting = 0;
 		siglongjmp(tp->env, 1);
 	}
 }
 
-void  ktc_create_timer(timer_t* ktctimer, struct tp_struct* tp, int num){
+/*void  ktc_create_timer(timer_t* ktctimer, struct tp_struct* tp, int num){
 	struct sigaction sa;
         struct sigevent timer_event;
 	sigfillset(&sa.sa_mask);
@@ -338,23 +338,22 @@ void  ktc_create_timer(timer_t* ktctimer, struct tp_struct* tp, int num){
 
 
 }
+*/
+
 
 
 long ktc_block_signal(int n){
 	sigset_t set;
+    int i;
 	sigemptyset(&set);
-	sigaddset(&set, SIGRTMIN+10+1);
-	sigaddset(&set, SIGRTMIN+10+2);
-	sigaddset(&set, SIGRTMIN+10+3);
-	sigaddset(&set, SIGRTMIN+10+4);
-	sigaddset(&set, SIGRTMIN+10+5);
-	sigaddset(&set, SIGRTMIN+10+6);
-	sigaddset(&set, SIGRTMIN+10+7);
+    for(i=0; i<30; i++){
+	    sigaddset(&set, SIGRTMIN+i);
+    }
 	pthread_sigmask(SIG_BLOCK, &set, NULL);
 
 }
 long ktc_fdelay_init(int interval, int period, int unit, struct timespec* start_time, int id, int retjmp, int num) {
-	struct timespec time_now, elapsed_time_ts;
+	/*struct timespec time_now, elapsed_time_ts;
 	int elapsed_time_int;
 	struct timespec wait_time, period_timespec;
 	period_timespec = convert_to_timespec(period, unit);
@@ -362,7 +361,7 @@ long ktc_fdelay_init(int interval, int period, int unit, struct timespec* start_
 	if(retjmp == 0){
 		sigset_t allsigs;
 		sigfillset(&allsigs);
-		sigdelset(&allsigs, SIGRTMIN+10+num);
+		sigdelset(&allsigs, SIGRTMIN+num);
         sigsuspend(&allsigs);
 		if(period > interval){
 			clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &wait_time, NULL);
@@ -380,25 +379,58 @@ long ktc_fdelay_init(int interval, int period, int unit, struct timespec* start_
 		}
 	}
 	else{
-		/* A case of next*/
+		//A case of next
 		if(period < interval){
 			(void) clock_gettime(CLOCK_REALTIME, start_time);
 			return -1;
 		}
 		else{
-		/* A case of timer expiry*/
+		// A case of timer expiry
 			*start_time = wait_time;
 			return 0;
 		}
-	}
+	} */
 
 
+}
+void  ktc_create_timer(timer_t* ktctimer, timer_t tid, struct tp_struct* tp, int num){
+    int err;
+    struct sigevent timer_event;
+    struct itimerspec its;
+    long long freq_nanosecs;
+    sigset_t mask;
+    struct sigaction sa;
+    timer_t sid;
+    printf("    *sival_ptr = 0x%lx\n", (long) tid);
+    if(tid == 0x0){
+        sa.sa_flags = SA_SIGINFO;
+	    sa.sa_sigaction = timer_signal_handler;
+	    if(sigaction((SIGRTMIN+num), &sa, NULL) < 0){
+                perror("sigaction");
+                exit(0);
+        }
+        sigemptyset(&mask);
+        sigaddset(&mask, SIGRTMIN+num);
+        if (pthread_sigmask(SIG_UNBLOCK, &mask, NULL) == -1){
+               perror("sigprocmask");
+                exit(0);
+        }
+	    tp->waiting = 0;
+	    tp->tmr = ktctimer;
+	    timer_event.sigev_notify = SIGEV_SIGNAL;
+        timer_event.sigev_signo = SIGRTMIN+num;
+        timer_event.sigev_value.sival_ptr = (void*) tp;
+	    if(timer_create(CLOCK_REALTIME, &timer_event, ktctimer) < 0){
+                 perror("timer_create");
+                 exit(0);
+        }
+          printf("    *sival_ptr = 0x%lx\n", (long) *ktctimer);
+    }
 }
 
 int ktc_fdelay_start_timer(int interval, int unit, timer_t ktctimer, struct timespec* start_time){
 	struct timespec interval_timespec;
         struct itimerspec i;
-
 	interval_timespec = convert_to_timespec(interval, unit);
         i.it_value = add_timespec((*start_time), interval_timespec);
         i.it_interval.tv_sec = 0;
@@ -407,6 +439,7 @@ int ktc_fdelay_start_timer(int interval, int unit, timer_t ktctimer, struct time
                                 perror("timer_setitimer");
                                 exit(0);
         }
+     printf("start_timer  0x%lx\n", (long) ktctimer);
 	//(*start_time) = add_timespec( (*start_time), interval_timespec);
 
 }
@@ -711,10 +744,11 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
 	period_timespec = convert_to_timespec(period, unit);
 	wait_time = add_timespec((*start_time), period_timespec);
     int prf_zero = 0;
+            printf("here\n");
 	if(retjmp == 0){
 		sigset_t allsigs;
 		sigfillset(&allsigs);
-		sigdelset(&allsigs, SIGRTMIN+10+num);
+		sigdelset(&allsigs, SIGRTMIN+num);
         sigsuspend(&allsigs);
 		if(period > interval){
 			clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &wait_time, NULL);
@@ -738,7 +772,7 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
 		}
 	}
 	else{
-		/* A case of next*/
+		// A case of next
 		if(period < interval){
 			(void) clock_gettime(CLOCK_REALTIME, start_time);
              fp->abort = prf_zero;
@@ -746,7 +780,7 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
 			return -1;
 		}
 		else{
-		/* A case of timer expiry*/
+		// A case of timer expiry
 			*start_time = wait_time;
             fp->abort = prf_zero;
              //fprintf(fp, "%d,", prf_zero);

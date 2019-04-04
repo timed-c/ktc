@@ -21,7 +21,7 @@
 enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
 //int policy = 0;
 //#define spolicy(X) if( (X) == EDF) spolicy_edf(); else spolicy_other(); sleep(0)
-#define spolicy(X) policy =X; sdelay(0, ms); 
+#define spolicy(X) policy =X; sdelay(0, ms);
 #define task void* __attribute__((task))
 
 //#define sdelay(c)    printf("%d", c)
@@ -92,7 +92,7 @@ bool boolvar;
 struct tp_struct tp_struct_data;
 int list_pr[500];
 int list_dl[500];
-void ktc_create_timer(timer_t* ktctimer, struct tp_struct* tp, int num);
+void ktc_create_timer(timer_t* ktctimer, timer_t tid, struct tp_struct* tp, int num);
 extern int ktc_start_time_init(struct timespec* start_time) ;
 extern long ktc_sdelay_init(int deadline, int period, int unit, struct timespec* start_time, int id ) ;
 extern long ktc_gettime(int unit);
@@ -109,8 +109,8 @@ typedef struct cbm{
 struct cab_ds{
 	struct cbm* free;
 	struct cbm* mrb;
-	int maxcbm; 
-	
+	int maxcbm;
+
 };
 
 cbm cabmsgv;
