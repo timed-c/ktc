@@ -348,7 +348,7 @@ let makeSdelayEndInstr fdec (structvar : varinfo) (timervar : varinfo) (tp : var
   let ktctime_var = findLocalVar fdec.slocals ("ktctime") in
   let itime_init_start_time = Set((Var(ktctime_var), NoOffset), v2e
         structvar, locUnknown) in
-  let timer_init = Call(None, v2e sdelayfuns.timer_create, [t;handlrt; (integer signo);], locUnknown) in
+  let timer_init = Call(None, v2e sdelayfuns.timer_create, [t; v2e timervar; handlrt; (integer signo);], locUnknown) in
   [mkStmtOneInstr start_time_init; mkStmtOneInstr itime_init_start_time; mkStmtOneInstr timer_init]
 
 (*
