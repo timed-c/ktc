@@ -49,6 +49,8 @@ let jnodeslist = ref []
 let jtasklist = ref []
 let csvlist = ref []
 let abortlist = ref []
+let offsetvar = ref 0
+let offsetlist = ref []
 
 
 let critical_str = "critical"
@@ -847,7 +849,6 @@ let calculateHyperperiod tlist =
     let hyperiod = List.fold_right lcm tlist 1 in
     E.log "Hyperperiod %d\n" hyperiod; hyperiod
 
-
 (*
 let rec unrolledJob num p j b w d pr nnow =
     match nnow with
@@ -1132,13 +1133,12 @@ class tfgMinus fdc = object(self)
         let action [i] =
             match i with
             |Call(_,Lval(Var vi,_),argList, loc) when (vi.vname = "sdelay" ||
-            vi.vname = "fdelay") -> (let (at, dl, res) = ((List.nth argList 0),
-            (List.nth argList 1), (List.nth argList 2)) in
-                                    let arrival_time_int = tfgTimeInMicroSec at
-                                    res in
-                                    let deadline_time_int = tfgTimeInMicroSec dl
-                                    res in
+            vi.vname = "fdelay") ->( let (at, dl, res) = ((List.nth argList 0), (List.nth argList 1), (List.nth argList 2)) in
+                                    let arrival_time_int = tfgTimeInMicroSec at res in
+                                    let deadline_time_int = tfgTimeInMicroSec dl res in
                                     let deadline_int = tfgGetValueInt dl in
+                                    let _ = if (!offsetvar = 0) then (offsetlist := (arrival_time_int) :: !offsetlist) in
+                                    let _ = (offsetvar := 1) in
                                     let kind = vi.vname in
                                     let _ = (if (arrival_time_int > -1404 &&
                                     deadline_int < 2147483640) then
@@ -1587,6 +1587,7 @@ class tfgMinusForTask filename = object(self)
         let tfgjson = new tfgMinus fdec in
         let jnodes = (`Assoc(["nodes", `List(!jnodeslist)])) in
         let _ = fdec.sbody <- visitCilBlock tfgjson fdec.sbody in
+        let _ = offsetvar := 0 in
         (*let _ = E.log "len of jnodeslist %d \n" (List.length !jnodeslist) in*)
         let jedges = completeJsonEdges !jnodeslist fdec.svar.vname in
         let jtask = `Assoc([(fdec.svar.vname,`Assoc([("vertices", `List(!jnodeslist));

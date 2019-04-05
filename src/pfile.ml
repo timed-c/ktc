@@ -946,7 +946,8 @@ class fProfilingAdder filename fdec = object(self)
                count_var) locUnknown in *)
                let trace_end_instr = makeLogTraceExecution ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))) (v2e
                stime) locUnknown in
-               [trace_end_instr; (*trace_abort_instr;*) i; inc_count_instr; previous_id_instr;
+                let loop_instr = Set((Var(loop_var), NoOffset), BinOp(PlusA, v2e loop_var, (integer 1), intType), locUnknown) in
+                [trace_end_instr; loop_instr; (*trace_abort_instr;*) i; inc_count_instr; previous_id_instr;
                trace_arrival_instr; trace_release_instr]
               (*  else
                    (let trace_arrival_instr = makeLogTraceArrival (v2e logname)
@@ -988,7 +989,8 @@ count_var loop_var fopn = object(self)
                (v2e lastarrival) (v2e itime) (mkAddrOf (var stime))
                (List.nth argList 1) locUnknown in
                let trace_end_instr = makeLogTraceExecution ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))) (v2e stime) locUnknown in
-               [trace_end_instr; i; inc_count_instr; previous_id_instr; trace_arrival_instr; trace_release_instr]
+                let loop_instr = Set((Var(loop_var), NoOffset), BinOp(PlusA, v2e loop_var, (integer 1), intType), locUnknown) in
+                [trace_end_instr; loop_instr; i; inc_count_instr; previous_id_instr; trace_arrival_instr; trace_release_instr]
         |_ -> [i] in
         ChangeDoChildrenPost([i], action)
 
@@ -998,7 +1000,6 @@ count_var loop_var fopn = object(self)
         |Loop(b,l,st1, st2) -> let ktc_file = findLocalVar fdec.slocals ("ktcfile") in
                                let cond_var = findLocalVar fdec.slocals
                                ("ktccondvar") in
-                               let loop_instr = Set((Var(loop_var), NoOffset), BinOp(PlusA, v2e loop_var, (integer 1), intType), locUnknown) in
                                let cond_instr = Set((Var(cond_var), NoOffset),
                                BinOp(PlusA, v2e cond_var, (integer 1), intType), locUnknown) in
                                let reinit = Set((Var(loop_var), NoOffset), Cil.zero, locUnknown) in
@@ -1013,8 +1014,7 @@ count_var loop_var fopn = object(self)
                                let write_to_file = [mkStmt (If((cond), block_true, block_false, locUnknown))] in
                                let loop_again = [mkStmt (If((cond_1),
                                block_true_1, block_false, locUnknown))] in
-                               s.skind <- Loop((mkBlock (List.append ([(mkStmtOneInstr
-                               loop_instr); (mkStmtOneInstr cond_instr)]) (List.append b.bstmts
+                               s.skind <- Loop((mkBlock (List.append ([(mkStmtOneInstr cond_instr)]) (List.append b.bstmts
                                (List.append loop_again write_to_file)))), l, st1, st2); s
         |_ -> s
         in ChangeDoChildrenPost(s, action)
