@@ -836,6 +836,7 @@ let rec uniqueTaskPair task_list task_arrival_time_list =
     (h, sarrival) :: (uniqueTaskPair rest task_arrival_time_list))
     |[] -> []
 
+
 let rec gcd u v =
   if v <> 0 then (gcd v (u mod v))
   else (abs u)
@@ -1088,9 +1089,9 @@ let addJsonNodes jnodes arrival_time deadline kind tname d =
         (abortlist :=  [tname; (string_of_int arrival_time); (string_of_int
         min_abort); (string_of_int max_abort); (string_of_int deadline)] ::
         !abortlist) in
-    ((csvlist := ([tname; (string_of_int arrival_time); (string_of_int j);
-    (string_of_int bcet); (string_of_int wcet); (string_of_int deadline)]) ::
-        !csvlist));
+    ((if ((j) <> 0) then (csvlist := ([tname; (string_of_int arrival_time); (string_of_int j);
+    (string_of_int bcet); (string_of_int wcet); (string_of_int deadline)] ::
+        !csvlist))));
     [`Assoc[("id",`Int(id+1)); ("a", `Int(arrival_time)); ("d", `Int(arrival_time));
     ("kind", `String(kind));("j",`Int(j))]]
 
