@@ -946,7 +946,7 @@ class fProfilingAdder filename fdec = object(self)
                count_var) locUnknown in *)
                let trace_end_instr = makeLogTraceExecution ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))) (v2e
                stime) locUnknown in
-                let loop_instr = Set((Var(loop_var), NoOffset), BinOp(PlusA, v2e loop_var, (integer 1), intType), locUnknown) in
+                 let loop_instr = makeLogTraceAbortTime (mkAddrOf (var loop_var)) locUnknown in
                 [trace_end_instr; loop_instr; (*trace_abort_instr;*) i; inc_count_instr; previous_id_instr;
                trace_arrival_instr; trace_release_instr]
               (*  else
@@ -989,7 +989,9 @@ count_var loop_var fopn = object(self)
                (v2e lastarrival) (v2e itime) (mkAddrOf (var stime))
                (List.nth argList 1) locUnknown in
                let trace_end_instr = makeLogTraceExecution ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))) (v2e stime) locUnknown in
-                let loop_instr = Set((Var(loop_var), NoOffset), BinOp(PlusA, v2e loop_var, (integer 1), intType), locUnknown) in
+                (*let loop_instr = Set((Var(loop_var), NoOffset), BinOp(PlusA,
+                 * v2e loop_var, (integer 1), intType), locUnknown) in*)
+                 let loop_instr = makeLogTraceAbortTime (mkAddrOf (var loop_var)) locUnknown in
                 [trace_end_instr; loop_instr; i; inc_count_instr; previous_id_instr; trace_arrival_instr; trace_release_instr]
         |_ -> [i] in
         ChangeDoChildrenPost([i], action)
@@ -1008,10 +1010,12 @@ count_var loop_var fopn = object(self)
                                (makeLogTraceFinalFile (v2e ktc_file) (v2e
                                logname_var) locUnknown)) ;(mkStmtOneInstr
                                (makeLogTraceFclose (v2e ktc_file) locUnknown))]  in
-                               let block_true_1 = mkBlock [ (mkStmtOneInstr (reinit))] in
                                let cond = BinOp(Eq, v2e cond_var, (integer 100), intType) in
-                               let cond_1 = BinOp(Gt, v2e loop_var, (integer 100), intType) in
-                               let write_to_file = [mkStmt (If((cond), block_true, block_false, locUnknown))] in
+                               let write_to_file = [mkStmt (If((cond),
+                               block_true, block_false, locUnknown))] in
+                               let block_false = mkBlock[] in
+                               let block_true_1 = mkBlock [ (mkStmtOneInstr (reinit))] in
+                               let cond_1 = BinOp(Ge, v2e loop_var, (integer 99), intType) in
                                let loop_again = [mkStmt (If((cond_1),
                                block_true_1, block_false, locUnknown))] in
                                s.skind <- Loop((mkBlock (List.append
@@ -1398,7 +1402,7 @@ class profileTask filename = object(self)
         (TPtr(TComp(ktc_filename,[]), [])) in
         let logname = findCompinfo filename "log_struct" in
         let logname_var = makeLocalVar fdec ("ktclog")
-        (TArray((TComp(logname,[])), Some((integer 5000)), [])) in
+        (TArray((TComp(logname,[])), Some((integer 200)), [])) in
         let log_init_instr = makeLogTraceInit (var filename_var) (mkString
         vi.vname) locUnknown in
          (*let flogname_var = makeLocalVar fdec ("ktcflog")
@@ -1430,10 +1434,9 @@ class profileTask filename = object(self)
         locUnknown in *)
         let trace_end_instr = makeLogTraceExecution ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))) (v2e
         execution_start_var) locUnknown in
-        let trace_abort_instr = makeLogTraceAbortTime ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))) locUnknown in
         let return_stmnt_in_func = List.hd (List.rev fdec.sbody.bstmts) in
         let add_end_instr_without_return = List.append (List.rev [mkStmtOneInstr
-        trace_end_instr; mkStmtOneInstr trace_abort_instr])
+        trace_end_instr])
              (List.tl (List.rev fdec.sbody.bstmts)) in
         let add_end_instr_with_return = return_stmnt_in_func ::
              (add_end_instr_without_return) in
