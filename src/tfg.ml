@@ -830,8 +830,8 @@ let rec addArrivalTime lst sum =
 
 let rec uniqueTaskPair task_list task_arrival_time_list =
     match task_list with
-    |h :: rest -> (let lst = (List.filter (fun a -> (fst a) = h )
-    task_arrival_time_list) in
+    |h :: rest -> (let lst = (List.tl (List.filter (fun a -> (fst a) = h )
+    task_arrival_time_list)) in
     let sarrival = addArrivalTime  lst 0 in
     (h, sarrival) :: (uniqueTaskPair rest task_arrival_time_list))
     |[] -> []
@@ -1000,8 +1000,7 @@ let findHyperperiod tlist alist =
     unique_task_arrival_pair) in
     let ncsv = List.map (to_csv_string) (unrollToHyper hp tlist task_list) in
     let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min";
-    "Cost max"; "Deadline"; "Priority"] :: (List.filter ((fun a-> (int_of_string
-    (List.nth a 2)) <> 0)) ncsv) in
+    "Cost max"; "Deadline"; "Priority"] :: (ncsv) in
     let _ = Csv.save "job.csv" nncsv
     in
     let abortcsv = create_abort_csv alist ncsv [] in
