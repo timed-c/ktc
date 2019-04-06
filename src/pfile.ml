@@ -1010,7 +1010,7 @@ count_var loop_var fopn = object(self)
                                (makeLogTraceFclose (v2e ktc_file) locUnknown))]  in
                                let block_true_1 = mkBlock [ (mkStmtOneInstr (reinit))] in
                                let cond = BinOp(Eq, v2e cond_var, (integer 100), intType) in
-                               let cond_1 = BinOp(Eq, v2e loop_var, (integer 100), intType) in
+                               let cond_1 = BinOp(Gt, v2e loop_var, (integer 100), intType) in
                                let write_to_file = [mkStmt (If((cond), block_true, block_false, locUnknown))] in
                                let loop_again = [mkStmt (If((cond_1),
                                block_true_1, block_false, locUnknown))] in
