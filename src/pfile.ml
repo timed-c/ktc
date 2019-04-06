@@ -1014,8 +1014,9 @@ count_var loop_var fopn = object(self)
                                let write_to_file = [mkStmt (If((cond), block_true, block_false, locUnknown))] in
                                let loop_again = [mkStmt (If((cond_1),
                                block_true_1, block_false, locUnknown))] in
-                               s.skind <- Loop((mkBlock (List.append ([(mkStmtOneInstr cond_instr)]) (List.append b.bstmts
-                               (List.append loop_again write_to_file)))), l, st1, st2); s
+                               s.skind <- Loop((mkBlock (List.append
+                               ((mkStmtOneInstr cond_instr) :: (loop_again)) (List.append b.bstmts
+                               (write_to_file)))), l, st1, st2); s
         |_ -> s
         in ChangeDoChildrenPost(s, action)
 
@@ -1397,7 +1398,7 @@ class profileTask filename = object(self)
         (TPtr(TComp(ktc_filename,[]), [])) in
         let logname = findCompinfo filename "log_struct" in
         let logname_var = makeLocalVar fdec ("ktclog")
-        (TArray((TComp(logname,[])), Some((integer 200)), [])) in
+        (TArray((TComp(logname,[])), Some((integer 5000)), [])) in
         let log_init_instr = makeLogTraceInit (var filename_var) (mkString
         vi.vname) locUnknown in
          (*let flogname_var = makeLocalVar fdec ("ktcflog")
