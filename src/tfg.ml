@@ -948,7 +948,7 @@ let add_period lst b =
     a + b
 
 let unrollMultiFrameAux tlist hp id tname =
-    let sum_period =  List.fold_right (add_period) tlist 0 in
+    let sum_period =  List.fold_right (add_period) (List.tl (List,rev tlist)) 0 in
     let _ = E.log "sum period %s %d\n" tname sum_period in
     let _ = E.log "hyper period %s %d\n" tname hp in
     let iter = hp/sum_period in
@@ -971,7 +971,7 @@ let rec unrollToHyper hp tlist task_list =
        match task_list with
        | name :: rest -> let onetskl = List.filter (fun a -> (List.nth a 0) =
            name) tlist in
-                         let unrolledlst = unrollOneTask (List.tl (List.rev onetskl)) hp (List.length
+                         let unrolledlst = unrollOneTask (onetskl) hp (List.length
                          task_list)  name in
                          List.append unrolledlst (unrollToHyper hp ((List.filter
                          (fun a -> (List.nth a 0) <>
