@@ -995,7 +995,8 @@ let findHyperperiod tlist alist =
     let task_arrival_pair = List.map (fun a -> ((List.nth a 0), (int_of_string
     (List.nth a 1)))) tlist in
     let task_list = List.map (fun a -> List.nth a 0) tlist in
-    let unique_task_arrival_pair = uniqueTaskPair (List.tl task_list) task_arrival_pair in
+    let unique_task_arrival_pair = uniqueTaskPair (task_list) (List.tl
+    task_arrival_pair) in
     let hp = calculateHyperperiod (List.map (fun a -> (snd a))
     unique_task_arrival_pair) in
     let ncsv = List.map (to_csv_string) (unrollToHyper hp tlist task_list) in
