@@ -992,8 +992,8 @@ let rec create_abort_csv alist jlist nlst =
 
 
 let findHyperperiod tlist alist =
-    let task_arrival_pair = List.filter (fun a -> (snd a) <> 0) (List.map (fun a -> ((List.nth a 0), (int_of_string
-    (List.nth a 1)))) tlist) in
+    let task_arrival_pair = (List.map (fun a -> ((List.nth a 0), (int_of_string
+    (List.nth a 1)))) (List.filter (fun a -> (int_of_string (List.nth a 2)) <> 0) tlist)) in
     let task_list = List.map (fun a -> List.nth a 0) tlist in
     let unique_task_arrival_pair = uniqueTaskPair (task_list) ((task_arrival_pair)) in
     let hp = calculateHyperperiod (List.map (fun a -> (snd a))
@@ -1001,7 +1001,7 @@ let findHyperperiod tlist alist =
     let ncsv = List.map (to_csv_string) (unrollToHyper hp tlist task_list) in
     let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min";
     "Cost max"; "Deadline"; "Priority"] :: (List.filter ((fun a-> (int_of_string
-    (List.nth a 2)) = 0)) ncsv) in
+    (List.nth a 2)) <> 0)) ncsv) in
     let _ = Csv.save "job.csv" nncsv
     in
     let abortcsv = create_abort_csv alist ncsv [] in
