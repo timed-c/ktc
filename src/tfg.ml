@@ -830,7 +830,7 @@ let rec addArrivalTime lst sum =
 
 let rec uniqueTaskPair task_list task_arrival_time_list =
     match task_list with
-    |h :: rest -> (let lst = (List.tl (List.rev (List.filter (fun a -> (fst a) = h )
+    |h :: rest -> (let lst = (((List.filter (fun a -> (fst a) = h )
     task_arrival_time_list))) in
     let sarrival = addArrivalTime  lst 0 in
     (h, sarrival) :: (uniqueTaskPair rest task_arrival_time_list))
