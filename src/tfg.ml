@@ -948,7 +948,8 @@ let add_period lst b =
 
 let unrollMultiFrameAux tlist hp id tname =
     let sum_period =  List.fold_right (add_period) tlist 0 in
-    (*let _ = E.log "sum period %s %d\n" tname sum_period in*)
+    let _ = E.log "sum period %s %d\n" tname sum_period in
+    let _ = E.log "hyper period %s %d\n" tname hp in
     let iter = hp/sum_period in
     let _ = E.log "iter %d\n" iter in
     let [name; p; j; b; w; d] = List.hd (List.rev tlist) in
