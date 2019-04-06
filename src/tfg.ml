@@ -846,7 +846,7 @@ let lcm m n =
   | m, n -> abs (m * n) / (gcd m n)
 
 let calculateHyperperiod tlist =
-    let hyperiod = List.fold_right lcm tlist 1 in
+    let hyperiod = List.fold_right lcm (List.tl tlist) 1 in
     E.log "Hyperperiod %d\n" hyperiod; hyperiod
 
 (*
