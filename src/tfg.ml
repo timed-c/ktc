@@ -48,6 +48,7 @@ let lstinstpolicy = ref []
 let jnodeslist = ref []
 let jtasklist = ref []
 let csvlist = ref []
+let joblist = ref []
 let abortlist = ref []
 let offsetvar = ref 0
 let offsetlist = ref []
@@ -993,14 +994,14 @@ let rec create_abort_csv alist jlist nlst =
     | [] -> nlst
 
 
-let findHyperperiod tlist alist =
+let findHyperperiod tlist alist jlist =
     let task_arrival_pair = (List.map (fun a -> ((List.nth a 0), (int_of_string
     (List.nth a 1))))) tlist in
     let task_list = List.map (fun a -> List.nth a 0) tlist in
     let unique_task_arrival_pair = uniqueTaskPair (task_list) ((task_arrival_pair)) in
     let hp = calculateHyperperiod (List.map (fun a -> (snd a))
     unique_task_arrival_pair) in
-    let ncsv = List.map (to_csv_string) (unrollToHyper hp tlist task_list) in
+    let ncsv = List.map (to_csv_string) (unrollToHyper hp jlist task_list) in
     let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min";
     "Cost max"; "Deadline"; "Priority"] :: (ncsv) in
     let _ = Csv.save "job.csv" nncsv
@@ -1090,6 +1091,9 @@ let addJsonNodes jnodes arrival_time deadline kind tname d =
         (abortlist :=  [tname; (string_of_int arrival_time); (string_of_int
         min_abort); (string_of_int max_abort); (string_of_int deadline)] ::
         !abortlist) in
+    (joblist := ([tname; (string_of_int arrival_time); (string_of_int j);
+    (string_of_int bcet); (string_of_int wcet); (string_of_int deadline)] ::
+        !joblist));
     ((if ((j) <> 0) then (csvlist := ([tname; (string_of_int arrival_time); (string_of_int j);
     (string_of_int bcet); (string_of_int wcet); (string_of_int deadline)] ::
         !csvlist))));
@@ -1602,7 +1606,7 @@ class tfgMinusForTask filename = object(self)
         "tfg_minus.json")
         (`List(!jtasklist))); (Csv.save "input.csv" !csvlist);
         (if (fdec.svar.vname = "main") then ( findHyperperiod !csvlist
-        !abortlist)); (Csv.save "input.csv" !csvlist);
+        !abortlist !joblist)); (Csv.save "input.csv" !csvlist);
         ()) in
 
        (* let _ = (if (List.length !jnodeslist > 0) then
