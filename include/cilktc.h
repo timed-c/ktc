@@ -28,7 +28,6 @@ extern int setschedvar;
 #define stp(pr, dl, unit) sdelay(pr, dl, unit)
 #define ftp(pr, dl, unit) if (pr == 0) skipdelay;  fdelay(pr, dl, unit)
 #define fdelay(intr, ...) fdelay(intr, intr, ##__VA_ARGS__)
-
 #define gettime(unit)  ktc_gettime(unit);sdelay(-1404, 0)
 
 #define invariant(c,i,...) __blockattribute__((invariant((c),(i),__VA_ARGS__)))

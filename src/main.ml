@@ -23,10 +23,10 @@ let outputFile (f : C.file) : unit =
 
 let processOneFile (cil: C.file) : unit =
   if !(O.enable_ext.(0)) then Sdelay.sdelay cil;
-  if !(O.enable_ext.(1)) then Fdelay.sdelay cil;
+  if !(O.enable_ext.(1)) then Pfile.sdelay cil;
   (*if !(O.enable_ext.(2)) then Profile.sdelay cil;*)
   if !(O.enable_ext.(2)) then Pfile.sdelay cil;
-  if !(O.enable_ext.(3)) then Tfg.sdelay cil;
+  if !(O.enable_ext.(3)) then Ftfg.sdelay cil;
   outputFile cil
 ;;
 

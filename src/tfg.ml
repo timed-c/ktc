@@ -948,7 +948,7 @@ let add_period lst b =
     a + b
 
 let unrollMultiFrameAux tlist hp id tname =
-    let sum_period =  List.fold_right (add_period) (List.tl (List,rev tlist)) 0 in
+    let sum_period =  List.fold_right (add_period) (tlist) 0 in
     let _ = E.log "sum period %s %d\n" tname sum_period in
     let _ = E.log "hyper period %s %d\n" tname hp in
     let iter = hp/sum_period in
@@ -967,15 +967,38 @@ let unrollOneTask tlist hp id tname =
     (List.rev tlist) hp (string_of_int id) tname))
 
 
-let rec unrollToHyper hp tlist task_list =
+let find_offset jlist tskname =
+    let olist = List.find (fun [tid; at; j; b; w; d] -> ((tid = tskname) & (int_of_string j) = 0) ) jlist in
+    (int_of_string (List.nth olist 1))
+
+
+let max_offset jlist =
+     let olist = List.filter (fun [tid; at; j; b; w; d] -> ((int_of_string j) = 0)) jlist in
+     let maxo = List.fold_right (Pervasives.max)
+     (List.map (fun [tid; at; j; b; w; d] -> (int_of_string at)) olist) 0 in
+     (E.log "max offset %d\n" maxo); maxo
+
+
+
+
+let rec unrollToHyper hp tlist task_list jlist =
        match task_list with
        | name :: rest -> let onetskl = List.filter (fun a -> (List.nth a 0) =
            name) tlist in
-                         let unrolledlst = unrollOneTask (onetskl) hp (List.length
+                         let os = find_offset jlist name in
+                         let unrolledlst = unrollOneTask (onetskl) (hp) (List.length
                          task_list)  name in
-                         List.append unrolledlst (unrollToHyper hp ((List.filter
-                         (fun a -> (List.nth a 0) <>
-           name)) tlist ) rest )
+                         let ncsv1 = List.map (fun [tid; jid; amin; amax; cmin;
+                         cmax; dl; pr] ->  [tid; jid; (
+                         ((amin) + os)); amax; cmin; cmax;
+                         (((dl) + os)); pr] )
+                         (unrolledlst) in
+                         let _ = E.log "a" in
+                         let h_amin = List.nth (List.hd unrolledlst) 1 in
+                         let _ = E.log "b" in
+                         let ncsv2 = if (h_amin = 0) then ncsv1 else (List.tl ncsv1) in
+                         List.append ncsv2 (unrollToHyper hp ((List.filter
+                         (fun a -> (List.nth a 0) <> name)) tlist) rest jlist)
        |[] -> []
 
 let to_csv_string ilist =
@@ -985,7 +1008,6 @@ let rec create_abort_csv alist jlist nlst =
     match jlist with
     | hx :: rst -> let tid = List.hd hx in
                   let texists = List.exists (fun a -> if (List.hd a = tid) then true else false) alist in
-
                   let auxlist = (if (texists) then
                       (let ax = List.find (fun a -> if (List.hd a = tid) then true else false) alist  in
                   [tid; List.nth hx 1; List.nth hx 6; List.nth hx 6; List.nth ax 2; List.nth ax 3] :: nlst)
@@ -993,6 +1015,33 @@ let rec create_abort_csv alist jlist nlst =
                   create_abort_csv alist rst auxlist
     | [] -> nlst
 
+let add_cmax_win lst b =
+    let a = (List.nth lst 5) in
+    (*let _ = E.log "add period %d\n" a in*)
+    a + b
+
+let max_rel_win lst b =
+    let a = (List.nth lst 5) in
+    (*let _ = E.log "add period %d\n" a in*)
+    Pervasives.max a b
+
+
+let rec compute_observation_window win ujblist tp t =
+    if (tp <> t) then
+        let tn = List.fold_right (add_cmax_win) (List.filter (fun a -> ((tp < (List.nth a 3)) & ((List.nth a 3) <= t))) ujblist) t in
+        let cond = ((List.exists (fun a -> (((List.nth a 2) <= tn) && (tn <
+        (List.nth a 3)))) ujblist) || (tn < win)) in
+        let newtn = if ((t = tn) && cond) then List.fold_right (max_rel_win) (List.filter (fun a -> ((tn < (List.nth a 3)))) ujblist) 0 else tn in
+            compute_observation_window win ujblist t tn
+    else
+        let _ =(E.log "obs win %d" t) in t
+
+let uniq l =
+  let rec tail_uniq a l =
+    match l with
+      | [] -> a
+      | hd::tl -> tail_uniq (hd::a) (List.filter (fun x -> x  != hd) tl) in
+  tail_uniq [] l
 
 let findHyperperiod tlist alist jlist =
     let task_arrival_pair = (List.map (fun a -> ((List.nth a 0), (int_of_string
@@ -1001,9 +1050,20 @@ let findHyperperiod tlist alist jlist =
     let unique_task_arrival_pair = uniqueTaskPair (task_list) ((task_arrival_pair)) in
     let hp = calculateHyperperiod (List.map (fun a -> (snd a))
     unique_task_arrival_pair) in
-    let ncsv = List.map (to_csv_string) (unrollToHyper hp jlist task_list) in
+    let maxos = max_offset jlist in
+    let utask_list = uniq task_list in
+    let ujblist = (unrollToHyper (hp + maxos) tlist (utask_list) jlist) in
+    let ncsv = List.map (to_csv_string) (ujblist) in
+       (* let ncsv2 = if (int_of_string h_amin = 0) then ncsv1 else (List.tl
+        ncsv1) in*)
+    let t = List.fold_right Pervasives.max (List.map (fun a -> List.nth a 3)
+    ujblist) 0 in
+    let _ = E.log "done\n" in
+    let new_win = compute_observation_window (hp + maxos) ujblist 0 t in
+    let _ = E.log "new_win %d" new_win in
     let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min";
     "Cost max"; "Deadline"; "Priority"] :: (ncsv) in
+
     let _ = Csv.save "job.csv" nncsv
     in
     let abortcsv = create_abort_csv alist ncsv [] in
@@ -1087,16 +1147,18 @@ let addJsonNodes jnodes arrival_time deadline kind tname d =
     let (wcet,bcet) = findExecutionTimeSrc tname (string_of_int (id+1)) in
     let (min_abort, max_abort) = findExecutionAbortTime tname (string_of_int
     (id+1)) in
-    let _ = if (max_abort <> 0) then
+    (*let _ = if ((max_abort) <> 0 && (max_abort <> 1000000000000) ) then
         (abortlist :=  [tname; (string_of_int arrival_time); (string_of_int
         min_abort); (string_of_int max_abort); (string_of_int deadline)] ::
-        !abortlist) in
+        !abortlist) in *)
     (joblist := ([tname; (string_of_int arrival_time); (string_of_int j);
     (string_of_int bcet); (string_of_int wcet); (string_of_int deadline)] ::
         !joblist));
     ((if ((j) <> 0) then (csvlist := ([tname; (string_of_int arrival_time); (string_of_int j);
     (string_of_int bcet); (string_of_int wcet); (string_of_int deadline)] ::
-        !csvlist))));
+        !csvlist)))); ((if ((j) <> 0) then (abortlist := ([tname; (string_of_int arrival_time); (string_of_int j);
+    (string_of_int bcet); (string_of_int wcet); (string_of_int deadline); (kind)] ::
+        !abortlist))))
     [`Assoc[("id",`Int(id+1)); ("a", `Int(arrival_time)); ("d", `Int(arrival_time));
     ("kind", `String(kind));("j",`Int(j))]]
 
@@ -1437,7 +1499,6 @@ let initializeCabDs f chanVar cname numbuf =
 
 
 
-
 class addpolicyDetailFunc filename = object(self)
 	inherit nopCilVisitor
         method vfunc (fdec : fundec) =
@@ -1604,9 +1665,12 @@ class tfgMinusForTask filename = object(self)
         (`List(!jtasklist)))*);
         (if (fdec.svar.vname = "main") then (Yojson.Safe.to_file
         "tfg_minus.json")
-        (`List(!jtasklist))); (Csv.save "input.csv" !csvlist);
+        (`List(!jtasklist)));  (Csv.save "input.csv" !csvlist);
+        (Csv.save
+        "ijob.csv" !joblist);
         (if (fdec.svar.vname = "main") then ( findHyperperiod !csvlist
-        !abortlist !joblist)); (Csv.save "input.csv" !csvlist);
+        !abortlist !joblist)); (Csv.save "input.csv" !csvlist); (Csv.save
+        "abort.csv" !abortlist);
         ()) in
 
        (* let _ = (if (List.length !jnodeslist > 0) then

@@ -2,6 +2,7 @@ open Cil
 open Pretty
 open Ktcutil
 open Yojson.Safe
+open Csv
 
 module E = Errormsg
 module L = List
@@ -15,6 +16,18 @@ module CG = Callgraph
 
 
 exception Eson of string
+
+type edge_info =
+{
+  src : string;
+  arrival  : string;
+  release : string;
+  jitter : string;
+  execution : string;
+  abort : string;
+  dst : string;
+}
+
 
 let debug = ref false
 let labelHash =  HT.create 64
@@ -34,6 +47,12 @@ let policyindex = ref 1
 let lstinstpolicy = ref []
 let jnodeslist = ref []
 let jtasklist = ref []
+let csvlist = ref []
+let joblist = ref []
+let abortlist = ref []
+let offsetvar = ref 0
+let offsetlist = ref []
+
 
 let critical_str = "critical"
 let next_str = "next"
@@ -82,7 +101,6 @@ type functions =
   mutable critical_end : varinfo;
   mutable pthread_create : varinfo;
   mutable pthread_join : varinfo;
-  mutable log_trace_abort_time :varinfo;
   mutable log_trace_execution : varinfo;
   mutable log_trace_release : varinfo;
   mutable log_trace_arrival : varinfo;
@@ -90,8 +108,6 @@ type functions =
   mutable log_get_time : varinfo;
   mutable log_trace_init_task : varinfo;
   mutable log_trace_previous_id : varinfo;
-  mutable log_trace_final_file : varinfo;
-  mutable log_trace_fclose : varinfo;
   mutable htc_get : varinfo;
   mutable htc_unget : varinfo;
   mutable htc_reserve : varinfo;
@@ -120,12 +136,9 @@ let sdelayfuns = {
   critical_end = dummyVar;
   pthread_create = dummyVar;
   pthread_join = dummyVar;
-  log_trace_fclose = dummyVar;
-  log_trace_final_file = dummyVar;
   log_trace_init = dummyVar;
   log_trace_previous_id = dummyVar;
   log_trace_init_task = dummyVar;
-  log_trace_abort_time = dummyVar;
   log_trace_execution = dummyVar;
   log_trace_release = dummyVar;
   log_trace_arrival = dummyVar;
@@ -147,10 +160,10 @@ let sdelayfuns = {
 
 
 
-let sdelay_init_str = "ktc_sdelay_init_profile"
+let sdelay_init_str = "ktc_sdelay_init"
 let start_timer_init_str   = "ktc_start_time_init"
 (*let start_timer_init_str   = "sdelay"*)
-let fdelay_init_str = "ktc_fdelay_init_profile"
+let fdelay_init_str = "ktc_fdelay_init"
 let gettime_str = "ktc_gettime"
 let timer_create_str  = "ktc_create_timer"
 let sig_setjmp_str = "__sigsetjmp"
@@ -159,15 +172,12 @@ let critical_start_str  = "ktc_critical_start"
 let critical_end_str = "ktc_critical_end"
 let pthread_create_str = "pthread_create"
 let pthread_join_str = "pthread_join"
-let log_trace_previous_id_str = "plog_trace_end_id"
-let log_trace_fclose_str = "fclose"
-let log_trace_final_file_str = "plog_write_to_file"
+let log_trace_previous_id_str = "log_trace_end_id"
 let log_trace_init_str = "fopen"
-let log_trace_init_task_str = "plog_trace_init_tp"
-let log_trace_arrival_str = "plog_trace_arrival"
-let log_trace_execution_str = "plog_trace_execution"
-let log_trace_abort_time_str = "plog_trace_abort_time"
-let log_trace_release_str = "plog_trace_release"
+let log_trace_init_task_str = "log_trace_init_tp"
+let log_trace_arrival_str = "log_trace_arrival"
+let log_trace_execution_str = "log_trace_execution"
+let log_trace_release_str = "log_trace_release"
 let log_get_time_str = "clock_gettime"
 let htc_get_str = "ktc_htc_getmes"
 let htc_unget_str = "ktc_htc_unget"
@@ -195,8 +205,6 @@ let sdelay_function_names = [
   critical_end_str;
   pthread_create_str;
   pthread_join_str;
-  log_trace_fclose_str;
-  log_trace_final_file_str;
   log_trace_init_str;
   log_trace_previous_id_str;
   log_trace_init_task_str;
@@ -215,7 +223,6 @@ let sdelay_function_names = [
   spolicy_set_str;
   compute_priority_str;
   nelem_str;
-  log_trace_abort_time_str;
   blocksignal_str;
 ]
 
@@ -283,13 +290,10 @@ let initSdelayFunctions (f : file)  : unit =
   sdelayfuns.log_get_time <- focf log_get_time_str init_type;
   sdelayfuns.pthread_join <- focf pthread_join_str init_type;
   sdelayfuns.log_trace_init <- focf log_trace_init_str init_type;
-  sdelayfuns.log_trace_fclose <- focf log_trace_fclose_str init_type;
-  sdelayfuns.log_trace_final_file <- focf log_trace_final_file_str init_type;
   sdelayfuns.log_trace_previous_id <- focf log_trace_previous_id_str init_type;
   sdelayfuns.log_trace_init_task <- focf log_trace_init_task_str init_type;
   sdelayfuns.log_trace_arrival <- focf log_trace_arrival_str init_type;
   sdelayfuns.log_trace_execution <- focf log_trace_execution_str init_type;
-    sdelayfuns.log_trace_abort_time <- focf log_trace_abort_time_str init_type;
   sdelayfuns.log_trace_release <- focf log_trace_release_str init_type;
   sdelayfuns.fifo_init <- focf fifo_init_str init_type;
   sdelayfuns.fifo_read <- focf fifo_read_str init_type;
@@ -301,46 +305,31 @@ let initSdelayFunctions (f : file)  : unit =
   sdelayfuns.compute_priority <- focf compute_priority_str init_type
 
 
-let makeSdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc :
-    location) lv =
+let makeSdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location) lv =
   (*let time_unit = if ((L.length argL) = 3 && not (isZero (L.hd argL))) then (E.s (E.error "%s:%d: error : unknown resolution of timing point" loc.file loc.line)) else (L.nth argL 2) in*)
   let time_unit = (L.nth argL 2) in
-  let logname_var = findLocalVar fdec.slocals ("ktclog") in
-   let loop_var  = findLocalVar fdec.slocals ("ktcloopvar") in
-     let count_var  = findLocalVar fdec.slocals ("ktccount") in
   let f, l, deadline, period ,tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, (L.nth argL 1), time_unit, mkAddrOf((var structvar)), (List.hd (List.rev argL))  in
-  [Call(lv,v2e sdelayfuns.sdelay_init, [deadline;period;tunit;s;t_id; ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))); v2e count_var], loc)]
+  [Call(lv,v2e sdelayfuns.sdelay_init, [deadline;period;tunit;s;t_id;], loc)]
 
 let makeelemInstr chan tail head lv loc =
   [Call(lv,v2e sdelayfuns.nelem, [mkAddrOf(var chan); Lval(var head); Lval(var tail)], loc)]
 
 let makeLogTraceInit filepointer name loc =
-    Call(Some(filepointer), v2e sdelayfuns.log_trace_init, [name; (mkString "a")], loc)
-
-let makeLogTraceFclose filepointer loc =
-    Call(None, v2e sdelayfuns.log_trace_fclose, [filepointer], loc)
-
-let makeLogTraceFinalFile filepointer buf loc =
-     Call(None, v2e sdelayfuns.log_trace_final_file, [filepointer;buf], loc)
-
+    Call(Some(filepointer), v2e sdelayfuns.log_trace_init, [name; (mkString "w")], loc)
 
 let makeLogTracePreviousID filepointer id stime loc =
-    Call(None, v2e sdelayfuns.log_trace_previous_id, [filepointer;id;stime], loc)
+    Call(None, v2e sdelayfuns.log_trace_previous_id, [filepointer;id; stime], loc)
 
-let makeLogTraceTask filepointer last_arrival itime fp loc =
-    Call(None, v2e sdelayfuns.log_trace_init_task, [filepointer; fp; Cil.zero;
+let makeLogTraceTask filepointer last_arrival itime loc =
+    Call(None, v2e sdelayfuns.log_trace_init_task, [filepointer; Cil.zero;
     last_arrival; itime], loc)
 
 
 let makeLogTraceArrival file_pointer tpid interval resolution arrival_pointer
-itime loc =
+itime loc  =
     Call(None,v2e sdelayfuns.log_trace_arrival, [file_pointer;tpid;
-    interval;resolution;arrival_pointer; itime], loc)
+    interval;resolution;arrival_pointer], loc)
 
-
-let makeLogTraceAbortTime file_pointer loc =
-    Call(None,v2e sdelayfuns.log_trace_abort_time,
-    [file_pointer], loc)
 
 let makeLogTraceExecution file_pointer stime loc =
     Call(None,v2e sdelayfuns.log_trace_execution, [file_pointer;stime], loc)
@@ -360,16 +349,10 @@ let makeSdelayEndInstr fdec (structvar : varinfo) (timervar : varinfo) (tp : var
   let t =  mkAddrOf((var timervar)) in
   let handlrt = mkAddrOf((var tp)) in
   let ktctime_var = findLocalVar fdec.slocals ("ktctime") in
-  let itime_init_start_time = Set((Var(ktctime_var), NoOffset), (v2e
-  structvar), locUnknown) in
-  [mkStmtOneInstr start_time_init; mkStmtOneInstr itime_init_start_time]
-
-
-let makeTimerCreate fdec (structvar : varinfo) (timervar : varinfo) (tp : varinfo) (signo : int)=
-  let t =  mkAddrOf((var timervar)) in
-  let handlrt = mkAddrOf((var tp)) in
+  let itime_init_start_time = Set((Var(ktctime_var), NoOffset), v2e
+        structvar, locUnknown) in
   let timer_init = Call(None, v2e sdelayfuns.timer_create, [t; v2e timervar; handlrt; (integer signo);], locUnknown) in
-  timer_init
+  [mkStmtOneInstr start_time_init; mkStmtOneInstr itime_init_start_time; mkStmtOneInstr timer_init]
 
 (*
 let makeSdelayEndInstr (structvar : varinfo) (timervar : varinfo) (tp : varinfo) (signo : int)=
@@ -379,23 +362,19 @@ let makeSdelayEndInstr (structvar : varinfo) (timervar : varinfo) (tp : varinfo)
   [mkStmtOneInstr timer_init]
 *)
 
-let makeFdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc :
-    location) (retjmp) (signo) tpstructvar (lv ) =
+let makeFdelayInitInstr (structvar : varinfo) (argL : exp list) (loc : location) (retjmp) (signo) tpstructvar lv : instr list =
   let time_unit = if ((L.length argL) = 3 && not (isZero (L.hd argL))) then mkString  (E.s (E.error "%s:%d: error : unknown resolution of timing point" loc.file loc.line))  else (L.nth argL 2) in
   let f, l, deadline, period, tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, (L.nth argL 1), time_unit, mkAddrOf((var structvar)), (List.hd(List.rev argL)) in
   let waitingOffset = match tpstructvar.vtype with
 		      | TComp (cinfo, _) -> Field (getCompField cinfo "waiting", NoOffset) in
   let waitingConditionInstr = Set((Var tpstructvar, waitingOffset), Cil.one, locUnknown) in
-  let logname_var = findLocalVar fdec.slocals ("ktclog") in
-  let count_var  = findLocalVar fdec.slocals ("ktccount") in
-    let loop_var  = findLocalVar fdec.slocals ("ktcloopvar") in
-  [waitingConditionInstr; Call(lv,v2e sdelayfuns.fdelay_init,
-  [deadline;period;tunit;s;t_id;(v2e retjmp); signo; ((mkAddrOf
-  ((Var(logname_var), Index(v2e loop_var, NoOffset))))); (v2e count_var)], loc)]
+  [waitingConditionInstr; Call(lv,v2e sdelayfuns.fdelay_init, [deadline;period;tunit;s;t_id;(v2e retjmp); signo;], loc)]
 
 let makegettimeInstr lv (structvar : varinfo) (argL : exp list) loc =
 	let tunit, s =  L.hd argL, mkAddrOf((var structvar)) in
 	[Call(lv,v2e sdelayfuns.gettime, [tunit;s;], loc)]
+
+
 
 let makespolicysetInstr runtime period deadline policy =
   Call(None,v2e sdelayfuns.spolicy_set, [v2e policy; v2e runtime; v2e deadline; v2e period], locUnknown)
@@ -506,7 +485,7 @@ let policyValue data hstm runtime deadline period priority policy list_dl list_p
 
 
 
-let maketimerfdelayStmt structvar argList tpstructvar timervar retjmp firmStmt timer_creater =
+let maketimerfdelayStmt structvar argList tpstructvar timervar retjmp firmStmt =
 	 let offset' = match tpstructvar.vtype with
 			   | TComp (cinfo, _) -> Field (getCompField cinfo "env", NoOffset) in
 	 let waitingOffset = match tpstructvar.vtype with
@@ -524,8 +503,7 @@ let maketimerfdelayStmt structvar argList tpstructvar timervar retjmp firmStmt t
 	let ifBlock = ifBlockFunc goto_label retjmp  in
 	let st = mkAddrOf (var structvar) in
 	let startTimer = Call(None, v2e sdelayfuns.fdelay_start_timer, [intr; tunit;timr;st;], locUnknown) in
-    [mkStmtOneInstr sigInt; mkStmtOneInstr timer_creater; ifBlock; waitingConditionStmt;
-    mkStmtOneInstr startTimer]
+	  [mkStmtOneInstr sigInt; ifBlock; waitingConditionStmt; mkStmtOneInstr startTimer ]
 
 let instrVarInfoIfFun il =
 	match (List.hd il) with
@@ -543,7 +521,8 @@ let pthreadJoinList fdec slist =
 	let ret_stmt  = List.hd revList in
 	let revList = List.tl revList in
 	let pthreadjoin_stmt = List.map (fun a -> makePthreadJoinInstr fdec a) !all_threads in
-	let newstmnt = pthreadjoin_stmt in
+	let blocksg = i2s (Call(None, v2e sdelayfuns.blocksignal, [Cil.zero], locUnknown)) in
+	let newstmnt = List.append pthreadjoin_stmt [blocksg] in
 	let revList = List.append newstmnt revList in
 	let revList = List.append [ret_stmt] revList in
 		List.rev revList
@@ -560,8 +539,8 @@ let instrTimingPoint (i : instr) : bool =
 
 let instrTimingPointAftr (i : instr) : bool =
    match i with
-    | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_sdelay_init_profile") ->  true
-    | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "ktc_fdelay_init_profile")  -> true
+    | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_sdelay_init") ->  true
+    | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "ktc_fdelay_init")  -> true
     | _ -> false
 
 (*
@@ -845,29 +824,424 @@ class merger filename fdec = object(self)
 
 end
 
+let rec addArrivalTime lst sum =
+    match lst with
+    | (name, at):: rest -> addArrivalTime rest (at + sum)
+    | [] -> sum
+
+let rec uniqueTaskPair task_list task_arrival_time_list =
+    match task_list with
+    |h :: rest -> (let lst = (((List.filter (fun a -> (fst a) = h )
+    task_arrival_time_list))) in
+    let sarrival = addArrivalTime  lst 0 in
+    (h, sarrival) :: (uniqueTaskPair rest task_arrival_time_list))
+    |[] -> []
+
+
+let rec gcd u v =
+  if v <> 0 then (gcd v (u mod v))
+  else (abs u)
+
+let lcm m n =
+  match m, n with
+  | 0, _ | _, 0 -> 0
+  | m, n -> abs (m * n) / (gcd m n)
+
+let calculateHyperperiod tlist =
+    let hyperiod = List.fold_right lcm (tlist) 1 in
+    E.log "Hyperperiod %d\n" hyperiod; hyperiod
+
+(*
+let rec unrolledJob num p j b w d pr nnow =
+    match nnow with
+    | 0 -> []
+    | 1 -> ([pr; 1; 0; j; b; w; d; pr]) :: (unrolledJob num
+    p j b w d pr (nnow -1))
+    (*|  _ -> let md = (nnow mod num) in
+    if (md <> 1) then
+    (([pr; (md); md*p; ((md*p)+j); b; w; (md*p + d);pr]) :: (unrolledJob num
+    p j b w d pr (nnow -1))) else [] :: (unrolledJob num p j b w d pr (nnow -1))*)
+    |  _ -> let md = (nnow mod num) in
+    if (md <> 1) then
+    (([pr; (md); md*p; ((md*p)+j); b; w; (md*p + d);pr]) :: (unrolledJob num
+    p j b w d pr (nnow -1))) else [] :: (unrolledJob num p j b w d pr (nnow -1))
+*)
+
+let rec unrolledJob num p j b w d pr nnow k =
+    (*let _ = E.log "unrolledJob %d" nnow in*)
+    match nnow with
+    | t when t = num -> []
+    | 0 -> ([pr; 0; 0; j; b; w; d; d; k]) :: (unrolledJob num p j b w d pr (nnow
+    + 1) k)
+    (*|  _ -> let md = (nnow mod num) in
+    if (md <> 1) then
+    (([pr; (md); md*p; ((md*p)+j); b; w; (md*p + d);pr]) :: (unrolledJob num
+    p j b w d pr (nnow -1))) else [] :: (unrolledJob num p j b w d pr (nnow -1))*)
+    |  _ ->  ([pr; (nnow); nnow*p; ((nnow*p)+j); b; w; (nnow*p + d);  nnow*p +
+    d; k]) :: (unrolledJob num
+    p j b w d pr (nnow + 1)) k
+
+let unrollOneFrame tlist hp id =
+    let telem = List.hd tlist in
+    let period = int_of_string (List.nth telem 1) in
+    let num_job = hp/period in
+    let n = 0 in
+    let k_int = if ((List.nth telem 6) = "fdelay") then 0 else 1 in
+    unrolledJob (num_job ) (int_of_string ((List.nth telem 1))) (int_of_string
+    (List.nth telem 2)) (int_of_string (List.nth telem
+    3))  (int_of_string (List.nth telem 4)) (int_of_string (List.nth telem 5))
+    id n (k_int)
+
+    (*
+let rec auxUnrollMultiFrame tlist num_itr id =
+    match num_itr with
+    | 0 -> []
+    |
+
+
+let unrollMultiFrame tlist hp id tname uniquelist =
+    let (name, period) = List.find (fun a -> (fst a) = tname) uniquelist in
+    let num_itr = hp/period in
+    auxUnrollMultiFrame tlist num_itr id
+
+*)
+
+let unrollSegment telem next_d jlist id  jid =
+    (*let _ = E.log "urollSegment %d\n" jid in*)
+    let [name; p; j; b; w; d;k] = telem in
+    let p_int = int_of_string p in
+    let d_int = int_of_string d in
+    let j_int = int_of_string j in
+    let next_d_int = int_of_string next_d in
+    let k_int = if (k = "fdelay") then 0 else 1 in
+    match jlist with
+    | [] -> [(int_of_string id); (jid); p_int; p_int + j_int ; (int_of_string b);
+    (int_of_string w);  (p_int + next_d_int); (p_int + next_d_int); k_int]
+    | _ -> let last_p = List.nth (List.hd (jlist)) 2 in
+           (*let _ = E.log "last p %d\n" last_p in*)
+    [(int_of_string id); jid;
+    (last_p + p_int); (last_p + p_int+j_int);
+    (int_of_string b); (int_of_string w);(last_p +
+    p_int+next_d_int); (last_p +
+    p_int+next_d_int); k_int]
+
+let rec unrollMultiFrame tlist hp id tname l jlist =
+    let len = List.length tlist in
+    (*let _ = E.log "unrollMUltiframe %d %s %d\n" (l) tname len in*)
+    match l with
+    | t when t = (len) -> jlist
+    | _ -> let jlst = unrollSegment (List.nth tlist l) (List.nth (List.nth tlist
+    ((l+1) mod len)) 5) jlist id ((List.length jlist)+1) in
+         let nelist = jlst :: jlist in
+          unrollMultiFrame tlist hp id tname (l+1) nelist
+
+let rec recUnrollSegment tlist hp id tname iter jlist =
+    (*let _ = E.log "recUnrollSegment %d\n" iter in*)
+    match iter with
+    | 0 -> jlist
+    | _ -> let jlst = unrollMultiFrame tlist hp id tname 0 jlist in
+            (*let jlst = [] in*)
+           (*let njlst = List.append jlst jlist in*)
+            (*unrollMultiFrame tlist hp id tname (iter - 1) njlst*)
+           recUnrollSegment tlist hp id tname (iter -1 ) jlst
+
+
+let add_period lst b =
+    let a = int_of_string (List.nth lst 1) in
+    (*let _ = E.log "add period %d\n" a in*)
+    a + b
+
+let unrollMultiFrameAux tlist hp id tname =
+    let sum_period =  List.fold_right (add_period) (tlist) 0 in
+    let _ = E.log "sum period %s %d\n" tname sum_period in
+    let _ = E.log "hyper period %s %d\n" tname hp in
+    let iter = hp/sum_period in
+    let _ = E.log "iter %d\n" iter in
+    let [name; p; j; b; w; d;k] = List.hd (List.rev tlist) in
+    let [n1; p1; j1; b1; w1; d1;k1] = List.hd tlist in
+    let k_int = if (k = "fdelay") then 0 else 1 in
+    let nlst = List. rev (List.tl (recUnrollSegment tlist hp id tname iter [])) in
+    [(int_of_string id); 0; 0;( int_of_string j1);
+    (int_of_string b); (int_of_string w); (int_of_string d1); (int_of_string
+    d1);k_int] :: nlst
+
+
+let unrollOneTask tlist hp id tname =
+    let l = List.length tlist in
+    if (l = 1) then (unrollOneFrame tlist hp id ) else (
+        if (l =  0) then [] else (unrollMultiFrameAux
+    (List.rev tlist) hp (string_of_int id) tname))
+
+
+let find_offset jlist tskname =
+    let olist = List.find (fun [tid; at; j; b; w; d;k] -> ((tid = tskname) & (int_of_string j) = 0) ) jlist in
+    (int_of_string (List.nth olist 1))
+
+
+let max_offset jlist =
+    let olist = List.filter (fun [tid; at; j; b; w; d;k] -> ((int_of_string j) = 0)) jlist in
+     let maxo = List.fold_right (Pervasives.max)
+     (List.map (fun [tid; at; j; b; w; d;k] -> (int_of_string at)) olist) 0 in
+     (E.log "max offset %d\n" maxo); maxo
+
+
+
+
+let rec unrollToHyper hp tlist task_list jlist =
+       match task_list with
+       | name :: rest -> let onetskl = List.filter (fun a -> (List.nth a 0) =
+           name) tlist in
+                         let os = find_offset jlist name in
+                         let unrolledlst = unrollOneTask (onetskl) (hp) (List.length
+                         task_list)  name in
+                         let ncsv1 = List.map (fun [tid; jid; amin; amax; cmin;
+                         cmax; dl; pr;k] ->  [tid; jid; (
+                         ((amin) + os)); amax; cmin; cmax;
+                         (((dl) + os)); pr;k] )
+                         (unrolledlst) in
+                         let _ = E.log "a" in
+                         let h_amin = List.nth (List.hd unrolledlst) 1 in
+                         let _ = E.log "b" in
+                         let ncsv2 = if (h_amin = 0) then ncsv1 else (List.tl ncsv1) in
+                         List.append ncsv2 (unrollToHyper hp ((List.filter
+                         (fun a -> (List.nth a 0) <> name)) tlist) rest jlist)
+       |[] -> []
+
+let to_csv_string ilist =
+    List.map (fun a -> (string_of_int a)) ilist
+
+
+let rec match_alist alist b w tid jid lst =
+    match alist with
+    | [ht; ha; hb; hw; habtmin; habtmax; dl] :: rst when (((int_of_string hw) = (int_of_string w))) ->
+            match_alist rst b w tid jid ([tid; jid; habtmin; habtmax; hb; hw] :: lst)
+    | [ht; ha; hb; hw; habtmin; habtmax; dl] :: rst when (((int_of_string hw) <> (int_of_string w))) ->
+            match_alist rst b w tid jid (lst)
+    |_ -> lst
+
+    |_ -> lst
+
+let rec create_abort_csv alist nlist lst =
+    match nlist with
+    | ([tid;jid; p; j; b; w; d;pr;k] :: rst) when (int_of_string k) = 1 -> let elem = match_alist alist b w tid jid [] in
+                                                          create_abort_csv alist rst (List.append elem lst)
+    | ([tid;jid; p; j; b; w; d;pr;k] :: rst) when (int_of_string k) <> 1 -> create_abort_csv alist rst lst
+    |[] -> lst
+(*let rec create_abort_csv alist nlist lst =
+    match nlist with
+    | ([tid;jid; p; j; b; w; d;pr;k] :: rst) when k = 0 -> let elem = List.find
+    (fun a -> ((int_of_string (List.nth a 2)) = b) &&
+    ((int_of_string (List.nth a 3)) = (w))) alist  in
+                                                          create_abort_csv alist
+                                                          rst ([tid; jid;
+                                                          (int_of_string
+                                                          (List.nth elem 4));
+                                                          (int_of_string
+                                                          (List.nth elem 5)); b;
+                                                          w]::lst)
+    | ([tid;jid; p; j; b; w; d;pr;k] :: rst) when k <> 0 -> lst
+    |[] -> lst
+
+
+
+let rec create_abort_csv alist jlist nlst =
+    match jlist with
+    | hx :: rst -> let tid = List.hd hx in
+                  let texists = List.exists (fun a -> if (List.hd a = tid) then true else false) alist in
+                  let auxlist = (if (texists) then
+                      (let ax = List.find (fun a -> if (List.hd a = tid) then true else false) alist  in
+                  [tid; List.nth hx 1; List.nth hx 6; List.nth hx 6; List.nth ax 2; List.nth ax 3] :: nlst)
+                      else nlst) in
+                  create_abort_csv alist rst auxlist
+    | [] -> nlst*)
+
+
+let add_cmax_win lst b =
+    let a = (List.nth lst 5) in
+    (*let _ = E.log "add period %d\n" a in*)
+    a + b
+
+let max_rel_win lst b =
+    let a = (List.nth lst 5) in
+    (*let _ = E.log "add period %d\n" a in*)
+    Pervasives.max a b
+
+
+let rec compute_observation_window win ujblist tp t =
+    if (tp <> t) then
+        let tn = List.fold_right (add_cmax_win) (List.filter (fun a -> ((tp < (List.nth a 3)) & ((List.nth a 3) <= t))) ujblist) t in
+        let cond = ((List.exists (fun a -> (((List.nth a 2) <= tn) && (tn <
+        (List.nth a 3)))) ujblist) || (tn < win)) in
+        let newtn = if ((t = tn) && cond) then List.fold_right (max_rel_win) (List.filter (fun a -> ((tn < (List.nth a 3)))) ujblist) 0 else tn in
+            compute_observation_window win ujblist t tn
+    else
+        let _ =(E.log "obs win %d" t) in t
+
+let uniq l =
+  let rec tail_uniq a l =
+    match l with
+      | [] -> a
+      | hd::tl -> tail_uniq (hd::a) (List.filter (fun x -> x  != hd) tl) in
+  tail_uniq [] l
+
+let findHyperperiod tlist alist jlist =
+    let task_arrival_pair = (List.map (fun a -> ((List.nth a 0), (int_of_string
+    (List.nth a 1))))) tlist in
+    let task_list = List.map (fun a -> List.nth a 0) tlist in
+    let unique_task_arrival_pair = uniqueTaskPair (task_list) ((task_arrival_pair)) in
+    let hp = calculateHyperperiod (List.map (fun a -> (snd a))
+    unique_task_arrival_pair) in
+    let maxos = max_offset jlist in
+    let utask_list = uniq task_list in
+    let ujblist = (unrollToHyper (hp + maxos) tlist (utask_list) jlist) in
+    let ncsv = List.map (to_csv_string) (ujblist) in
+       (* let ncsv2 = if (int_of_string h_amin = 0) then ncsv1 else (List.tl
+        ncsv1) in*)
+    let t = List.fold_right Pervasives.max (List.map (fun a -> List.nth a 3)
+    ujblist) 0 in
+    let _ = E.log "done\n" in
+    let new_win = compute_observation_window (hp + maxos) ujblist 0 t in
+    let ujblist = (unrollToHyper (new_win) tlist (utask_list) jlist) in
+    let ncsv = List.map (to_csv_string) (ujblist) in
+    let _ = E.log "new_win %d" new_win in
+    let nncsv0 = List.map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] ->
+        [tid; jid; amin; amax; cmin; cmax; dl; pr] ) ncsv in
+    let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min";
+    "Cost max"; "Deadline"; "Priority"] :: (nncsv0) in
+    let _ = Csv.save "kind.csv" ncsv in
+    let _ = Csv.save "job.csv" nncsv
+    in
+    let abortcsv =  (match alist with
+                    |[] -> E.log "alist empty here"; []
+                    |_ -> E.log "alist not empty"; List.rev (create_abort_csv alist (ncsv) [])) in
+    let abortncsv = ["Task ID"; "Job ID"; "TMIN"; "TMAX"; "CMIN";
+    "CMAX"] :: abortcsv in
+    let _ = Csv.save "action.csv" abortncsv
+in ()
+
+let read_data fname =
+  Csv.load fname
+  |> List.map (function [src; arrival; release; jitter; execution; abort; dst] -> {src;
+  arrival; release; jitter; execution; abort; dst}
+                      | _ -> failwith "read_data: incorrect file")
+
+let filter_edges s d t =
+    List.filter (fun a -> (a.src = s) && (a.dst = d) ) t
+
+let filter_nodes s t =
+    List.filter (fun a -> (a.src = s)) t
+
+let maxEx a b  =
+    let aint = int_of_string a in
+    if (aint > b) then aint else b
+
+let minEx a b =
+    let aint = int_of_string a in
+    if (aint < b) then aint else b
+
+let findExecutionTime tname src dst =
+    let tnew = read_data tname in
+    let t = List.rev (List.tl (List.rev tnew)) in
+    let noheader = List.tl t in
+    let edge_list = filter_edges (src) (dst) noheader in
+    let maxexe = List.fold_right maxEx (List.map (fun a -> a.execution) edge_list)
+    0 in
+    let minexe = List.fold_right minEx (List.map (fun a -> a.execution) edge_list)
+    1000000000000 in
+    (maxexe, minexe)
+
+let findExecutionTimeSrc tname src =
+    let tnew = read_data tname in
+    let t = List.rev (List.tl (List.rev tnew)) in
+    let noheader = List.tl t in
+    let edge_list = filter_nodes (src) noheader in
+    let maxexe = List.fold_right maxEx (List.map (fun a -> a.execution) edge_list)
+    0 in
+    let minexe = List.fold_right minEx (List.map (fun a -> a.execution) edge_list)
+    1000000000000 in
+    (maxexe, minexe)
+
+
+let findJitter tname src =
+    let tnew = read_data tname in
+    let t = List.rev (List.tl (List.rev tnew)) in
+    let noheader = List.tl t in
+    let node_list = filter_nodes (src) noheader in
+    let maxjitter = List.fold_right maxEx (List.map (fun a -> a.jitter) node_list)
+    0 in
+    let minjitter = List.fold_right minEx (List.map (fun a -> a.jitter) node_list)
+    1000000000000 in
+    minEx (string_of_int maxjitter) minjitter
+
+
+
+
+let findExecutionAbortTime tname src =
+    let tnew = read_data tname in
+    let t = List.rev (List.tl (List.rev tnew)) in
+    let noheader = List.tl t in
+    let edge_list = filter_nodes (src) noheader in
+    let max_abort = List.fold_right maxEx (List.map (fun a -> a.abort) edge_list)
+    0 in
+    let min_abort = List.fold_right minEx (List.map (fun a -> a.abort) edge_list)
+    1000000000000 in
+    (max_abort, min_abort)
+
+
 let tfgFindID jnodes =
  List.length jnodes
 
 
-let addJsonNodes jnodes arrival_time deadline kind =
+let addJsonNodes jnodes arrival_time deadline kind tname d =
+    let _ = E.log "deadline %d\n" in
     let id = tfgFindID jnodes in
-    [`Assoc[("id",`Int(id+1)); ("a", `Int(arrival_time)); ("d", `Int(arrival_time));
-    ("kind", `String(kind));("j",`Int(0))]]
+    let j = findJitter tname  (string_of_int (id+1)) in
+    let (wcet,bcet) = findExecutionTimeSrc tname (string_of_int (id+1)) in
+    let (min_abort, max_abort) = findExecutionAbortTime tname (string_of_int
+    (id+1)) in
+    let _ = if ((max_abort) <> 0 && (max_abort <> 1000000000000) ) then
+        (abortlist :=  [tname; (string_of_int arrival_time);  (string_of_int bcet); (string_of_int wcet); (string_of_int
+        min_abort); (string_of_int max_abort); (string_of_int deadline)] ::
+        !abortlist) in
+    (joblist := ([tname; (string_of_int arrival_time); (string_of_int j);
+    (string_of_int bcet); (string_of_int wcet); (string_of_int deadline); kind] ::
+        !joblist));
+    ((if ((j) <> 0) then (csvlist := ([tname; (string_of_int arrival_time); (string_of_int j);
+    (string_of_int 0); (string_of_int wcet); (string_of_int deadline);kind] ::
+        !csvlist))));    [`Assoc[("id",`Int(id+1)); ("a", `Int(arrival_time)); ("d", `Int(arrival_time));
+    ("kind", `String(kind));("j",`Int(j))]]
 
-let rec addJsonEdges len clen jedges =
-    let _ = E.log "addJsonEdges %d \n" (clen) in
+let rec addJsonEdges len clen jedges tname =
+    (*let _ = E.log "addJsonEdges %d \n" (clen) in*)
     match clen with
     | 0 -> jedges
     | _ -> let d = if (clen = len) then 1 else (clen + 1) in
-           let e = `Assoc[("src", `Int(clen));("dst", `Int(d)); ("b", `Int(0)); ("w",
-              `Int(0))] :: jedges in
+            (*let _ = E.log "%s" tname in*)
+           let (wcet,bcet) = findExecutionTime tname (string_of_int clen)
+           (string_of_int d) in
+           let e = `Assoc[("src", `Int(clen));("dst", `Int(d)); ("b", `Int(bcet)); ("w",
+              `Int(wcet))] :: jedges in
             let nlen = clen - 1 in
-            addJsonEdges len nlen e
+            addJsonEdges len nlen e tname
 
-let completeJsonEdges jnodes =
+let completeJsonEdges jnodes tname =
     let len = List.length jnodes in
-    let jedgeslist = addJsonEdges len len [] in
+    let jedgeslist = addJsonEdges len len [] tname in
     jedgeslist
+
+let tfgGetValueInt t =
+    let topt = Cil.isInteger t in
+    let tinit = (match topt with
+                 |Some(at) -> i64_to_int at
+                 |None -> raise (Eson "arrival time not
+                                    Int")) in
+            tinit
+
+let tfgTimeInMicroSec tv res =
+    let t = tfgGetValueInt tv in
+    let n = tfgGetValueInt res in
+    let powup = 10.0 ** ((float_of_int n) +. 6.0) in
+    (int_of_float powup) * t
 
 
 class tfgMinus fdc = object(self)
@@ -875,19 +1249,22 @@ class tfgMinus fdc = object(self)
     method vinst (i : instr) =
         let action [i] =
             match i with
-            |Call(_,Lval(Var vi,_),argList, loc) when (vi.vname = "sdelay" ||
-            vi.vname = "fdelay") -> (let arrival_time_cil_exp = List.hd argList in
-                                    let arrival_time_option = Cil.isInteger
-                                    arrival_time_cil_exp in
-                                    let arrival_time_int =
-                                    (match arrival_time_option with
-                                    |Some(at) -> i64_to_int at
-                                    |None -> raise (Eson "arrival time not
-                                    Int")) in
+            |Call(_,Lval(Var vi,_),argL, loc) when (vi.vname = "sdelay" ||
+                                    vi.vname = "fdelay") ->(let argList = if
+                                        ((L.length argL) < 5) then (argL) else
+                                            (List.tl argL) in
+                                    let (at, dl, res) = ((List.nth argList 0), (List.nth argList 1), (List.nth argList 2)) in
+                                    let arrival_time_int = tfgTimeInMicroSec at res in
+                                    let deadline_time_int = tfgTimeInMicroSec dl res in
+                                    let deadline_int = tfgGetValueInt dl in
+                                    let _ = if (!offsetvar = 0) then (offsetlist := (arrival_time_int) :: !offsetlist) in
+                                    let _ = (offsetvar := 1) in
                                     let kind = vi.vname in
-                                    let _ = (if (arrival_time_int > -1404) then
+                                    let _ = (if (arrival_time_int > -1404 &&
+                                    deadline_int < 2147483640) then
                                             let newnode = addJsonNodes !jnodeslist arrival_time_int
-                                            arrival_time_int kind in
+                                            deadline_time_int kind
+                                            fdc.svar.vname deadline_int in
                                             jnodeslist := List.append
                                             !jnodeslist newnode) in
                                     [i])
@@ -895,30 +1272,14 @@ class tfgMinus fdc = object(self)
         ChangeDoChildrenPost([i], action)
 end
 
-let isdeadlineInfinity argList =
-        let arrival_time_cil_exp = List.hd argList in
-        let arrival_time_option = Cil.isInteger arrival_time_cil_exp in
-        let arrival_time_int = (match arrival_time_option with
-                                |Some(at) -> i64_to_int at
-                                |None -> raise (Eson "arrival time not
-                                Int")) in
-        arrival_time_int
 
 
-class fProfilingAdder filename fdec = object(self)
+class profilingAdder filename logname lastarrival stime itime fdec id_var
+count_var = object(self)
     inherit nopCilVisitor
     val mutable counter = 0
     method vinst (i : instr) =
     let action [i] =
-        let logname_var = findLocalVar fdec.slocals ("ktclog") in
-        (*let flog = findLocalVar fdec.slocals ("ktcflog") in*)
-        let loop_var = findLocalVar fdec.slocals ("ktcloopvar") in
-        let lastarrival = findLocalVar fdec.slocals ("ktcatime") in
-        let stime = findLocalVar fdec.slocals ("ktcstime") in
-        let itime = findLocalVar fdec.slocals ("ktctime") in
-        let id_var = findLocalVar fdec.slocals ("ktcpid") in
-        let start_time_var = findLocalVar fdec.slocals ("start_time") in
-        let count_var  = findLocalVar fdec.slocals ("ktccount") in
         match i with
         |Call(_,Lval(Var vi,_),argList, loc) when (isFunTask vi) ->
                 let logstart = findCompinfo filename "timespec" in
@@ -928,111 +1289,28 @@ class fProfilingAdder filename fdec = object(self)
                 fdec.slocals ("ktcitime")) else (makeLocalVar fdec ("ktcitime")
                 (TComp(logstart,[]))) in
                 [i]
-        |Call(_,Lval(Var vi,_),argList, loc) when ((vi.vname =
-            "ktc_sdelay_init_profile" ||
-        vi.vname = "ktc_fdelay_init_profile") & (fdec.svar.vname <> "main")) -> (*if
-            (isdeadlineInfinity argList < 2147483640) then *)
+        |Call(_,Lval(Var vi,_),argList, loc) when ((vi.vname = "sdelay" ||
+        vi.vname = "fdelay") & (fdec.svar.vname <> "main")) ->
                let inc_count_instr = counter <- counter + 1; Set((Var(count_var),
                NoOffset), BinOp(PlusA, v2e id_var, (integer counter), intType), locUnknown) in
-               let previous_id_instr = makeLogTracePreviousID ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))) (v2e
+               let previous_id_instr = makeLogTracePreviousID (v2e logname) (v2e
                count_var) (v2e stime) locUnknown in
-               let trace_arrival_instr = makeLogTraceArrival ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset)))))
+               let trace_arrival_instr = makeLogTraceArrival (v2e logname)
                (v2e count_var) (List.nth argList 1) (List.nth
                argList 2) (mkAddrOf (var lastarrival)) (mkAddrOf (var itime)) locUnknown in
-               let trace_release_instr = makeLogTraceRelease ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset)))))
+               let trace_release_instr = makeLogTraceRelease (v2e logname)
                (v2e lastarrival) (v2e itime) (mkAddrOf (var stime))
                (List.nth argList 1) locUnknown in
-                (*let trace_abort_instr = makeLogTraceAbortTime (v2e flog)
-               (v2e lastarrival) (v2e stime) (List.nth argList 2) (v2e
-               count_var) locUnknown in *)
-               let trace_end_instr = makeLogTraceExecution ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))) (v2e
+               let trace_end_instr = makeLogTraceExecution (v2e logname) (v2e
                stime) locUnknown in
-                 let loop_instr = makeLogTraceAbortTime (mkAddrOf (var loop_var)) locUnknown in
-                [trace_end_instr; (*trace_abort_instr;*) i; inc_count_instr;
-                previous_id_instr; loop_instr; trace_arrival_instr; trace_release_instr]
-              (*  else
-                   (let trace_arrival_instr = makeLogTraceArrival (v2e logname)
-               (Cil.mone) (List.nth argList 1) (List.nth
-               argList 2) (mkAddrOf (var lastarrival)) locUnknown in
-                let itime_init_start_time = makeLogGetTime itime locUnknown in
-                [i;trace_arrival_instr](*;itime_init_start_time]*) ) *)
+               [trace_end_instr; i; inc_count_instr; inc_count_instr; trace_arrival_instr; trace_release_instr]
         |_ -> [i] in
         ChangeDoChildrenPost([i], action)
-
-end
-
-
-class profilingAdder filename logname_var lastarrival stime itime fdec id_var
-count_var loop_var fopn = object(self)
-    inherit nopCilVisitor
-    val mutable counter = 0
-    method vinst (i : instr) =
-    let action [i] =
-        match i with
-        |Call(_,Lval(Var vi,_),argList, loc) when (isFunTask vi) ->
-                let logstart = findCompinfo filename "timespec" in
-                let itimeexist = List.exists (fun v -> v.vname = "ktcitime")
-                fdec.slocals in
-                let logstart_var = if (itimeexist) then (findLocalVar
-                fdec.slocals ("ktcitime")) else (makeLocalVar fdec ("ktcitime")
-                (TComp(logstart,[]))) in
-                [i]
-        |Call(_,Lval(Var vi,_),argList, loc) when ((vi.vname = "sdelayi" ||
-        vi.vname = "fdelayi") & (fdec.svar.vname <> "main")) ->
-               let inc_count_instr = counter <- counter + 1; Set((Var(count_var),
-               NoOffset), BinOp(PlusA, v2e id_var, (integer counter), intType), locUnknown) in
-               let previous_id_instr = makeLogTracePreviousID ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))) (v2e
-               count_var) (v2e stime) locUnknown in
-               let trace_arrival_instr = makeLogTraceArrival ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset)))))
-               (v2e count_var) (List.nth argList 1) (List.nth
-               argList 2) (mkAddrOf (var lastarrival)) (mkAddrOf (var itime)) locUnknown in
-               let trace_release_instr = makeLogTraceRelease ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset)))))
-               (v2e lastarrival) (v2e itime) (mkAddrOf (var stime))
-               (List.nth argList 1) locUnknown in
-               let trace_end_instr = makeLogTraceExecution ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))) (v2e stime) locUnknown in
-                (*let loop_instr = Set((Var(loop_var), NoOffset), BinOp(PlusA,
-                 * v2e loop_var, (integer 1), intType), locUnknown) in*)
-                 let loop_instr = makeLogTraceAbortTime (mkAddrOf (var loop_var)) locUnknown in
-                [trace_end_instr; i; inc_count_instr; previous_id_instr;
-                loop_instr; trace_arrival_instr; trace_release_instr]
-        |_ -> [i] in
-        ChangeDoChildrenPost([i], action)
-
-    	method vstmt (s :stmt) =
-	    let action s =
-	    match s.skind with
-        |Loop(b,l,st1, st2) -> let ktc_file = findLocalVar fdec.slocals ("ktcfile") in
-                               let cond_var = findLocalVar fdec.slocals
-                               ("ktccondvar") in
-                               let cond_instr = Set((Var(cond_var), NoOffset),
-                               BinOp(PlusA, v2e cond_var, (integer 1), intType), locUnknown) in
-                               let reinit = Set((Var(loop_var), NoOffset), Cil.zero, locUnknown) in
-                               let block_false = mkBlock[] in
-                               let block_true =  mkBlock [(mkStmtOneInstr fopn); (mkStmtOneInstr
-                               (makeLogTraceFinalFile (v2e ktc_file) (v2e
-                               logname_var) locUnknown)) ;(mkStmtOneInstr
-                               (makeLogTraceFclose (v2e ktc_file) locUnknown))]  in
-                               let cond = BinOp(Eq, v2e cond_var, (integer 100), intType) in
-                               let write_to_file = [mkStmt (If((cond),
-                               block_true, block_false, locUnknown))] in
-                               let block_false = mkBlock[] in
-                               let block_true_1 = mkBlock [ (mkStmtOneInstr (reinit))] in
-                               let cond_1 = BinOp(Ge, v2e loop_var, (integer
-                               1000), intType) in
-                               let loop_again = [mkStmt (If((cond_1),
-                               block_true_1, block_false, locUnknown))] in
-                               s.skind <- Loop((mkBlock (
-                               ((mkStmtOneInstr cond_instr)) :: (List.append b.bstmts
-                               (write_to_file)))), l, st1, st2); s
-        |_ -> s
-        in ChangeDoChildrenPost(s, action)
-
 end
 
 
 
-class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp :
-    varinfo) data fname sigvar  signo timer_creater = object(self)
+class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : varinfo) data fname sigvar  signo = object(self)
   inherit nopCilVisitor
 
        method vinst (i :instr) =
@@ -1047,14 +1325,8 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp :
 						                             let fifocount = findGlobalVar filename.globals (channame^"ktccount") in
 						                             let fifotail= findGlobalVar filename.globals (channame^"ktctail") in
 					                                     makeelemInstr  fifothrdqu fifocount fifotail lv loc *)
-    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> if
-        L.length argList < 5 then makeSdelayInitInstr fdec structvar argList loc
-        lv else makeSdelayInitInstr fdec structvar (L.tl argList) loc lv
-    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> if
-        L.length argList < 5 then makeFdelayInitInstr fdec structvar argList loc
-        ret_jmp (integer signo) tpstructvar lv else makeFdelayInitInstr
-        fdec structvar (L.tl argList) loc ret_jmp (integer signo) tpstructvar
-        lv
+    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> if L.length argList < 5 then makeSdelayInitInstr structvar argList loc lv else makeSdelayInitInstr structvar (L.tl argList) loc lv
+    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> if L.length argList < 5 then makeFdelayInitInstr structvar argList loc ret_jmp (integer signo) tpstructvar lv else makeFdelayInitInstr structvar (L.tl argList) loc ret_jmp (integer signo) tpstructvar  lv
 	|Call(lv ,Lval(Var vi,_), argList, loc) when (vi.vname = "gettime") -> makegettimeInstr lv structvar argList loc
 	(*|Call(_,LVal(Var vi,_),_,loc) when (vi.vname = "next") -> makeNextGoto loc *)
 	|Call(_,Lval(Var vi,_),argList,_) when (isFunTask vi) ->
@@ -1111,11 +1383,8 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp :
                          label_stmt.labels <- [Label(string_to_int s.sid,locUnknown,false)] ;*)
                          let firmSuccInst = retFirmSucc s data in
                          let intr = getInstr firmSuccInst in
-                         let addthisTo = maketimerfdelayStmt structvar intr
-                         tpstructvar timervar ret_jmp firmSuccInst timer_creater in
-                         s.skind <- Block (mkBlock (List.append
-                         [(mkStmtOneInstr (List.find instrTimingPointAftr il))]
-                          (addthisTo))); s
+                         let addthisTo = maketimerfdelayStmt structvar intr tpstructvar timervar ret_jmp firmSuccInst in
+			 s.skind <- Block (mkBlock ((mkStmtOneInstr (List.find instrTimingPointAftr il)) :: addthisTo)); s
 			end
 	|If(CastE(t,z),b,_,_) when isCriticalType t ->  begin
 							let cs_start = makeCriticalStartInstr sigvar (get_stmtLoc s.skind) in
@@ -1234,8 +1503,7 @@ class addLabelStmt fdec = object(self)
 			(*let label_no =  getvaridStmt s in*)
 			let label_stmt = mkStmt (Instr []) in
                 		label_stmt.labels <- [Label(label_name,locUnknown,false)]; (*E.log "s.sid  %d \n" s.sid;*) HT.add labelHash label_no label_stmt;
-			(*let changStmTo = List.append   [mkStmt s.skind] [label_stmt] in*)
-            let changStmTo = List.append [label_stmt] [mkStmt s.skind] in
+			let changStmTo = List.append   [mkStmt s.skind] [label_stmt] in
 			let block = mkBlock  changStmTo in
                 	s.skind <- Block block ;
                 	s
@@ -1280,7 +1548,6 @@ let initializeCabDs f chanVar cname numbuf =
 	let mrbinit = mkStmtOneInstr (Set(mrbl, nullptr, locUnknown)) in
 	let maxc = mkStmtOneInstr (Set(maxc, integer numbuf, locUnknown)) in
 		[freeinit; mrbinit; maxc]
-
 
 
 
@@ -1335,8 +1602,8 @@ class sdelayFunc filename fname fno = object(self)
         inherit nopCilVisitor
 
         method vfunc (fdec : fundec) =
-	    (*	Cfg.clearFileCFG filename; Cfg.computeFileCFG filename;
-   		Cfg.printCfgFilename (fdec.svar.vname ^ ".dot") fdec; *)
+		Cfg.clearFileCFG filename; Cfg.computeFileCFG filename;
+   		Cfg.printCfgFilename (fdec.svar.vname ^ ".dot") fdec;
 		 Cfg.clearFileCFG filename; all_threads := [];
 	(*	Cfg.cfgFunPrint (fdec.svar.vname^".dot") fdec;
 	        computeAvail fdec;
@@ -1357,7 +1624,6 @@ class sdelayFunc filename fname fno = object(self)
 		let signo = (signumb := !signumb + 1);  !signumb in
 		let init_start = makeSdelayEndInstr fdec structvar ftimer tpstructvar signo in
 		let populate_instr = (mkStmtOneInstr (Call(None, v2e sdelayfuns.compute_priority, [integer (!policyindex);], locUnknown))) in
-        let timer_creater = makeTimerCreate fdec structvar ftimer tpstructvar signo in
 		let data =  checkTPSucc fdec filename  in
 		let y = checkAvailOfStmt fdec in
 	(*	let policydetail = new addPolicydetail filename data runtime deadline period priority in
@@ -1365,11 +1631,8 @@ class sdelayFunc filename fname fno = object(self)
 		let addl = new  addLabelStmt filename in
                 fdec.sbody <- visitCilBlock addl  fdec.sbody ; *)
 		(*let y' = isErrorFree filename in*)
-		let modifysdelay = new sdelayReportAdder filename fdec structvar
-        tpstructvar ftimer rt_jmp data fname org_sig signo  timer_creater in
-        let blocksg = i2s (Call(None, v2e sdelayfuns.blocksignal, [Cil.zero], locUnknown)) in
+		let modifysdelay = new sdelayReportAdder filename fdec structvar tpstructvar ftimer rt_jmp data fname org_sig signo in
 		fdec.sbody <- visitCilBlock modifysdelay fdec.sbody;
-          fdec.sbody.bstmts <- blocksg :: fdec.sbody.bstmts;
 		fdec.sbody.bstmts <- List.append init_start fdec.sbody.bstmts;
 		fdec.sbody.bstmts <- addPthreadJoin fdec fdec.sbody.bstmts ;
 		(*if fdec.svar.vname = "main" then
@@ -1378,58 +1641,33 @@ class sdelayFunc filename fname fno = object(self)
 
 end
 
-class fProfileTask filename = object(self)
-    inherit nopCilVisitor
-    method vfunc (fdec : fundec) =
-                let modifyprofile = new fProfilingAdder filename fdec in
-		fdec.sbody <- visitCilBlock modifyprofile fdec.sbody;
-    ChangeTo(fdec)
-end
-
-
-
-
 class profileTask filename = object(self)
     inherit nopCilVisitor
     method vfunc (fdec : fundec) =
         let vi = fdec.svar in
         let arglist = fdec.sformals in
-        let loop_var = makeLocalVar fdec "ktcloopvar" intType in
-        let cond_var = makeLocalVar fdec "ktccondvar" intType in
-        let id_var = makeLocalVar fdec "ktcpid" intType in
-        let count_var = makeLocalVar fdec "ktccount" intType in
+        let id_var = makeTempVar fdec intType in
+        let count_var = makeTempVar fdec intType in
         let timestruct = findCompinfo filename "timespec" in
-        let itime = makeLocalVar fdec "ktctime"
-        (TComp(timestruct,[])) in
+        let itime = makeLocalVar fdec "ktctime" (TComp(timestruct,[])) in
         (*init file instr*)
-        let ktc_filename = findCompinfo filename "_IO_FILE" in
-        let filename_var = makeLocalVar fdec ("ktcfile")
-        (TPtr(TComp(ktc_filename,[]), [])) in
-        let logname = findCompinfo filename "log_struct" in
+        let logname = findCompinfo filename "_IO_FILE" in
         let logname_var = makeLocalVar fdec ("ktclog")
-        (TArray((TComp(logname,[])), Some((integer 2000)), [])) in
-        let log_init_instr = makeLogTraceInit (var filename_var) (mkString
-        vi.vname) locUnknown in
-         (*let flogname_var = makeLocalVar fdec ("ktcflog")
         (TPtr(TComp(logname,[]), [])) in
-        let log_init_instr_f = makeLogTraceInit (var flogname_var)
-        (mkString (vi.vname^"_fdelay"))  locUnknown in*)
+        let log_init_instr = makeLogTraceInit (var logname_var) (mkString
+        vi.vname)  locUnknown in
         (*let start_time_var = findLocalVar fdec.slocals ("start_time") in
         let itime_init_start_time = Set((Var(itime), NoOffset), v2e
         start_time_var, locUnknown) in*)
         (*print ps*)
         let last_arrival_var = makeLocalVar fdec "ktcatime" ulongType in
-        let trace_init_instr = makeLogTraceTask ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))) (mkAddrOf (var
-        last_arrival_var)) (v2e itime) (v2e filename_var) locUnknown  in
+        let trace_init_instr = makeLogTraceTask ((v2e logname_var)) (mkAddrOf (var
+        last_arrival_var)) (v2e itime) locUnknown  in
         (*let offset_from_caller = if ((isFunTaskName vi.vname) & (vi.vname <> "main") &
         (List.length arglist <> 0)) then (Set((Var(last_arrival_var),
         NoOffset),  StartOf(Mem(v2e (List.hd arglist)), NoOffset), locUnknown)) else (Set((Var(last_arrival_var),
         NoOffset), Cil.zero, locUnknown)) in*)
         let offset_from_caller = (Set((Var(last_arrival_var),
-        NoOffset), Cil.zero, locUnknown)) in
-        let loop_var_instr = (Set((Var(loop_var),
-        NoOffset), Cil.zero, locUnknown)) in
-        let cond_var_instr = (Set((Var(cond_var),
         NoOffset), Cil.zero, locUnknown)) in
         (*print release*)
         let execution_start_var = makeLocalVar fdec "ktcstime"
@@ -1437,24 +1675,21 @@ class profileTask filename = object(self)
         (*let trace_release_instr = makeLogTraceRelease (v2e logname_var) (v2e
         last_arrival_var) (v2e itime) (mkAddrOf (var execution_start_var))
         locUnknown in *)
-        let trace_end_instr = makeLogTraceExecution ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))) (v2e
+        let trace_end_instr = makeLogTraceExecution (v2e logname_var) (v2e
         execution_start_var) locUnknown in
         let return_stmnt_in_func = List.hd (List.rev fdec.sbody.bstmts) in
-        let add_end_instr_without_return = List.append (List.rev [mkStmtOneInstr
-        trace_end_instr])
+        let add_end_instr_without_return = (mkStmtOneInstr trace_end_instr) ::
              (List.tl (List.rev fdec.sbody.bstmts)) in
         let add_end_instr_with_return = return_stmnt_in_func ::
              (add_end_instr_without_return) in
         let modifyprofile = new profilingAdder filename logname_var
-        last_arrival_var execution_start_var itime fdec id_var count_var
-        loop_var log_init_instr  in
+        last_arrival_var execution_start_var itime fdec id_var count_var in
         if (isFunTaskName vi.vname) then
 		fdec.sbody <- visitCilBlock modifyprofile fdec.sbody;
         let id_init = Set((Var(id_var),NoOffset), Cil.zero, locUnknown) in
         let count_init = Set((Var(count_var),NoOffset), Cil.zero, locUnknown) in
-        let prepend_statement = mkStmt (Instr([cond_var_instr;loop_var_instr;id_init; count_init;
-        offset_from_caller; log_init_instr;
-        trace_init_instr(*;log_init_instr_f*)])) in
+        let prepend_statement = mkStmt (Instr([id_init; count_init;
+        offset_from_caller; log_init_instr; trace_init_instr])) in
         if (vi.vname <> "main") then
             fdec.sbody.bstmts <- List.rev add_end_instr_with_return;
         if(vi.vname <> "main") then
@@ -1467,20 +1702,28 @@ class tfgMinusForTask filename = object(self)
     method vfunc (fdec: fundec) =
         let _ = jnodeslist := [] in
         let _ = if (isFunTask fdec.svar) then
-        (let _ = E.log "tfgMinusForTask %s \n" fdec.svar.vname in
+        ((*let _ = E.log "tfgMinusForTask %s \n" fdec.svar.vname in*)
         let tfgjson = new tfgMinus fdec in
         let jnodes = (`Assoc(["nodes", `List(!jnodeslist)])) in
         let _ = fdec.sbody <- visitCilBlock tfgjson fdec.sbody in
-        let _ = E.log "len of jnodeslist %d \n" (List.length !jnodeslist) in
-        let jedges = completeJsonEdges !jnodeslist in
+        let _ = offsetvar := 0 in
+        (*let _ = E.log "len of jnodeslist %d \n" (List.length !jnodeslist) in*)
+        let jedges = completeJsonEdges !jnodeslist fdec.svar.vname in
         let jtask = `Assoc([(fdec.svar.vname,`Assoc([("vertices", `List(!jnodeslist));
             ("edges", `List(jedges))]))]) in
        (* let _ = to_channel stdout jtask in *)
         (jtasklist := jtask :: !jtasklist);
-        (if (fdec.svar.vname = "main") then to_channel stdout
-        (`List(!jtasklist)));
-        (if (fdec.svar.vname = "main") then to_file "tfg_minus.json"
-        (`List(!jtasklist)));()) in
+        (*(if (fdec.svar.vname = "main") then (Yojson.Safe.to_channel stdout)
+        (`List(!jtasklist)))*);
+        (if (fdec.svar.vname = "main") then (Yojson.Safe.to_file
+        "tfg_minus.json")
+        (`List(!jtasklist)));  (Csv.save "input.csv" !csvlist);
+        (Csv.save
+        "ijob.csv" !joblist);
+        (if (fdec.svar.vname = "main") then ( findHyperperiod !csvlist
+        !abortlist !joblist)); (Csv.save "input.csv" !csvlist); (Csv.save
+        "abort.csv" !abortlist);
+        ()) in
 
        (* let _ = (if (List.length !jnodeslist > 0) then
             to_channel stdout (`Assoc([("vertices", `List(!jnodeslist));
@@ -1787,11 +2030,6 @@ let tfgMinusGeneration f =
     let vis = new tfgMinusForTask f in
     visitCilFile vis f
 
-
-let fProfileTransformation f =
-    let vis = new fProfileTask f in
-    visitCilFile vis f
-
 let profileTransformation f =
     let vis = new profileTask f in
     visitCilFile vis f
@@ -1903,11 +2141,9 @@ let fifoAnalysi f =
         visitCilFile cVis f
 
 let sdelay (f : file) : unit =
-initSdelayFunctions f; (*mergeTimingPoints f ;*) timing_basic_block f;
-(*addpolicyDetail f;*) timing_basic_block f;  Cfg.clearFileCFG f; Cfg.computeFileCFG f;  addLabel f;  Cfg.clearFileCFG f; concurrencyA f;
+initSdelayFunctions f; (*mergeTimingPoints f ;*) timing_basic_block f; addpolicyDetail f; timing_basic_block f;  Cfg.clearFileCFG f; Cfg.computeFileCFG f;  addLabel f;  Cfg.clearFileCFG f; concurrencyA f;
 (*List.iter (fun (a,b) -> E.log "(%s %d)" a b) !all_task; *) chanReaderWriterAnalysis f;
-   profileTransformation f; timingConstructsTransformatn f;
-    fProfileTransformation f; (*tfgMinusGeneration f;*)  (*fifoAnalysi f; concurrencyConstructsTransformatn f ;*) fillgloballist_pr_dl f;  ()
+    tfgMinusGeneration f; profileTransformation f; timingConstructsTransformatn f; fifoAnalysi f;(*concurrencyConstructsTransformatn f ;*) fillgloballist_pr_dl f;  ()
 
 
 
