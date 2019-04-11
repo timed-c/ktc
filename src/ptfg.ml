@@ -1075,7 +1075,7 @@ let rec compute_observation_window win ujblist tp t =
         let newtn = if ((t = tn) && cond) then List.fold_right (max_rel_win) (List.filter (fun a -> ((tn < (List.nth a 3)))) ujblist) 0 else tn in
             compute_observation_window win ujblist t tn
     else
-        let _ =(E.log "Observation Window %d" t) in t
+        (*let _ =(E.log "obs win %d" t) in*) t
 
 let uniq l =
   let rec tail_uniq a l =
@@ -1093,17 +1093,16 @@ let findHyperperiod tlist alist jlist =
     unique_task_arrival_pair) in
     let maxos = max_offset jlist in
     let utask_list = uniq task_list in
-    let ujblist = (unrollToHyper (hp + maxos) tlist (utask_list) jlist) in
+    let ujblist = (unrollToHyper (hp + (2*maxos)) tlist (utask_list) jlist) in
     let ncsv = List.map (to_csv_string) (ujblist) in
        (* let ncsv2 = if (int_of_string h_amin = 0) then ncsv1 else (List.tl
         ncsv1) in*)
     let t = List.fold_right Pervasives.max (List.map (fun a -> List.nth a 3)
     ujblist) 0 in
-    let _ = E.log "done\n" in
-    let new_win = compute_observation_window (hp + maxos) ujblist 0 t in
+    (*let new_win = compute_observation_window (hp + (2* maxos)) ujblist 0 t in
     let ujblist = (unrollToHyper (new_win) tlist (utask_list) jlist) in
-    let ncsv = List.map (to_csv_string) (ujblist) in
-    (*let _ = E.log "new_win %d" new_win in*)
+    let ncsv = List.map (to_csv_string) (ujblist) in *)
+    let _ = E.log "Observation Window %d" (hp + (2*maxos)) in
     let nncsv0 = List.map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] ->
         [tid; jid; amin; amax; cmin; cmax; dl; pr] ) ncsv in
     let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min";
@@ -1193,7 +1192,7 @@ let tfgFindID jnodes =
 
 
 let addJsonNodes jnodes arrival_time deadline kind tname d =
-    let _ = E.log "deadline %d\n" in
+    (*let _ = E.log "deadline %d\n" in*)
     let id = tfgFindID jnodes in
     let j = findJitter tname  (string_of_int (id+1)) in
     let (wcet,bcet) = findExecutionTimeSrc tname (string_of_int (id+1)) in
