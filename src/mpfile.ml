@@ -357,7 +357,7 @@ let makeSdelayEndInstr fdec (structvar : varinfo) (timervar : varinfo) (tp : var
   let start_time_init = Call(None, v2e sdelayfuns.start_timer_init, [s;], locUnknown) in
   let t =  mkAddrOf((var timervar)) in
   let handlrt = mkAddrOf((var tp)) in
-  let ktctime_var = findLocalVar fdec.slocals ("ktctime") in
+  let ktctime_var = findLocalVar fdec.slocals ("ktcptime") in
   let itime_init_start_time = Set((Var(ktctime_var), NoOffset), (v2e
   structvar), locUnknown) in
   [mkStmtOneInstr start_time_init; mkStmtOneInstr itime_init_start_time]
@@ -913,7 +913,7 @@ class fProfilingAdder filename fdec = object(self)
         let lastarrival = findLocalVar fdec.slocals ("ktcatime") in
         let minmaxlog_var =  findLocalVar fdec.slocals ("minmaxlog") in
         let stime = findLocalVar fdec.slocals ("ktcstime") in
-        let itime = findLocalVar fdec.slocals ("ktctime") in
+        let itime = findLocalVar fdec.slocals ("ktcptime") in
         let id_var = findLocalVar fdec.slocals ("ktcpid") in
         let start_time_var = findLocalVar fdec.slocals ("start_time") in
         let count_var  = findLocalVar fdec.slocals ("ktccount") in
@@ -1382,7 +1382,7 @@ class profileTask filename = object(self)
         let id_var = makeLocalVar fdec "ktcpid" intType in
         let count_var = makeLocalVar fdec "ktccount" intType in
         let timestruct = findCompinfo filename "timespec" in
-        let itime = makeLocalVar fdec "ktctime"
+        let itime = makeLocalVar fdec "ktcptime"
         (TComp(timestruct,[])) in
         (*init file instr*)
         let ktc_filename = findCompinfo filename "_IO_FILE" in
