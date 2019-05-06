@@ -994,7 +994,7 @@ class profilingAdder filename logname_var lastarrival stime itime fdec id_var co
                                let reinit = Set((Var(loop_var), NoOffset), Cil.zero, locUnknown) in
                                let block_false = mkBlock[] in
                                let block_true =  mkBlock [(mkStmtOneInstr fopn); (mkStmtOneInstr
-                               (makeLogTraceFinalFile (v2e ktc_file) (v2e flogvar) (v2e mkmisses_var) (mkString fdec.svar.vname) locUnknown)) ;(mkStmtOneInstr
+                               (makeLogTraceFinalFile (v2e ktc_file) (v2e flogvar) (v2e mkmisses_var) (mkString (fdec.svar.vname^"_mk")) locUnknown)) ;(mkStmtOneInstr
                                (makeLogTraceFclose (v2e ktc_file) locUnknown))]  in
                                let cond = BinOp(Eq, v2e cond_var, (integer 100), intType) in
                                let write_to_file = [mkStmt (If((cond),
