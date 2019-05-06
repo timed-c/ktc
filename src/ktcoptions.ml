@@ -17,7 +17,7 @@ let warnVararg: bool ref = ref false
 let home : string ref = ref ""
 let merge : bool ref = ref false
 
-let num_ext = 4
+let num_ext = 5
 let enable_ext : bool ref array = Array.init num_ext (fun i -> ref false)
 
 
