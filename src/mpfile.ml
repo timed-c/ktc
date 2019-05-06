@@ -337,9 +337,8 @@ itime loc =
     interval;resolution;arrival_pointer; itime], loc)
 
 
-let makeLogTraceAbortTime file_pointer loc =
-    Call(None,v2e sdelayfuns.log_trace_abort_time,
-    [file_pointer], loc)
+let makeLogTraceAbortTime mm_pointer ls_pointer loc =
+    Call(None,v2e sdelayfuns.log_trace_abort_time, [mm_pointer; ls_pointer], loc)
 
 let makeLogTraceExecution file_pointer stime loc =
     Call(None,v2e sdelayfuns.log_trace_execution, [file_pointer;stime], loc)
@@ -940,7 +939,7 @@ class fProfilingAdder filename fdec = object(self)
                (v2e lastarrival) (v2e stime) (List.nth argList 2) (v2e
                count_var) locUnknown in *)
                let trace_end_instr = makeLogTraceExecution (mkAddrOf (var logname_var)) (v2e stime) locUnknown in
-               let loop_instr = makeLogTraceAbortTime (mkAddrOf (var minmaxlog_var)) locUnknown in
+               let loop_instr = makeLogTraceAbortTime (mkAddrOf (var minmaxlog_var)) (mkAddrOf (var logname_var))  locUnknown in
                 [trace_end_instr; (*trace_abort_instr;*) i; inc_count_instr; previous_id_instr; loop_instr; trace_arrival_instr; trace_release_instr]
               (*  else
                    (let trace_arrival_instr = makeLogTraceArrival (v2e logname)
@@ -976,7 +975,7 @@ class profilingAdder filename logname_var lastarrival stime itime fdec id_var co
                let trace_end_instr = makeLogTraceExecution    (mkAddrOf (var logname_var)) (v2e stime) locUnknown in
                 (*let loop_instr = Set((Var(loop_var), NoOffset), BinOp(PlusA,
                  * v2e loop_var, (integer 1), intType), locUnknown) in*)
-               let loop_instr = makeLogTraceAbortTime (mkAddrOf (var flogvar)) locUnknown in
+               let loop_instr = makeLogTraceAbortTime (mkAddrOf (var flogvar)) (mkAddrOf (var logname_var)) locUnknown in
                 [trace_end_instr; i; inc_count_instr; previous_id_instr; loop_instr; trace_arrival_instr; trace_release_instr]
         |_ -> [i] in
         ChangeDoChildrenPost([i], action)
