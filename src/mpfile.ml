@@ -340,8 +340,8 @@ itime loc =
 let makeLogTraceAbortTime mm_pointer ls_pointer loc =
     Call(None,v2e sdelayfuns.log_trace_abort_time, [mm_pointer; ls_pointer], loc)
 
-let makeLogTraceExecution file_pointer stime loc =
-    Call(None,v2e sdelayfuns.log_trace_execution, [file_pointer;stime], loc)
+let makeLogTraceExecution file_pointer stime itme loc =
+    Call(None,v2e sdelayfuns.log_trace_execution, [file_pointer;stime;itme], loc)
 
 let makeLogTraceRelease file_pointer last_arrival itime stime interval loc =
     Call(None,v2e sdelayfuns.log_trace_release,
@@ -939,7 +939,7 @@ class fProfilingAdder filename fdec = object(self)
                 (*let trace_abort_instr = makeLogTraceAbortTime (v2e flog)
                (v2e lastarrival) (v2e stime) (List.nth argList 2) (v2e
                count_var) locUnknown in *)
-               let trace_end_instr = makeLogTraceExecution (mkAddrOf (var logname_var)) (v2e stime) locUnknown in
+               let trace_end_instr = makeLogTraceExecution (mkAddrOf (var logname_var)) (v2e stime) (mkAddrOf (var itime)) locUnknown in
                let loop_instr = makeLogTraceAbortTime ((v2e minmaxlog_var)) (mkAddrOf (var logname_var))  locUnknown in
                 [trace_end_instr; (*trace_abort_instr;*) i; inc_count_instr; previous_id_instr; loop_instr; trace_arrival_instr; trace_release_instr]
               (*  else
@@ -974,7 +974,7 @@ class profilingAdder filename logname_var lastarrival stime itime fdec id_var co
                let trace_arrival_instr = makeLogTraceArrival  (mkAddrOf (var logname_var)) (v2e count_var) (List.nth argList 1) (List.nth argList 2) (mkAddrOf
                (var lastarrival)) (mkAddrOf (var itime)) locUnknown in
                let trace_release_instr = makeLogTraceRelease  (mkAddrOf (var logname_var)) (v2e lastarrival) (v2e itime) (mkAddrOf (var stime)) (List.nth argList 1) locUnknown in
-               let trace_end_instr = makeLogTraceExecution    (mkAddrOf (var logname_var)) (v2e stime) locUnknown in
+               let trace_end_instr = makeLogTraceExecution    (mkAddrOf (var logname_var)) (v2e stime) (mkAddrOf (var itime)) locUnknown in
                 (*let loop_instr = Set((Var(loop_var), NoOffset), BinOp(PlusA,
                  * v2e loop_var, (integer 1), intType), locUnknown) in*)
                let loop_instr = makeLogTraceAbortTime ((v2e flogvar)) (mkAddrOf (var logname_var)) locUnknown in
@@ -1418,7 +1418,7 @@ class profileTask filename = object(self)
         (*let trace_release_instr = makeLogTraceRelease (v2e logname_var) (v2e
         last_arrival_var) (v2e itime) (mkAddrOf (var execution_start_var))
         locUnknown in *)
-        let trace_end_instr = makeLogTraceExecution (mkAddrOf (var logname_var)) (v2e execution_start_var) locUnknown in
+        let trace_end_instr = makeLogTraceExecution (mkAddrOf (var logname_var)) (v2e execution_start_var)  (mkAddrOf (var itime)) locUnknown in
         let return_stmnt_in_func = List.hd (List.rev fdec.sbody.bstmts) in
         let add_end_instr_without_return = List.append (List.rev [mkStmtOneInstr trace_end_instr]) (List.tl (List.rev fdec.sbody.bstmts)) in
         let add_end_instr_with_return = return_stmnt_in_func :: (add_end_instr_without_return) in
