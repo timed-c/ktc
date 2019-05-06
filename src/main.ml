@@ -27,6 +27,7 @@ let processOneFile (cil: C.file) : unit =
   (*if !(O.enable_ext.(2)) then Profile.sdelay cil;*)
   if !(O.enable_ext.(2)) then Pfile.sdelay cil;
   if !(O.enable_ext.(3)) then Ftfg.sdelay cil;
+  if !(O.enable_ext.(4)) then Mpfile.sdelay cil;
   outputFile cil
 ;;
 
