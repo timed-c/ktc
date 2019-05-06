@@ -1387,8 +1387,9 @@ class profileTask filename = object(self)
         let filename_var = makeLocalVar fdec ("ktcfile")
         (TPtr(TComp(ktc_filename,[]), [])) in
         let logname = findCompinfo filename "log_struct" in
+        let minmaxname =  findCompinfo filename "minmax_struct" in
         let logname_var = makeLocalVar fdec ("ktclog") (TComp(logname,[])) in
-        let flogname_var = makeLocalVar fdec ("minmaxlog") (TArray((TComp(logname,[])), Some((integer 50)), [])) in
+        let flogname_var = makeLocalVar fdec ("minmaxlog") (TArray((TComp(minmaxname,[])), Some((integer 50)), [])) in
         let log_init_instr = makeLogTraceInit (var filename_var) (mkString vi.vname) locUnknown in
          (*let flogname_var = makeLocalVar fdec ("ktcflog")
         (TPtr(TComp(logname,[]), [])) in
