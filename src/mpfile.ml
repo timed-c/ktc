@@ -1400,7 +1400,7 @@ class profileTask filename = object(self)
         start_time_var, locUnknown) in*)
         (*print ps*)
         let last_arrival_var = makeLocalVar fdec "ktcatime" ulongType in
-        let trace_init_instr = makeLogTraceTask ((v2e flogname_var)) (mkAddrOf (var last_arrival_var)) (v2e itime) (v2e filename_var) locUnknown  in
+        let trace_init_instr = makeLogTraceTask ((v2e flogname_var)) (mkAddrOf (var last_arrival_var)) (mkAddrOf (var itime)) (v2e filename_var) locUnknown  in
         (*let offset_from_caller = if ((isFunTaskName vi.vname) & (vi.vname <> "main") &
         (List.length arglist <> 0)) then (Set((Var(last_arrival_var),
         NoOffset),  StartOf(Mem(v2e (List.hd arglist)), NoOffset), locUnknown)) else (Set((Var(last_arrival_var),
@@ -1426,8 +1426,7 @@ class profileTask filename = object(self)
         let id_init = Set((Var(id_var),NoOffset), Cil.zero, locUnknown) in
         let count_init = Set((Var(count_var),NoOffset), Cil.zero, locUnknown) in
         let prepend_statement = mkStmt (Instr([cond_var_instr;loop_var_instr;id_init; count_init;
-        offset_from_caller; log_init_instr;
-        trace_init_instr(*;log_init_instr_f*)])) in
+        offset_from_caller; log_init_instr; trace_init_instr(*;log_init_instr_f*)])) in
         if (vi.vname <> "main") then
             fdec.sbody.bstmts <- List.rev add_end_instr_with_return;
         if(vi.vname <> "main") then
