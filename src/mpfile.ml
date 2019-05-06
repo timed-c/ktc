@@ -934,8 +934,8 @@ class fProfilingAdder filename fdec = object(self)
                NoOffset), BinOp(PlusA, v2e id_var, (integer counter), intType), locUnknown) in
                let previous_id_instr = makeLogTracePreviousID (mkAddrOf (var logname_var)) (v2e count_var) (v2e stime) locUnknown in
                let trace_arrival_instr = makeLogTraceArrival (mkAddrOf (var logname_var)) (v2e count_var) (List.nth argList 1) (List.nth argList 2) (mkAddrOf
-               (var lastarrival)) ((v2e itime)) locUnknown in
-               let trace_release_instr = makeLogTraceRelease (mkAddrOf (var logname_var)) (v2e lastarrival) (v2e itime) (mkAddrOf (var stime)) (List.nth argList 1) locUnknown in
+               (var lastarrival)) (mkAddrOf (var itime)) locUnknown in
+               let trace_release_instr = makeLogTraceRelease (mkAddrOf (var logname_var)) (v2e lastarrival) (mkAddrOf (var itime)) (mkAddrOf (var stime)) (List.nth argList 1) locUnknown in
                 (*let trace_abort_instr = makeLogTraceAbortTime (v2e flog)
                (v2e lastarrival) (v2e stime) (List.nth argList 2) (v2e
                count_var) locUnknown in *)
@@ -972,7 +972,7 @@ class profilingAdder filename logname_var lastarrival stime itime fdec id_var co
                let inc_count_instr = counter <- counter + 1; Set((Var(count_var), NoOffset), BinOp(PlusA, v2e id_var, (integer counter), intType), locUnknown) in
                let previous_id_instr = makeLogTracePreviousID (mkAddrOf (var logname_var)) (v2e count_var) (v2e stime) locUnknown in
                let trace_arrival_instr = makeLogTraceArrival  (mkAddrOf (var logname_var)) (v2e count_var) (List.nth argList 1) (List.nth argList 2) (mkAddrOf
-               (var lastarrival)) ((v2e itime)) locUnknown in
+               (var lastarrival)) (mkAddrOf (var itime)) locUnknown in
                let trace_release_instr = makeLogTraceRelease  (mkAddrOf (var logname_var)) (v2e lastarrival) (v2e itime) (mkAddrOf (var stime)) (List.nth argList 1) locUnknown in
                let trace_end_instr = makeLogTraceExecution    (mkAddrOf (var logname_var)) (v2e stime) locUnknown in
                 (*let loop_instr = Set((Var(loop_var), NoOffset), BinOp(PlusA,
