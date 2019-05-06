@@ -939,7 +939,7 @@ class fProfilingAdder filename fdec = object(self)
                (v2e lastarrival) (v2e stime) (List.nth argList 2) (v2e
                count_var) locUnknown in *)
                let trace_end_instr = makeLogTraceExecution (mkAddrOf (var logname_var)) (v2e stime) locUnknown in
-               let loop_instr = makeLogTraceAbortTime (mkAddrOf (var minmaxlog_var)) (mkAddrOf (var logname_var))  locUnknown in
+               let loop_instr = makeLogTraceAbortTime ((v2e minmaxlog_var)) (mkAddrOf (var logname_var))  locUnknown in
                 [trace_end_instr; (*trace_abort_instr;*) i; inc_count_instr; previous_id_instr; loop_instr; trace_arrival_instr; trace_release_instr]
               (*  else
                    (let trace_arrival_instr = makeLogTraceArrival (v2e logname)
@@ -975,7 +975,7 @@ class profilingAdder filename logname_var lastarrival stime itime fdec id_var co
                let trace_end_instr = makeLogTraceExecution    (mkAddrOf (var logname_var)) (v2e stime) locUnknown in
                 (*let loop_instr = Set((Var(loop_var), NoOffset), BinOp(PlusA,
                  * v2e loop_var, (integer 1), intType), locUnknown) in*)
-               let loop_instr = makeLogTraceAbortTime (mkAddrOf (var flogvar)) (mkAddrOf (var logname_var)) locUnknown in
+               let loop_instr = makeLogTraceAbortTime ((v2e flogvar)) (mkAddrOf (var logname_var)) locUnknown in
                 [trace_end_instr; i; inc_count_instr; previous_id_instr; loop_instr; trace_arrival_instr; trace_release_instr]
         |_ -> [i] in
         ChangeDoChildrenPost([i], action)
@@ -991,8 +991,7 @@ class profilingAdder filename logname_var lastarrival stime itime fdec id_var co
                                let reinit = Set((Var(loop_var), NoOffset), Cil.zero, locUnknown) in
                                let block_false = mkBlock[] in
                                let block_true =  mkBlock [(mkStmtOneInstr fopn); (mkStmtOneInstr
-                               (makeLogTraceFinalFile (v2e ktc_file) (v2e
-                               logname_var) locUnknown)) ;(mkStmtOneInstr
+                               (makeLogTraceFinalFile (v2e ktc_file) (v2e flogvar) locUnknown)) ;(mkStmtOneInstr
                                (makeLogTraceFclose (v2e ktc_file) locUnknown))]  in
                                let cond = BinOp(Eq, v2e cond_var, (integer 100), intType) in
                                let write_to_file = [mkStmt (If((cond),
@@ -1400,7 +1399,7 @@ class profileTask filename = object(self)
         start_time_var, locUnknown) in*)
         (*print ps*)
         let last_arrival_var = makeLocalVar fdec "ktcatime" ulongType in
-        let trace_init_instr = makeLogTraceTask (mkAddrOf (var flogname_var)) (mkAddrOf (var last_arrival_var)) (v2e itime) (v2e filename_var) locUnknown  in
+        let trace_init_instr = makeLogTraceTask ((v2e flogname_var)) (mkAddrOf (var last_arrival_var)) (v2e itime) (v2e filename_var) locUnknown  in
         (*let offset_from_caller = if ((isFunTaskName vi.vname) & (vi.vname <> "main") &
         (List.length arglist <> 0)) then (Set((Var(last_arrival_var),
         NoOffset),  StartOf(Mem(v2e (List.hd arglist)), NoOffset), locUnknown)) else (Set((Var(last_arrival_var),
