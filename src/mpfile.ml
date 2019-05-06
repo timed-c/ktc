@@ -337,8 +337,8 @@ itime loc =
     interval;resolution;arrival_pointer; itime], loc)
 
 
-let makeLogTraceAbortTime mm_pointer ls_pointer loc =
-    Call(None,v2e sdelayfuns.log_trace_abort_time, [mm_pointer; ls_pointer], loc)
+let makeLogTraceAbortTime mm_pointer ls_pointer dl mkarr mkmiss mkcount loc =
+    Call(None,v2e sdelayfuns.log_trace_abort_time, [mm_pointer; ls_pointer; dl; mkarr; mkmiss; mkcount], loc)
 
 let makeLogTraceExecution file_pointer stime itme loc =
     Call(None,v2e sdelayfuns.log_trace_execution, [file_pointer;stime;itme], loc)
@@ -917,14 +917,14 @@ class fProfilingAdder filename fdec = object(self)
         let id_var = findLocalVar fdec.slocals ("ktcpid") in
         let start_time_var = findLocalVar fdec.slocals ("start_time") in
         let count_var  = findLocalVar fdec.slocals ("ktccount") in
+        let mkarray_var = findLocalVar fdec.slocals ("mkarray") in
+        let mkmisses_var = findLocalVar fdec.slocals ("mkmisses") in
+        let mkcounter_var = findLocalVar fdec.slocals ("mkcounter") in
         match i with
         |Call(_,Lval(Var vi,_),argList, loc) when (isFunTask vi) ->
                 let logstart = findCompinfo filename "timespec" in
-                let itimeexist = List.exists (fun v -> v.vname = "ktcitime")
-                fdec.slocals in
-                let logstart_var = if (itimeexist) then (findLocalVar
-                fdec.slocals ("ktcitime")) else (makeLocalVar fdec ("ktcitime")
-                (TComp(logstart,[]))) in
+                let itimeexist = List.exists (fun v -> v.vname = "ktcitime") fdec.slocals in
+                let logstart_var = if (itimeexist) then (findLocalVar fdec.slocals ("ktcitime")) else (makeLocalVar fdec ("ktcitime") (TComp(logstart,[]))) in
                 [i]
         |Call(_,Lval(Var vi,_),argList, loc) when ((vi.vname =
             "ktc_sdelay_init_profile" ||
@@ -940,7 +940,8 @@ class fProfilingAdder filename fdec = object(self)
                (v2e lastarrival) (v2e stime) (List.nth argList 2) (v2e
                count_var) locUnknown in *)
                let trace_end_instr = makeLogTraceExecution (mkAddrOf (var logname_var)) (v2e stime) (mkAddrOf (var itime)) locUnknown in
-               let loop_instr = makeLogTraceAbortTime ((v2e minmaxlog_var)) (mkAddrOf (var logname_var))  locUnknown in
+               let loop_instr = makeLogTraceAbortTime ((v2e minmaxlog_var)) (mkAddrOf (var logname_var)) (List.nth argList 0) (v2e mkarray_var) (mkAddrOf (var mkmisses_var))
+               (mkAddrOf (var mkcounter_var))  locUnknown in
                 [trace_end_instr; (*trace_abort_instr;*) i; inc_count_instr; previous_id_instr; loop_instr; trace_arrival_instr; trace_release_instr]
               (*  else
                    (let trace_arrival_instr = makeLogTraceArrival (v2e logname)
@@ -954,7 +955,7 @@ class fProfilingAdder filename fdec = object(self)
 end
 
 
-class profilingAdder filename logname_var lastarrival stime itime fdec id_var count_var loop_var fopn flogvar = object(self)
+class profilingAdder filename logname_var lastarrival stime itime fdec id_var count_var loop_var fopn flogvar mkarray_var mkmisses_var mkcounter_var = object(self)
     inherit nopCilVisitor
     val mutable counter = 0
     method vinst (i : instr) =
@@ -977,7 +978,7 @@ class profilingAdder filename logname_var lastarrival stime itime fdec id_var co
                let trace_end_instr = makeLogTraceExecution    (mkAddrOf (var logname_var)) (v2e stime) (mkAddrOf (var itime)) locUnknown in
                 (*let loop_instr = Set((Var(loop_var), NoOffset), BinOp(PlusA,
                  * v2e loop_var, (integer 1), intType), locUnknown) in*)
-               let loop_instr = makeLogTraceAbortTime ((v2e flogvar)) (mkAddrOf (var logname_var)) locUnknown in
+                let loop_instr = makeLogTraceAbortTime ((v2e flogvar)) (mkAddrOf (var logname_var)) (List.nth argList 0) (v2e mkarray_var) (mkAddrOf (var mkmisses_var)) (mkAddrOf (var mkcounter_var)) locUnknown in
                 [trace_end_instr; i; inc_count_instr; previous_id_instr; loop_instr; trace_arrival_instr; trace_release_instr]
         |_ -> [i] in
         ChangeDoChildrenPost([i], action)
@@ -1393,6 +1394,9 @@ class profileTask filename = object(self)
         let logname_var = makeLocalVar fdec ("ktclog") (TComp(logname,[])) in
         let flogname_var = makeLocalVar fdec ("minmaxlog") (TArray((TComp(minmaxname,[])), Some((integer 50)), [])) in
         let log_init_instr = makeLogTraceInit (var filename_var) (mkString vi.vname) locUnknown in
+        let mkarray_var = makeLocalVar fdec ("mkarray") (TArray((intType), Some((integer 50)), [])) in
+        let mkmisses_var = makeLocalVar fdec ("mkmisses") intType in
+        let mkcounter_var = makeLocalVar fdec ("mkcounter") intType in
          (*let flogname_var = makeLocalVar fdec ("ktcflog")
         (TPtr(TComp(logname,[]), [])) in
         let log_init_instr_f = makeLogTraceInit (var flogname_var)
@@ -1407,12 +1411,10 @@ class profileTask filename = object(self)
         (List.length arglist <> 0)) then (Set((Var(last_arrival_var),
         NoOffset),  StartOf(Mem(v2e (List.hd arglist)), NoOffset), locUnknown)) else (Set((Var(last_arrival_var),
         NoOffset), Cil.zero, locUnknown)) in*)
-        let offset_from_caller = (Set((Var(last_arrival_var),
-        NoOffset), Cil.zero, locUnknown)) in
-        let loop_var_instr = (Set((Var(loop_var),
-        NoOffset), Cil.zero, locUnknown)) in
-        let cond_var_instr = (Set((Var(cond_var),
-        NoOffset), Cil.zero, locUnknown)) in
+        let offset_from_caller = (Set((Var(last_arrival_var), NoOffset), Cil.zero, locUnknown)) in
+        let loop_var_instr = (Set((Var(loop_var), NoOffset), Cil.zero, locUnknown)) in
+        let cond_var_instr = (Set((Var(cond_var), NoOffset), Cil.zero, locUnknown)) in
+        let mkcounter_var_instr = (Set((Var(mkcounter_var), NoOffset), Cil.zero, locUnknown)) in
         (*print release*)
         let execution_start_var = makeLocalVar fdec "ktcstime" (TComp(timestruct,[])) in
         (*let trace_release_instr = makeLogTraceRelease (v2e logname_var) (v2e
@@ -1422,12 +1424,13 @@ class profileTask filename = object(self)
         let return_stmnt_in_func = List.hd (List.rev fdec.sbody.bstmts) in
         let add_end_instr_without_return = List.append (List.rev [mkStmtOneInstr trace_end_instr]) (List.tl (List.rev fdec.sbody.bstmts)) in
         let add_end_instr_with_return = return_stmnt_in_func :: (add_end_instr_without_return) in
-        let modifyprofile = new profilingAdder filename logname_var last_arrival_var execution_start_var itime fdec id_var count_var loop_var log_init_instr flogname_var in
+        let modifyprofile = new profilingAdder filename logname_var last_arrival_var execution_start_var itime fdec id_var count_var loop_var log_init_instr
+        flogname_var mkarray_var mkmisses_var mkcounter_var in
         if (isFunTaskName vi.vname) then
 		fdec.sbody <- visitCilBlock modifyprofile fdec.sbody;
         let id_init = Set((Var(id_var),NoOffset), Cil.zero, locUnknown) in
         let count_init = Set((Var(count_var),NoOffset), Cil.zero, locUnknown) in
-        let prepend_statement = mkStmt (Instr([cond_var_instr;loop_var_instr;id_init; count_init;
+        let prepend_statement = mkStmt (Instr([cond_var_instr;loop_var_instr;mkcounter_var_instr;id_init; count_init;
         offset_from_caller; log_init_instr; trace_init_instr(*;log_init_instr_f*)])) in
         if (vi.vname <> "main") then
             fdec.sbody.bstmts <- List.rev add_end_instr_with_return;
