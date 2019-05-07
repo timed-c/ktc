@@ -966,6 +966,7 @@ let unrollMultiFrameAux tlist hp id tname =
 
 
 let unrollOneTask tlist hp id tname =
+    let _ = E.log "unrollOneTask \n"in
     let l = List.length tlist in
     if (l = 1) then (unrollOneFrame tlist hp id ) else (
         if (l =  0) then [] else (unrollMultiFrameAux
@@ -973,7 +974,8 @@ let unrollOneTask tlist hp id tname =
 
 
 let find_offset jlist tskname =
-    let olist = List.find (fun [tid; at; j; b; w; d;k] -> ((tid = tskname) & (int_of_string j) = 0) ) jlist in
+    let _ = E.log "find_offset %s" tskname in
+    let olist = List.find (fun [tid; at; j; b; w; d;k] -> ((tid = tskname) & (int_of_string d) = 0) ) jlist in
     (int_of_string (List.nth olist 1))
 
 
@@ -987,6 +989,7 @@ let max_offset jlist =
 
 
 let rec unrollToHyper hp tlist task_list jlist =
+      (*let _ = E.log "unrollToHyper \n"in*)
        match task_list with
        | name :: rest -> let onetskl = List.filter (fun a -> (List.nth a 0) =
            name) tlist in
@@ -998,9 +1001,9 @@ let rec unrollToHyper hp tlist task_list jlist =
                          ((amin) + os)); amax; cmin; cmax;
                          (((dl) + os)); pr;k] )
                          (unrolledlst) in
-                         let _ = E.log "a" in
+                         (*let _ = E.log "a" in*)
                          let h_amin = List.nth (List.hd unrolledlst) 1 in
-                         let _ = E.log "b" in
+                         (*let _ = E.log "b" in*)
                          let ncsv2 = if (h_amin = 0) then ncsv1 else (List.tl ncsv1) in
                          List.append ncsv2 (unrollToHyper hp ((List.filter
                          (fun a -> (List.nth a 0) <> name)) tlist) rest jlist)
@@ -1093,12 +1096,13 @@ let findHyperperiod tlist alist jlist =
     let maxos = max_offset jlist in
     let utask_list = uniq task_list in
     let ujblist = (unrollToHyper (hp + maxos) tlist (utask_list) jlist) in
+    (*let _ = E.log "done 2\n" in*)
     let ncsv = List.map (to_csv_string) (ujblist) in
        (* let ncsv2 = if (int_of_string h_amin = 0) then ncsv1 else (List.tl
         ncsv1) in*)
     let t = List.fold_right Pervasives.max (List.map (fun a -> List.nth a 3)
     ujblist) 0 in
-    let _ = E.log "done\n" in
+    (*let _ = E.log "done\n" in*)
     let new_win = compute_observation_window (hp + maxos) ujblist 0 t in
     let ujblist = (unrollToHyper (new_win) tlist (utask_list) jlist) in
     let ncsv = List.map (to_csv_string) (ujblist) in
@@ -1111,8 +1115,8 @@ let findHyperperiod tlist alist jlist =
     let _ = Csv.save "job.csv" nncsv
     in
     let abortcsv =  (match alist with
-                    |[] -> E.log "alist empty here"; []
-                    |_ -> E.log "alist not empty"; List.rev (create_abort_csv alist (ncsv) [])) in
+                    |[] -> (*E.log "alist empty here";*) []
+                    |_ -> (*E.log "alist not empty";*) List.rev (create_abort_csv alist (ncsv) [])) in
     let abortncsv = ["Task ID"; "Job ID"; "TMIN"; "TMAX"; "CMIN";
     "CMAX"] :: abortcsv in
     let _ = Csv.save "action.csv" abortncsv
@@ -1139,7 +1143,7 @@ let minEx a b =
 
 let findExecutionTime tname src dst =
     let tnew = read_data tname in
-    let noheader = List.tl tnew in
+    let noheader = List.tl (tnew) in
     let edge = filter_edges (src) (dst) noheader in
     let maxexe = edge.wcet in
     let minexe = edge.bcet in
@@ -1147,7 +1151,7 @@ let findExecutionTime tname src dst =
 
 let findExecutionTimeSrc tname src =
     let tnew = read_data tname in
-    let noheader = List.tl tnew in
+    let noheader = List.tl (tnew) in
     let edge = filter_nodes (src) noheader in
     let maxexe = edge.wcet in
     let minexe = edge.bcet in
@@ -1156,14 +1160,14 @@ let findExecutionTimeSrc tname src =
 
 let findJitter tname src =
     let tnew = read_data tname in
-    let noheader = List.tl tnew in
+    let noheader = List.tl (tnew) in
     let node = filter_nodes (src) noheader in
     (int_of_string node.jitter)
 
 
 let findExecutionAbortTime tname src =
     let tnew = read_data tname in
-    let noheader = List.tl tnew in
+    let noheader = List.tl (tnew) in
     let edge = filter_nodes (src) noheader in
     ((int_of_string edge.abort), (int_of_string edge.abort))
 
@@ -1173,7 +1177,7 @@ let tfgFindID jnodes =
 
 
 let addJsonNodes jnodes arrival_time deadline kind tname d =
-    let _ = E.log "deadline %d\n" in
+    (*let _ = E.log "deadline %d\n" in*)
     let id = tfgFindID jnodes in
     let j = findJitter tname  (string_of_int (id+1)) in
     let (wcet,bcet) = findExecutionTimeSrc tname (string_of_int (id+1)) in
@@ -1206,8 +1210,9 @@ let rec addJsonEdges len clen jedges tname =
 
 let completeJsonEdges jnodes tname =
     let len = List.length jnodes in
-    let jedgeslist = addJsonEdges len len [] tname in
-    jedgeslist
+    (*let jedgeslist = addJsonEdges len len [] tname in
+    jedgeslist*)
+    []
 
 let tfgGetValueInt t =
     let topt = Cil.isInteger t in
