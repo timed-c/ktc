@@ -959,7 +959,7 @@ let unrollMultiFrameAux tlist hp id tname =
     let [name; p; j; b; w; d;k] = List.hd (List.rev tlist) in
     let [n1; p1; j1; b1; w1; d1;k1] = List.hd tlist in
     let k_int = if (k = "fdelay") then 0 else 1 in
-    let nlst = List. rev (List.tl (recUnrollSegment tlist hp id tname iter [])) in
+    let nlst = List.rev (List.tl (recUnrollSegment tlist hp id tname iter [])) in
     [(int_of_string id); 0; 0;( int_of_string j1);
     (int_of_string b); (int_of_string w); (int_of_string d1); (int_of_string
     d1);k_int] :: nlst
@@ -967,7 +967,8 @@ let unrollMultiFrameAux tlist hp id tname =
 
 let unrollOneTask tlist hp id tname =
     let _ = E.log "unrollOneTask \n"in
-    let l = List.length tlist in
+    let ntlist = List.filter (fun [tid; at; j; b; w; d;k] -> (int_of_string d) <> 0)  tlist in
+    let l = List.length ntlist in
     if (l = 1) then (unrollOneFrame tlist hp id ) else (
         if (l =  0) then [] else (unrollMultiFrameAux
     (List.rev tlist) hp (string_of_int id) tname))
@@ -1105,7 +1106,8 @@ let findHyperperiod tlist alist jlist =
     (*let _ = E.log "done\n" in*)
     let new_win = compute_observation_window (hp + maxos) ujblist 0 t in
     let ujblist = (unrollToHyper (new_win) tlist (utask_list) jlist) in
-    let ncsv = List.map (to_csv_string) (ujblist) in
+    let njblist = List.filter (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] -> dl <> 0) ujblist in
+    let ncsv = List.map (to_csv_string) (njblist) in
     (*let _ = E.log "new_win %d" new_win in*)
     let nncsv0 = List.map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] ->
         [tid; jid; amin; amax; cmin; cmax; dl; pr] ) ncsv in
