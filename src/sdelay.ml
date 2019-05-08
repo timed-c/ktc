@@ -147,10 +147,10 @@ let sdelayfuns = {
 
 
 
-let sdelay_init_str = "ktc_sdelay_init_profile"
+let sdelay_init_str = "ktc_sdelay_init"
 let start_timer_init_str   = "ktc_start_time_init"
 (*let start_timer_init_str   = "sdelay"*)
-let fdelay_init_str = "ktc_fdelay_init_profile"
+let fdelay_init_str = "ktc_fdelay_init"
 let gettime_str = "ktc_gettime"
 let timer_create_str  = "ktc_create_timer"
 let sig_setjmp_str = "__sigsetjmp"
@@ -305,11 +305,11 @@ let makeSdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc :
     location) lv =
   (*let time_unit = if ((L.length argL) = 3 && not (isZero (L.hd argL))) then (E.s (E.error "%s:%d: error : unknown resolution of timing point" loc.file loc.line)) else (L.nth argL 2) in*)
   let time_unit = (L.nth argL 2) in
-  let logname_var = findLocalVar fdec.slocals ("ktclog") in
+  (*let logname_var = findLocalVar fdec.slocals ("ktclog") in
    let loop_var  = findLocalVar fdec.slocals ("ktcloopvar") in
-     let count_var  = findLocalVar fdec.slocals ("ktccount") in
+     let count_var  = findLocalVar fdec.slocals ("ktccount") in*)
   let f, l, deadline, period ,tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, (L.nth argL 1), time_unit, mkAddrOf((var structvar)), (List.hd (List.rev argL))  in
-  [Call(lv,v2e sdelayfuns.sdelay_init, [deadline;period;tunit;s;t_id; ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))); v2e count_var], loc)]
+  [Call(lv,v2e sdelayfuns.sdelay_init, [deadline;period;tunit;s;t_id], loc)]
 
 let makeelemInstr chan tail head lv loc =
   [Call(lv,v2e sdelayfuns.nelem, [mkAddrOf(var chan); Lval(var head); Lval(var tail)], loc)]
@@ -386,12 +386,12 @@ let makeFdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc :
   let waitingOffset = match tpstructvar.vtype with
 		      | TComp (cinfo, _) -> Field (getCompField cinfo "waiting", NoOffset) in
   let waitingConditionInstr = Set((Var tpstructvar, waitingOffset), Cil.one, locUnknown) in
-  let logname_var = findLocalVar fdec.slocals ("ktclog") in
+  (*let logname_var = findLocalVar fdec.slocals ("ktclog") in
   let count_var  = findLocalVar fdec.slocals ("ktccount") in
-    let loop_var  = findLocalVar fdec.slocals ("ktcloopvar") in
+    let loop_var  = findLocalVar fdec.slocals ("ktcloopvar") in*)
   [waitingConditionInstr; Call(lv,v2e sdelayfuns.fdelay_init,
-  [deadline;period;tunit;s;t_id;(v2e retjmp); signo; ((mkAddrOf
-  ((Var(logname_var), Index(v2e loop_var, NoOffset))))); (v2e count_var)], loc)]
+  [deadline;period;tunit;s;t_id;(v2e retjmp); signo (*((mkAddrOf
+  ((Var(logname_var), Index(v2e loop_var, NoOffset))))); (v2e count_var)*)], loc)]
 
 let makegettimeInstr lv (structvar : varinfo) (argL : exp list) loc =
 	let tunit, s =  L.hd argL, mkAddrOf((var structvar)) in
