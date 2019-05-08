@@ -1,27 +1,42 @@
+/*tasks with periodic loop*/
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-#include "cilktc.h"
-#include "log.h"
+#include <cilktc.h>
+
 FILE dfile;
-void read_sensor_1();
-void read_sensor_2();
 
-task foo(void* itime)
-{
-  while(1){
-    read_sensor_1();
-    sdelay(5, ms);
-    read_sensor_2();
-    sdelay(10, ms);
-  }
+task tsk_foo(){
+    int i;
+    for(i=0;i<50;i++){
+        sdelay(300, ms);
+    }
 }
 
-task bar(void* itime){
-   printf("In bar\n");
+
+task tsk_bar(){
+
+    int i;
+    for(i=0; i<50;i++){
+        sdelay(200, ms);
+    }
+
 }
+
+
+task tsk_far(){
+    int i;
+    for(i=0; i<50;i++){
+        fdelay(600, ms);
+    }
+}
+
+
+
 int main(){
-    int a;
-	printf("In main\n");
-    bar();
+    long unsigned int targ = 10;
+    tsk_foo();
+    tsk_bar();
+    tsk_far();
+    printf("main--end\n");
 }

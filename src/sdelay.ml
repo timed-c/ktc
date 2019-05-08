@@ -359,10 +359,10 @@ let makeSdelayEndInstr fdec (structvar : varinfo) (timervar : varinfo) (tp : var
   let start_time_init = Call(None, v2e sdelayfuns.start_timer_init, [s;], locUnknown) in
   let t =  mkAddrOf((var timervar)) in
   let handlrt = mkAddrOf((var tp)) in
-  let ktctime_var = findLocalVar fdec.slocals ("ktctime") in
+ (* let ktctime_var = findLocalVar fdec.slocals ("ktctime") in
   let itime_init_start_time = Set((Var(ktctime_var), NoOffset), (v2e
-  structvar), locUnknown) in
-  [mkStmtOneInstr start_time_init; mkStmtOneInstr itime_init_start_time]
+  structvar), locUnknown) in *)
+  [mkStmtOneInstr start_time_init(*; mkStmtOneInstr itime_init_start_time*)]
 
 
 let makeTimerCreate fdec (structvar : varinfo) (timervar : varinfo) (tp : varinfo) (signo : int)=
@@ -412,7 +412,7 @@ let makePthreadCreateInstr (threadvar : varinfo) (funvar : varinfo) argList
 (loc:location) fdec =
 	let addrThread = mkAddrOf(var threadvar) in
 	let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in
-    let itime = findLocalVar fdec.slocals ("ktcitime") in
+    (*let itime = findLocalVar fdec.slocals ("ktcitime") in*)
 	(*let addrFun = mkAddrOf(var funvar) in
 	i2s ( Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero; addrFun; Cil.zero;], loc)) *)
 	let ret = if (L.length argList) = 0 then
@@ -420,7 +420,7 @@ let makePthreadCreateInstr (threadvar : varinfo) (funvar : varinfo) argList
     (var funvar)); nullptr], loc)
 	else
 	Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero ; (mkAddrOf
-    (var funvar)); mkAddrOf (var itime)], loc)
+    (var funvar))(*; mkAddrOf (var itime)*)], loc)
 	in ret
 
 
