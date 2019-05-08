@@ -1125,7 +1125,7 @@ let findHyperperiod tlist alist jlist =
 in ()
 
 let read_data fname =
-  Csv.load fname
+  Csv.load (fname^".ktc.trace")
   |> List.map (function [src; bcet; wcet; jitter; abort; dst] -> {src; bcet; wcet; jitter; abort; dst}
                       | _ -> failwith "read_data: incorrect file")
 

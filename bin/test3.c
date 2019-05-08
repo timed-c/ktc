@@ -8,7 +8,7 @@ FILE dfile;
 
 task tsk_foo(){
     int i;
-    for(i=0;i<50;i++){
+    while(1){
         sdelay(300, ms);
     }
 }
@@ -17,7 +17,7 @@ task tsk_foo(){
 task tsk_bar(){
 
     int i;
-    for(i=0; i<50;i++){
+    while(1){
         sdelay(200, ms);
     }
 
@@ -26,8 +26,8 @@ task tsk_bar(){
 
 task tsk_far(){
     int i;
-    for(i=0; i<50;i++){
-        fdelay(600, ms);
+    while(1){
+        sdelay(600, ms);
     }
 }
 

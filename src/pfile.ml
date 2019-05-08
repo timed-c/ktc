@@ -1409,7 +1409,7 @@ class profileTask filename = object(self)
         let logname_var = makeLocalVar fdec ("ktclog")
         (TArray((TComp(logname,[])), Some((integer 2000)), [])) in
         let log_init_instr = makeLogTraceInit (var filename_var) (mkString
-        vi.vname) locUnknown in
+        (vi.vname^".ktc.trace")) locUnknown in
          (*let flogname_var = makeLocalVar fdec ("ktcflog")
         (TPtr(TComp(logname,[]), [])) in
         let log_init_instr_f = makeLogTraceInit (var flogname_var)
