@@ -163,6 +163,51 @@ extern struct timer_env* timer_env_array[50];
 extern int compare_qsort (const void * elem1, const void * elem2);
 extern void populatelist(int num);
 
+
+#define infty 0
+struct log_struct{
+    int src;
+    unsigned long atime;
+    unsigned long rtime;
+    unsigned long jitter;
+    unsigned long execution;
+    unsigned long abort;
+    int dst;
+};
+
+struct minmax_struct{
+    int msrc;
+    unsigned long mbcet;
+    unsigned long mwcet;
+    unsigned long mjitter;
+    unsigned long mabort;
+    int mdst;
+};
+
+
+
+void mplog_trace_init_tp(struct minmax_struct* fp, FILE* fptr, int tp, unsigned long* arrival_init, TickType_t* itime);
+void mplog_trace_init(const char* func, struct _IO_FILE *fp);
+void mplog_trace_arrival(struct log_struct* fp, int tp, int interval, int res, unsigned long *last_arrival, TickType_t* itime);
+void mplog_trace_release(struct log_struct* fp, unsigned long last_arrival, TickType_t* itime, TickType_t* stime, int interval);
+void mplog_trace_execution(struct log_struct* fp, TickType_t stime, TickType_t* iptime);
+void mplog_trace_end_id(struct log_struct* fp, int id, TickType_t time);
+void mplog_trace_abort_time(struct minmax_struct* mm, struct log_struct* ls, int deadline, int* mkarray, int* mkmisses, int* mkcounter);
+void mplog_write_to_file(FILE* fp, struct minmax_struct* ls, int k, char* fname);
+
+
+#pragma cilnoremove("log_struct")
+#pragma cilnoremove("minmax_struct")
+#pragma cilnoremove("mplog_trace_init_tp")
+#pragma cilnoremove("mplog_trace_init")
+#pragma cilnoremove("mplog_trace_arrival")
+#pragma cilnoremove("mplog_trace_release")
+#pragma cilnoremove("mplog_trace_execution")
+#pragma cilnoremove("mplog_trace_end_id")
+#pragma cilnoremove("mplog_trace_abort_time")
+#pragma cilnoremove("mplog_write_to_file")
+#pragma cilnoremove("fopen")
+#pragma cilnoremove("fclose")
 #pragma cilnoremove("list_dl")
 #pragma cilnoremove("list_pr")
 #pragma cilnoremove("populatelist")
