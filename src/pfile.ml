@@ -377,7 +377,7 @@ let makeTimerCreate fdec (structvar : varinfo) (timervar : varinfo) (tp : varinf
   timer_init
 
 let makeTraceSetParam argc argv loc =
-    let ifcond = BinOp(Gt, (argc), (Cil.integer 3), intType) in
+    let ifcond = BinOp(Gt, (argc), (Cil.integer 2), intType) in
     let btrue = mkBlock [mkStmtOneInstr (Call(None,v2e sdelayfuns.log_trace_set_param, [argv], loc))] in
     let bfalse = mkBlock [] in
     mkStmt (If(ifcond, btrue, bfalse, loc))
@@ -1015,6 +1015,7 @@ count_var loop_var fopn = object(self)
         |Loop(b,l,st1, st2) -> let ktc_file = findLocalVar fdec.slocals ("ktcfile") in
                                let cond_var = findLocalVar fdec.slocals
                                ("ktccondvar") in
+                               let iter_var = findGlobalVar filename.globals "ktc_iterglobal" in
                                let cond_instr = Set((Var(cond_var), NoOffset),
                                BinOp(PlusA, v2e cond_var, (integer 1), intType), locUnknown) in
                                let reinit = Set((Var(loop_var), NoOffset), Cil.zero, locUnknown) in
@@ -1023,7 +1024,7 @@ count_var loop_var fopn = object(self)
                                (makeLogTraceFinalFile (v2e ktc_file) (v2e
                                logname_var) locUnknown)) ;(mkStmtOneInstr
                                (makeLogTraceFclose (v2e ktc_file) locUnknown))]  in
-                               let cond = BinOp(Eq, v2e cond_var, (integer 100), intType) in
+                               let cond = BinOp(Eq, v2e cond_var, (v2e iter_var), intType) in
                                let write_to_file = [mkStmt (If((cond),
                                block_true, block_false, locUnknown))] in
                                let block_false = mkBlock[] in

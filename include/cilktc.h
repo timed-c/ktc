@@ -266,7 +266,7 @@ void plog_trace_execution(struct log_struct* fp, struct timespec stime);
 void plog_trace_end_id(struct log_struct* fp, int id, struct timespec stime);
 void plog_trace_abort_time(int* fp);
 void plog_write_to_file(FILE* fp, struct log_struct* ls);
-
+void plog_trace_set_param(char* argv[]);
 
 void mplog_trace_init_tp(struct minmax_struct* ls, FILE* fptr,  int tp, unsigned long* arrival_init, struct timespec* iptime);
 void mplog_trace_arrival(struct log_struct* fp, int tp, int interval, int res, unsigned long *last_arrival, struct timespec* iptime);
@@ -274,8 +274,9 @@ void mplog_trace_release(struct log_struct* fp, unsigned long last_arrival, stru
 void mplog_trace_execution(struct log_struct* fp, struct timespec stime, struct timespec* iptime);
 void mplog_write_to_file(FILE* fp, struct minmax_struct* ls, int k, char* fname);
 void mplog_trace_end_id(struct log_struct* fp, int id, struct timespec stime);
-void mplog_trace_set_param(char* argv);
+void mplog_trace_set_param(char* argv[]);
 void mplog_trace_abort_time(struct minmax_struct* mm, struct log_struct* ls, int deadline, int* mkarray, int* mkmisses, int* mkcounter);
+
 
 int ktc_kglobal = 3;
 int ktc_iterglobal = 50;

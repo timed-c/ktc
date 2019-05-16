@@ -998,8 +998,8 @@ class profilingAdder filename logname_var lastarrival stime itime fdec id_var co
 	    let action s =
 	    match s.skind with
         |Loop(b,l,st1, st2) -> let ktc_file = findLocalVar fdec.slocals ("ktcfile") in
-                               let cond_var = findLocalVar fdec.slocals
-                               ("ktccondvar") in
+                               let cond_var = findLocalVar fdec.slocals ("ktccondvar") in
+                               let iter_var = findGlobalVar filename.globals "ktc_iterglobal" in
                                let cond_instr = Set((Var(cond_var), NoOffset),
                                BinOp(PlusA, v2e cond_var, (integer 1), intType), locUnknown) in
                                let reinit = Set((Var(loop_var), NoOffset), Cil.zero, locUnknown) in
@@ -1007,7 +1007,7 @@ class profilingAdder filename logname_var lastarrival stime itime fdec id_var co
                                let block_true =  mkBlock [(mkStmtOneInstr fopn); (mkStmtOneInstr
                                (makeLogTraceFinalFile (v2e ktc_file) (v2e flogvar) (v2e mkmisses_var) (mkString (fdec.svar.vname^"_mk")) locUnknown)) ;(mkStmtOneInstr
                                (makeLogTraceFclose (v2e ktc_file) locUnknown))]  in
-                               let cond = BinOp(Eq, v2e cond_var, (integer 100), intType) in
+                               let cond = BinOp(Eq, v2e cond_var, v2e iter_var, intType) in
                                let write_to_file = [mkStmt (If((cond),
                                block_true, block_false, locUnknown))] in
                                let block_false = mkBlock[] in
