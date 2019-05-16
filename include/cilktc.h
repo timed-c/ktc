@@ -19,7 +19,7 @@
 */
 
 enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
-int policy = 0;
+int policy;
 extern int setschedvar;
 //#define spolicy(X) if( (X) == EDF) spolicy_edf(); else spolicy_other(); sleep(0)
 #define spolicy(X) setschedvar = 1; policy =X; sdelay(-2103, ms);
@@ -101,8 +101,8 @@ struct tp_struct{
 
 bool boolvar;
 struct tp_struct tp_struct_data;
-int list_pr[500] = {4};
-int list_dl[500] = {4};
+int list_pr[500];
+int list_dl[500];
 void ktc_create_timer(timer_t* ktctimer,timer_t tid, struct tp_struct* tp, int num);
 extern int ktc_start_time_init(struct timespec* start_time) ;
 extern long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec* start_time, int id, FILE* fp, int pid) ;
@@ -266,7 +266,7 @@ void plog_trace_execution(struct log_struct* fp, struct timespec stime);
 void plog_trace_end_id(struct log_struct* fp, int id, struct timespec stime);
 void plog_trace_abort_time(int* fp);
 void plog_write_to_file(FILE* fp, struct log_struct* ls);
-void plog_trace_set_param(char* argv[]);
+void plog_set_param(char* argv[]);
 
 void mplog_trace_init_tp(struct minmax_struct* ls, FILE* fptr,  int tp, unsigned long* arrival_init, struct timespec* iptime);
 void mplog_trace_arrival(struct log_struct* fp, int tp, int interval, int res, unsigned long *last_arrival, struct timespec* iptime);
@@ -274,12 +274,12 @@ void mplog_trace_release(struct log_struct* fp, unsigned long last_arrival, stru
 void mplog_trace_execution(struct log_struct* fp, struct timespec stime, struct timespec* iptime);
 void mplog_write_to_file(FILE* fp, struct minmax_struct* ls, int k, char* fname);
 void mplog_trace_end_id(struct log_struct* fp, int id, struct timespec stime);
-void mplog_trace_set_param(char* argv[]);
+void mplog_set_param(char* argv[]);
 void mplog_trace_abort_time(struct minmax_struct* mm, struct log_struct* ls, int deadline, int* mkarray, int* mkmisses, int* mkcounter);
 
 
-int ktc_kglobal = 3;
-int ktc_iterglobal = 50;
+int ktc_kglobal;
+int ktc_iterglobal;
 
 /** FREERTOS**/
 /*
@@ -353,6 +353,7 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("log_trace_arrival")
 #pragma cilnoremove("log_trace_init_tp")
 #pragma cilnoremove("log_trace_init")
+#pragma cilnoremove("mplog_set_param")
 #pragma cilnoremove("mplog_trace_end_id")
 #pragma cilnoremove("mplog_trace_abort_time")
 #pragma cilnoremove("mplog_trace_release")
@@ -365,6 +366,7 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("sae")
 #pragma cilnoremove("fopen")
 #pragma cilnoremove("fclose")
+#pragma cilnoremove("plog_set_param")
 #pragma cilnoremove("plog_trace_end_id")
 #pragma cilnoremove("plog_trace_abort_time")
 #pragma cilnoremove("plog_trace_release")
