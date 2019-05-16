@@ -357,7 +357,7 @@ let makeLogGetTime itime  loc =
     loc)
 
 let makeTraceSetParam argc argv loc =
-    let ifcond = BinOp(Gt, (argc), (Cil.integer 3), intType) in
+    let ifcond = BinOp(Gt, (argc), (Cil.integer 2), intType) in
     let btrue = mkBlock [mkStmtOneInstr (Call(None,v2e sdelayfuns.log_trace_set_param, [argv], loc))] in
     let bfalse = mkBlock [] in
     mkStmt (If(ifcond, btrue, bfalse, loc))

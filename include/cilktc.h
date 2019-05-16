@@ -265,7 +265,7 @@ void plog_trace_release(struct log_struct* fp, unsigned long last_arrival, struc
 void plog_trace_execution(struct log_struct* fp, struct timespec stime);
 void plog_trace_end_id(struct log_struct* fp, int id, struct timespec stime);
 void plog_trace_abort_time(int* fp);
-void plog_write_to_file(FILE* fp, struct log_struct* ls);
+void plog_write_to_file(FILE* fp, struct log_struct* ls, char* fname);
 void plog_set_param(char* argv[]);
 
 void mplog_trace_init_tp(struct minmax_struct* ls, FILE* fptr,  int tp, unsigned long* arrival_init, struct timespec* iptime);

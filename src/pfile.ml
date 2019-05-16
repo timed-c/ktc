@@ -325,8 +325,8 @@ let makeLogTraceInit filepointer name loc =
 let makeLogTraceFclose filepointer loc =
     Call(None, v2e sdelayfuns.log_trace_fclose, [filepointer], loc)
 
-let makeLogTraceFinalFile filepointer buf loc =
-     Call(None, v2e sdelayfuns.log_trace_final_file, [filepointer;buf], loc)
+let makeLogTraceFinalFile filepointer buf fname loc =
+    Call(None, v2e sdelayfuns.log_trace_final_file, [filepointer;buf; fname], loc)
 
 
 let makeLogTracePreviousID filepointer id stime loc =
@@ -377,7 +377,7 @@ let makeTimerCreate fdec (structvar : varinfo) (timervar : varinfo) (tp : varinf
   timer_init
 
 let makeTraceSetParam argc argv loc =
-    let ifcond = BinOp(Gt, (argc), (Cil.integer 2), intType) in
+    let ifcond = BinOp(Gt, (argc), (Cil.integer 1), intType) in
     let btrue = mkBlock [mkStmtOneInstr (Call(None,v2e sdelayfuns.log_trace_set_param, [argv], loc))] in
     let bfalse = mkBlock [] in
     mkStmt (If(ifcond, btrue, bfalse, loc))
@@ -1022,7 +1022,7 @@ count_var loop_var fopn = object(self)
                                let block_false = mkBlock[] in
                                let block_true =  mkBlock [(mkStmtOneInstr fopn); (mkStmtOneInstr
                                (makeLogTraceFinalFile (v2e ktc_file) (v2e
-                               logname_var) locUnknown)) ;(mkStmtOneInstr
+                               logname_var) (mkString fdec.svar.vname) locUnknown)) ;(mkStmtOneInstr
                                (makeLogTraceFclose (v2e ktc_file) locUnknown))]  in
                                let cond = BinOp(Eq, v2e cond_var, (v2e iter_var), intType) in
                                let write_to_file = [mkStmt (If((cond),
