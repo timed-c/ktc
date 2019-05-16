@@ -33,7 +33,7 @@ task tsk_far(){
 
 
 
-int main(){
+int main(int argc, char* argv[]){
     long unsigned int targ = 10;
     tsk_foo();
     tsk_bar();

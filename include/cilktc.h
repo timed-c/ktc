@@ -59,7 +59,7 @@ struct threadqueue {
 //#define fifochannel(c)  c ##ktclist[50]; int c ##ktccount; int c ##ktctail; struct threadqueue  __attribute__((fifochannel)) c
 //# task if((void *__attribute__((task)))1)
 #define fifochannel(c) c; pipe_t* c ##pipe; pipe_consumer_t* c ##cons; pipe_producer_t* c ##pros;
-#define main() *dummyglobalvariable; int populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort);return 1; } void main()
+#define main(...) *dummyglobalvariable; int populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort);return 1; } void main(__VA_ARGS__)
 #define aperiodic(val, ms)  runtime = val; deadline = val; period = val; ktc_set_sched(policy, runtime, period, deadline);setschedvar = 0;
 #define ms -3
 #define ns -9
@@ -237,6 +237,48 @@ pthread_t pthread_id_example;
 
 
 
+/* log specfic*/
+struct log_struct{
+    int src;
+    unsigned long atime;
+    unsigned long rtime;
+    unsigned long jitter;
+    unsigned long execution;
+    unsigned long abort;
+    int dst;
+};
+
+struct minmax_struct{
+    int msrc;
+    unsigned long mbcet;
+    unsigned long mwcet;
+    unsigned long mjitter;
+    unsigned long mabort;
+    int mdst;
+};
+
+
+void plog_trace_init_tp(struct log_struct* fp, FILE* fptr, int tp, unsigned long* arrival_init, struct timespec itime);
+void plog_trace_init(const char* func, struct _IO_FILE *fp);
+void plog_trace_arrival(struct log_struct* fp, int tp, int interval, int res, unsigned long *last_arrival, struct timespec* itime);
+void plog_trace_release(struct log_struct* fp, unsigned long last_arrival, struct timespec itime, struct timespec* stime, int interval);
+void plog_trace_execution(struct log_struct* fp, struct timespec stime);
+void plog_trace_end_id(struct log_struct* fp, int id, struct timespec stime);
+void plog_trace_abort_time(int* fp);
+void plog_write_to_file(FILE* fp, struct log_struct* ls);
+
+
+void mplog_trace_init_tp(struct minmax_struct* ls, FILE* fptr,  int tp, unsigned long* arrival_init, struct timespec* iptime);
+void mplog_trace_arrival(struct log_struct* fp, int tp, int interval, int res, unsigned long *last_arrival, struct timespec* iptime);
+void mplog_trace_release(struct log_struct* fp, unsigned long last_arrival, struct timespec* iptime, struct timespec* stime, int interval);
+void mplog_trace_execution(struct log_struct* fp, struct timespec stime, struct timespec* iptime);
+void mplog_write_to_file(FILE* fp, struct minmax_struct* ls, int k, char* fname);
+void mplog_trace_end_id(struct log_struct* fp, int id, struct timespec stime);
+void mplog_trace_set_param(char* argv);
+void mplog_trace_abort_time(struct minmax_struct* mm, struct log_struct* ls, int deadline, int* mkarray, int* mkmisses, int* mkcounter);
+
+int ktc_kglobal = 3;
+int ktc_iterglobal = 50;
 
 /** FREERTOS**/
 /*
@@ -310,6 +352,14 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("log_trace_arrival")
 #pragma cilnoremove("log_trace_init_tp")
 #pragma cilnoremove("log_trace_init")
+#pragma cilnoremove("mplog_trace_end_id")
+#pragma cilnoremove("mplog_trace_abort_time")
+#pragma cilnoremove("mplog_trace_release")
+#pragma cilnoremove("mplog_trace_execution")
+#pragma cilnoremove("mplog_trace_arrival")
+#pragma cilnoremove("mplog_trace_init_tp")
+#pragma cilnoremove("mplog_trace_init")
+#pragma cilnoremove("mplog_write_to_file")
 #pragma cilnoremove("clock_gettime")
 #pragma cilnoremove("sae")
 #pragma cilnoremove("fopen")
@@ -322,6 +372,8 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("plog_trace_init_tp")
 #pragma cilnoremove("plog_trace_init")
 #pragma cilnoremove("plog_write_to_file")
+#pragma cilnoremove("log_struct")
+#pragma cilnoremove("minmax_struct")
 extern int autotest_finished;
 //extern int ktc_sdelay_end(char const   *f , int l , int intrval , char *unit ) ;
 //extern long ktc_sdelay_init(char const   *f , int l, int intrval, char* unit, struct timespec* start_time ) ;

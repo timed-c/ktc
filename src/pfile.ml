@@ -92,6 +92,7 @@ type functions =
   mutable log_trace_previous_id : varinfo;
   mutable log_trace_final_file : varinfo;
   mutable log_trace_fclose : varinfo;
+  mutable log_trace_set_param : varinfo;
   mutable htc_get : varinfo;
   mutable htc_unget : varinfo;
   mutable htc_reserve : varinfo;
@@ -129,6 +130,7 @@ let sdelayfuns = {
   log_trace_execution = dummyVar;
   log_trace_release = dummyVar;
   log_trace_arrival = dummyVar;
+  log_trace_set_param = dummyVar;
   log_get_time = dummyVar;
   htc_get = dummyVar;
   htc_unget = dummyVar;
@@ -168,6 +170,7 @@ let log_trace_arrival_str = "plog_trace_arrival"
 let log_trace_execution_str = "plog_trace_execution"
 let log_trace_abort_time_str = "plog_trace_abort_time"
 let log_trace_release_str = "plog_trace_release"
+let log_trace_set_param_str = "plog_set_param"
 let log_get_time_str = "clock_gettime"
 let htc_get_str = "ktc_htc_getmes"
 let htc_unget_str = "ktc_htc_unget"
@@ -217,6 +220,7 @@ let sdelay_function_names = [
   nelem_str;
   log_trace_abort_time_str;
   blocksignal_str;
+  log_trace_set_param_str;
 ]
 
 
@@ -289,8 +293,9 @@ let initSdelayFunctions (f : file)  : unit =
   sdelayfuns.log_trace_init_task <- focf log_trace_init_task_str init_type;
   sdelayfuns.log_trace_arrival <- focf log_trace_arrival_str init_type;
   sdelayfuns.log_trace_execution <- focf log_trace_execution_str init_type;
-    sdelayfuns.log_trace_abort_time <- focf log_trace_abort_time_str init_type;
+  sdelayfuns.log_trace_abort_time <- focf log_trace_abort_time_str init_type;
   sdelayfuns.log_trace_release <- focf log_trace_release_str init_type;
+  sdelayfuns.log_trace_set_param <- focf log_trace_set_param_str init_type;
   sdelayfuns.fifo_init <- focf fifo_init_str init_type;
   sdelayfuns.fifo_read <- focf fifo_read_str init_type;
   sdelayfuns.fifo_write <- focf fifo_write_str init_type;
@@ -370,6 +375,12 @@ let makeTimerCreate fdec (structvar : varinfo) (timervar : varinfo) (tp : varinf
   let handlrt = mkAddrOf((var tp)) in
   let timer_init = Call(None, v2e sdelayfuns.timer_create, [t; v2e timervar; handlrt; (integer signo);], locUnknown) in
   timer_init
+
+let makeTraceSetParam argc argv loc =
+    let ifcond = BinOp(Gt, (argc), (Cil.integer 3), intType) in
+    let btrue = mkBlock [mkStmtOneInstr (Call(None,v2e sdelayfuns.log_trace_set_param, [argv], loc))] in
+    let bfalse = mkBlock [] in
+    mkStmt (If(ifcond, btrue, bfalse, loc))
 
 (*
 let makeSdelayEndInstr (structvar : varinfo) (timervar : varinfo) (tp : varinfo) (signo : int)=
@@ -1455,6 +1466,13 @@ class profileTask filename = object(self)
         let prepend_statement = mkStmt (Instr([cond_var_instr;loop_var_instr;id_init; count_init;
         offset_from_caller; log_init_instr;
         trace_init_instr(*;log_init_instr_f*)])) in
+        if (vi.vname = "main") then
+            begin
+                if (List.length fdec.sformals <> 0) then
+                    begin
+                        fdec.sbody.bstmts <- (makeTraceSetParam (v2e (List.nth fdec.sformals 0))  (v2e (List.nth fdec.sformals 1)) locUnknown) :: (fdec.sbody.bstmts)
+                    end
+        end;
         if (vi.vname <> "main") then
             fdec.sbody.bstmts <- List.rev add_end_instr_with_return;
         if(vi.vname <> "main") then
