@@ -4,37 +4,50 @@
 #include <stdlib.h>
 #include <cilktc.h>
 
+#define infty 0
+//extern int policy =1;
+//extern int list_dl[500] ={4};
+//extern int list_pr[500] ={4};
+void qsort_large();
+void qsort_small();
+void mdeg2rad(int k);
+void mrad2deg(int k);
+void mSolveCubic(int k);
+void musqrt(int k);
+
 FILE dfile;
 
 task tsk_foo(){
-    int i;
+    stp(0, infty, ms);
     while(1){
-        sdelay(300, ms);
+        sdelay(30, ms);
+
     }
 }
 
 
 task tsk_bar(){
-
-    int i;
+    stp(0, infty, ms);
     while(1){
-        sdelay(200, ms);
+        sdelay(20, ms);
+
     }
 
 }
-
 
 task tsk_far(){
-    int i;
+    stp(0, infty, ms);
     while(1){
-        sdelay(600, ms);
+        sdelay(10, ms);
+
     }
 }
+
+
 
 
 
 int main(int argc, char* argv[]){
-    long unsigned int targ = 10;
     tsk_foo();
     tsk_bar();
     tsk_far();

@@ -22,7 +22,6 @@ type edge_info =
   src : string;
   arrival  : string;
   release : string;
-  jitter : string;
   execution : string;
   abort : string;
   dst : string;
@@ -1119,9 +1118,9 @@ let findHyperperiod tlist alist jlist =
 in ()
 
 let read_data fname =
-  Csv.load (fname^".ktc.trace")
-  |> List.map (function [src; arrival; release; jitter; execution; abort; dst] -> {src;
-  arrival; release; jitter; execution; abort; dst}
+  Csv.load (fname)
+  |> List.map (function [src; arrival; release; execution; abort; dst] -> {src;
+  arrival; release; execution; abort; dst}
                       | _ -> failwith "read_data: incorrect file")
 
 let filter_edges s d t =
@@ -1138,14 +1137,18 @@ let minEx a b =
     let aint = int_of_string a in
     if (aint < b) then aint else b
 
+let subtract_string a b =
+    let m = (int_of_string a) - (int_of_string b) in
+    (string_of_int m)
+
 let findExecutionTime tname src dst =
     let tnew = read_data tname in
     let t = List.rev (List.tl (List.rev tnew)) in
     let noheader = List.tl t in
     let edge_list = filter_edges (src) (dst) noheader in
-    let maxexe = List.fold_right maxEx (List.map (fun a -> a.execution) edge_list)
+    let maxexe = List.fold_right maxEx (List.map (fun a -> (subtract_string a.execution a.release)) edge_list)
     0 in
-    let minexe = List.fold_right minEx (List.map (fun a -> a.execution) edge_list)
+    let minexe = List.fold_right minEx (List.map (fun a -> (subtract_string a.execution a.release)) edge_list)
     1000000000000 in
     (maxexe, minexe)
 
@@ -1154,7 +1157,7 @@ let findExecutionTimeSrc tname src =
     let t = List.rev (List.tl (List.rev tnew)) in
     let noheader = List.tl t in
     let edge_list = filter_nodes (src) noheader in
-    let maxexe = List.fold_right maxEx (List.map (fun a -> a.execution) edge_list)
+    let maxexe = List.fold_right maxEx (List.map (fun a -> (subtract_string a.execution a.release)) edge_list)
     0 in
     let minexe = List.fold_right minEx (List.map (fun a -> a.execution) edge_list)
     1000000000000 in
@@ -1166,19 +1169,17 @@ let findJitter tname src =
     let t = List.rev (List.tl (List.rev tnew)) in
     let noheader = List.tl t in
     let node_list = filter_nodes (src) noheader in
-    let maxjitter = List.fold_right maxEx (List.map (fun a -> a.jitter) node_list)
+    let maxjitter = List.fold_right maxEx (List.map (fun a -> (subtract_string a.release a.arrival)) node_list)
     0 in
-    let minjitter = List.fold_right minEx (List.map (fun a -> a.jitter) node_list)
+    let minjitter = List.fold_right minEx (List.map (fun a -> (subtract_string a.release a.arrival)) node_list)
     1000000000000 in
     minEx (string_of_int maxjitter) minjitter
-
-
 
 
 let findExecutionAbortTime tname src =
     let tnew = read_data tname in
     let t = List.rev (List.tl (List.rev tnew)) in
-    let noheader = List.tl t in
+    let noheader = List.tl (List.tl t) in
     let edge_list = filter_nodes (src) noheader in
     let max_abort = List.fold_right maxEx (List.map (fun a -> a.abort) edge_list)
     0 in
@@ -1192,8 +1193,8 @@ let tfgFindID jnodes =
 
 
 let addJsonNodes jnodes arrival_time deadline kind tname d =
-    (*let _ = E.log "deadline %d\n" in*)
     let id = tfgFindID jnodes in
+    let _ = E.log "addJsonNode %d\n" id in
     let j = findJitter tname  (string_of_int (id+1)) in
     let (wcet,bcet) = findExecutionTimeSrc tname (string_of_int (id+1)) in
     let (min_abort, max_abort) = findExecutionAbortTime tname (string_of_int
@@ -1263,7 +1264,7 @@ class tfgMinus fdc = object(self)
                                     deadline_int < 2147483640) then
                                             let newnode = addJsonNodes !jnodeslist arrival_time_int
                                             deadline_time_int kind
-                                            fdc.svar.vname deadline_int in
+                                            (fdc.svar.vname^".ktc.trace") deadline_int in
                                             jnodeslist := List.append
                                             !jnodeslist newnode) in
                                     [i])
@@ -1707,7 +1708,7 @@ class tfgMinusForTask filename = object(self)
         let _ = fdec.sbody <- visitCilBlock tfgjson fdec.sbody in
         let _ = offsetvar := 0 in
         (*let _ = E.log "len of jnodeslist %d \n" (List.length !jnodeslist) in*)
-        let jedges = completeJsonEdges !jnodeslist fdec.svar.vname in
+        let jedges = completeJsonEdges !jnodeslist (fdec.svar.vname^".ktc.trace") in
         let jtask = `Assoc([(fdec.svar.vname,`Assoc([("vertices", `List(!jnodeslist));
             ("edges", `List(jedges))]))]) in
        (* let _ = to_channel stdout jtask in *)
