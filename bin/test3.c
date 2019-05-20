@@ -4,10 +4,6 @@
 #include <stdlib.h>
 #include <cilktc.h>
 
-#define infty 0
-//extern int policy =1;
-//extern int list_dl[500] ={4};
-//extern int list_pr[500] ={4};
 void qsort_large();
 void qsort_small();
 void mdeg2rad(int k);
@@ -35,21 +31,20 @@ task tsk_bar(){
 
 }
 
-task tsk_far(){
+task tsk_boo(){
     stp(0, infty, ms);
     while(1){
         sdelay(10, ms);
-
     }
 }
 
 
 
 
-
 int main(int argc, char* argv[]){
+    long unsigned int targ = 10;
     tsk_foo();
     tsk_bar();
-    tsk_far();
+    tsk_boo();
     printf("main--end\n");
 }

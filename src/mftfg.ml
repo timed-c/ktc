@@ -1073,6 +1073,8 @@ let max_rel_win lst b =
 
 
 let rec compute_observation_window win ujblist tp t =
+    let _ = E.log "tp %d \t" tp in
+    let _ = E.log "t %d\n" t in
     if (tp <> t) then
         let tn = List.fold_right (add_cmax_win) (List.filter (fun a -> ((tp < (List.nth a 3)) & ((List.nth a 3) <= t))) ujblist) t in
         let cond = ((List.exists (fun a -> (((List.nth a 2) <= tn) && (tn <
@@ -1099,8 +1101,9 @@ let findHyperperiod tlist alist jlist =
     let maxos = max_offset jlist in
     let utask_list = uniq task_list in
     let ujblist = (unrollToHyper (hp + maxos) tlist (utask_list) jlist) in
-    (*let _ = E.log "done 2\n" in*)
+    let _ = E.log "H+Omax : %d + %d = %d" hp maxos (hp + maxos) in
     let ncsv = List.map (to_csv_string) (ujblist) in
+    let _ = Csv.save "intermediate.csv" ncsv in
        (* let ncsv2 = if (int_of_string h_amin = 0) then ncsv1 else (List.tl
         ncsv1) in*)
     let t = List.fold_right Pervasives.max (List.map (fun a -> List.nth a 3)

@@ -30,8 +30,10 @@ typedef void * xQueueHandle;
 #define MICRO 1000000
 #define NANO  1000000000
 
-#define ms "ms"
-#define sec "sec"
+#define ms -3
+#define ns -9
+#define sec 0
+#define us -6
 #define CONSTRUCTOR __attribute__((constructor))
 
 
@@ -58,7 +60,7 @@ typedef void * xQueueHandle;
 
 #define critical if((void *__attribute__((critical)))0)
 #define next if((void *__attribute__((next)))0) next()
-#define skipdelay skipdelay()
+
 #define exec_child(x) if(x == 0)
 //#define cread(chan, ptr); if((void *__attribute__((read_block))) (sizeof(#chan) > &ptr)) {sleep(0);}
 #define cread(chan, ptr)   xQueueReceive( chan, &( ptr ), ( portMAX_DELAY ))
@@ -79,7 +81,7 @@ extern int runtime;
 //#define cinit(chan, val); if((void *__attribute__((init_block))) (sizeof(#chan) > val)) {sleep(0);}
 
 extern   TickType_t start_time ;
-void skipdelay();
+
 #define lvchannel __attribute__((lvchannel))
 #//define fifochannel  __attribute__((fifochannel))
 #define gettime(ms)  ktc_gettime(&start_time, #ms)
@@ -183,8 +185,6 @@ struct minmax_struct{
     unsigned long mabort;
     int mdst;
 };
-
-
 
 void mplog_trace_init_tp(struct minmax_struct* fp, FILE* fptr, int tp, unsigned long* arrival_init, TickType_t* itime);
 void mplog_trace_init(const char* func, struct _IO_FILE *fp);

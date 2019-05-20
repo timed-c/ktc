@@ -887,7 +887,7 @@ class sdelayFunc filename fname = object(self)
 
 end
 
-class profilingAdder filename logname_var lastarrival stime itime fdec id_var count_var loop_var fopn flogvar mkarray_var mkmisses_var mkcounter_var = object(self)
+class profilingAdder filename logname_var lastarrival stime itime fdec id_var count_var loop_var flogvar mkarray_var mkmisses_var mkcounter_var = object(self)
     inherit nopCilVisitor
     val mutable counter = 0
     method vinst (i : instr) =
@@ -925,9 +925,9 @@ class profilingAdder filename logname_var lastarrival stime itime fdec id_var co
                                BinOp(PlusA, v2e cond_var, (integer 1), intType), locUnknown) in
                                let reinit = Set((Var(loop_var), NoOffset), Cil.zero, locUnknown) in
                                let block_false = mkBlock[] in
-                               let block_true =  mkBlock [(mkStmtOneInstr fopn); (mkStmtOneInstr
-                               (makeLogTraceFinalFile (v2e ktc_file) (v2e flogvar) (v2e mkmisses_var) (mkString (fdec.svar.vname^"_mk")) locUnknown)) ;(mkStmtOneInstr
-                               (makeLogTraceFclose (v2e ktc_file) locUnknown))]  in
+                               let block_true =  mkBlock [(mkStmtOneInstr
+                               (makeLogTraceFinalFile (v2e ktc_file) (v2e flogvar) (v2e mkmisses_var) (mkString (fdec.svar.vname^"_mk")) locUnknown)) (*;(mkStmtOneInstr
+                               (makeLogTraceFclose (v2e ktc_file) locUnknown))*)]  in
                                let cond = BinOp(Eq, v2e cond_var, (integer 100), intType) in
                                let write_to_file = [mkStmt (If((cond),
                                block_true, block_false, locUnknown))] in
@@ -958,15 +958,16 @@ class profileTask filename = object(self)
         let timestruct = findType filename.globals "TickType_t" in
         let itime = makeLocalVar fdec "ktcptime" timestruct in
         (*init file instr*)
-        let ktc_filename = findCompinfo filename "_IO_FILE" in
-        let filename_var = makeLocalVar fdec ("ktcfile") (TPtr(TComp(ktc_filename,[]), [])) in
+        (*let ktc_filename = findCompinfo filename "_IO_FILE" in
+        let filename_var = makeLocalVar fdec ("ktcfile") (TPtr(TComp(ktc_filename,[]), [])) in *)
+        let filename_var = makeLocalVar fdec ("ktcfile") intType in
         let logname = findCompinfo filename "log_struct" in
         let _ = E.log "logstruct found" in
         let minmaxname =  findCompinfo filename "minmax_struct" in
         let _ = E.log "all compinfo in profileTask" in
         let logname_var = makeLocalVar fdec ("ktclog") (TComp(logname,[])) in
         let flogname_var = makeLocalVar fdec ("minmaxlog") (TArray((TComp(minmaxname,[])), Some((integer 50)), [])) in
-        let log_init_instr = makeLogTraceInit (var filename_var) (mkString (vi.vname^".ktc.trace")) locUnknown in
+        (*let log_init_instr = makeLogTraceInit (var filename_var) (mkString (vi.vname^".ktc.trace")) locUnknown in*)
         let mkarray_var = makeLocalVar fdec ("mkarray") (TArray((intType), Some((integer 50)), [])) in
         let mkmisses_var = makeLocalVar fdec ("mkmisses") intType in
         let mkcounter_var = makeLocalVar fdec ("mkcounter") intType in
@@ -997,14 +998,14 @@ class profileTask filename = object(self)
         let return_stmnt_in_func = List.hd (List.rev fdec.sbody.bstmts) in
         let add_end_instr_without_return = List.append (List.rev [mkStmtOneInstr trace_end_instr]) (List.tl (List.rev fdec.sbody.bstmts)) in
         let add_end_instr_with_return = return_stmnt_in_func :: (add_end_instr_without_return) in
-        let modifyprofile = new profilingAdder filename logname_var last_arrival_var execution_start_var itime fdec id_var count_var loop_var log_init_instr
+        let modifyprofile = new profilingAdder filename logname_var last_arrival_var execution_start_var itime fdec id_var count_var loop_var
         flogname_var mkarray_var mkmisses_var mkcounter_var in
         if (isFunTaskName vi.vname) then
 		fdec.sbody <- visitCilBlock modifyprofile fdec.sbody;
         let id_init = Set((Var(id_var),NoOffset), Cil.zero, locUnknown) in
         let count_init = Set((Var(count_var),NoOffset), Cil.zero, locUnknown) in
         let prepend_statement = mkStmt (Instr([cond_var_instr;loop_var_instr;mkcounter_var_instr;id_init; count_init;
-        offset_from_caller; log_init_instr; trace_init_instr(*;log_init_instr_f*)])) in
+        offset_from_caller; trace_init_instr(*;log_init_instr_f*)])) in
         if (vi.vname <> "main") then
             fdec.sbody.bstmts <- List.rev add_end_instr_with_return;
         if(vi.vname <> "main") then

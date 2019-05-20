@@ -65,7 +65,7 @@ struct threadqueue {
 #define ns -9
 #define sec 0
 #define us -6
-
+#define infty 0
 
 
 struct timespec diff_timespec(struct timespec, struct timespec);
