@@ -575,8 +575,16 @@ void ktc_simpson(int* sdata, int* tdata){
 	*tdata = *sdata;
 }
 
+void change_priority(int priority){
+    struct sched_param param;
+    int s;
+    param.sched_priority = ched_get_priority_min(SCHED_FIFO) + priority;
+    s = pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+    if (s != 0)
+        handle_error_en(s, "pthread_setschedparam");
+}
 
-long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec* start_time, int id, FILE* fp, int pid){
+long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec* start_time, int id, FILE* fp, int pid, int priority){
     int profile = 0;
     if(pid != 0)
         fprintf(fp, "%d,", profile);
@@ -590,6 +598,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 	}
 	if(period < 0){
 		(void) clock_gettime(CLOCK_REALTIME, start_time);
+        change_priority(priority);
 		return period;
 	}
 	 if(period == 0){
@@ -597,6 +606,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 		st = *start_time;
                 (void) clock_gettime(CLOCK_REALTIME, start_time);
 		elapsed_time = diff_timespec(*start_time, st);
+        change_priority(priority);
 		return (timespec_to_unit(elapsed_time, unit));
         }
 	if(period == deadline){
@@ -608,11 +618,13 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 			wait_time = add_timespec((*start_time), interval_time);
 			clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &wait_time, NULL);
 			*start_time = wait_time;
+            change_priority(priority);
 			return 0;
 		}
 		if(cmp_timespec(interval_time, elapsed_time) == 0){
 			wait_time = add_timespec((*start_time), interval_time);
 			*start_time = wait_time;
+            change_priority(priority);
 			return 0;
 		}
 		if(cmp_timespec(interval_time, elapsed_time) == -1){
@@ -621,6 +633,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 			//printf("Time Elapsed- %lld.%.9ld\n", (long long)(elapsed_time.tv_sec), (elapsed_time.tv_nsec)) ;
 			*start_time = add_timespec(wait_time, elapsed_time);
 			(void) clock_gettime(CLOCK_REALTIME, &et);
+            change_priority(priority);
 			return (timespec_to_unit(elapsed_time, unit));
 		}
 	}
@@ -636,6 +649,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 			clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &wait_time, NULL);
 			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); /*elapsed_time here is the obershot*/
 			*start_time = wait_time;
+            change_priority(priority);
 			return (timespec_to_unit(overshot_timespec, unit));
 		}
 		if(cmp_timespec(interval_time, elapsed_time) == 0){
@@ -643,6 +657,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 			deadline_timespec = add_timespec((*start_time), deadline_timespec);
 			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec);
 			*start_time = wait_time;
+            change_priority(priority);
 			return (timespec_to_unit(overshot_timespec, unit));
 		}
 		if(cmp_timespec(interval_time, elapsed_time) == -1){
@@ -652,6 +667,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 			*start_time = add_timespec(wait_time, elapsed_time);
 			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec);
 			(void) clock_gettime(CLOCK_REALTIME, &et);
+            change_priority(priority);
 			return (timespec_to_unit(overshot_timespec, unit));
 		}
 	}
@@ -667,6 +683,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 			clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &wait_time, NULL);
 			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); /*elapsed_time here is the obershot*/
 			*start_time = wait_time;
+            change_priority(priority);
 			return (timespec_to_unit(overshot_timespec, unit));
 		}
 		if(cmp_timespec(interval_time, elapsed_time) == 0){
@@ -674,6 +691,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 			deadline_timespec = add_timespec((*start_time), deadline_timespec);
 			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec);
 			*start_time = wait_time;
+            change_priority(priority);
 			return (timespec_to_unit(overshot_timespec, unit));
 		}
 		if(cmp_timespec(interval_time, elapsed_time) == -1){
@@ -683,15 +701,17 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 			*start_time = add_timespec(wait_time, elapsed_time);
 			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec);
 			(void) clock_gettime(CLOCK_REALTIME, &et);
+            change_priority(priority);
 			return (timespec_to_unit(overshot_timespec, unit));
 		}
 	}
+    change_priority(priority);
 	return 0;
 }
 
 
 
-long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec* start_time, int id, int retjmp, int num, FILE* fp, int pid) {
+long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec* start_time, int id, int retjmp, int num, FILE* fp, int pid, int priority) {
 	struct timespec time_now, elapsed_time_ts;
 	int elapsed_time_int;
 	struct timespec wait_time, period_timespec;
@@ -713,12 +733,14 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
 		    *start_time = wait_time;
             if(pid != 0)
                 fprintf(fp, "%d,", prf_zero);
+            change_priority(priority);
 			return 0;
 		}
 		else{
 			(void) clock_gettime(CLOCK_REALTIME, start_time);
             if(pid != 0)
                 fprintf(fp, "%d,", elapsed_time_int);
+            change_priority(priority);
 			return elapsed_time_int;
 		}
 	}
@@ -727,12 +749,14 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
 		if(period < interval){
 			(void) clock_gettime(CLOCK_REALTIME, start_time);
              fprintf(fp, "%d,", prf_zero);
+             change_priority(priority);
 			return -1;
 		}
 		else{
 		/* A case of timer expiry*/
 			*start_time = wait_time;
              fprintf(fp, "%d,", prf_zero);
+             change_priority(priority);
 			return 0;
 		}
 	}

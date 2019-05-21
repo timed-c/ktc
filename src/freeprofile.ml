@@ -140,7 +140,7 @@ let sig_setjmp_str = "setjmp"
 let fdelay_start_timer_str = "ktc_fdelay_start_timer_free"
 let critical_start_str  = "vTaskEnterCritical"
 let critical_end_str = "vTaskExitCritical"
-let task_create_str = "xTaskGenericCreate"
+let task_create_str = "xTaskCreate"
 let task_delete_str = "vTaskDelete"
 let fifo_init_str = "ktc_fifo_init"
 let fifo_read_str =  "ktc_fifo_read"
@@ -230,6 +230,9 @@ let initSdelayFunctions (f : file)  : unit =
 		     false, []) in
   let void_type = TFun(intType, None,
 		     false, []) in
+    let taskcreate_type = TFun(intType, Some["a", intType, []; "b", intType, []; "c", intType, []; "d", intType, []; "e", intType,
+    [];"f", intType, [];],
+		     false, []) in
   sdelayfuns.sdelay_init <- focf sdelay_init_str init_type;
   sdelayfuns.start_timer_init <- focf start_timer_init_str   end_type;
   sdelayfuns.fdelay_init <- focf fdelay_init_str init_type;
@@ -238,7 +241,7 @@ let initSdelayFunctions (f : file)  : unit =
   sdelayfuns.fdelay_start_timer <- focf  fdelay_start_timer_str init_type;
   sdelayfuns.critical_start <- focf critical_start_str init_type;
   sdelayfuns.critical_end <- focf critical_end_str init_type;
-  sdelayfuns.task_create <- focf task_create_str init_type;
+  sdelayfuns.task_create <- focf task_create_str taskcreate_type;
   sdelayfuns.task_delete <- focf task_delete_str init_type;
   sdelayfuns.fifo_init <- focf fifo_init_str init_type;
   sdelayfuns.fifo_read <- focf fifo_read_str init_type;
@@ -291,7 +294,7 @@ let makeTaskCreateInstr (handlevar : varinfo) (funvar : varinfo) (idlePrioVar : 
   let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in
 	(*let addrFun = mkAddrOf(var funvar) in
 	i2s ( Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero; addrFun; Cil.zero;], loc)) *)
-  Call(None, v2e sdelayfuns.task_create, [v2e funvar; (mkString (funvar.vname^handlevar.vname)); (integer 1024); arg; v2e idlePrioVar; addrHandle; nullptr; nullptr ], loc)
+  Call(None, v2e sdelayfuns.task_create, [v2e funvar; (mkString (funvar.vname^handlevar.vname)); (integer 190); arg; v2e idlePrioVar; nullptr], loc)
 
 let makeTaskCreateInstrVarExp (handlevar : varinfo) (funvar : varinfo) (prioVar : exp) (loc:location) argList =
   let arg = (match argList with
@@ -301,7 +304,7 @@ let makeTaskCreateInstrVarExp (handlevar : varinfo) (funvar : varinfo) (prioVar 
   let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in
 	(*let addrFun = mkAddrOf(var funvar) in
 	i2s ( Call(None, v2e sdelayfuns.pthread_create, [addrThread; Cil.zero; addrFun; Cil.zero;], loc)) *)
-  Call(None, v2e sdelayfuns.task_create, [v2e funvar; (mkString (funvar.vname^handlevar.vname)); (integer 1024); arg ; prioVar; addrHandle; nullptr; nullptr ], loc)
+  Call(None, v2e sdelayfuns.task_create, [v2e funvar; (mkString (funvar.vname^handlevar.vname)); (integer 190); arg ; prioVar; nullptr], loc)
 
 let makeTaskDeleteInstr (handlevar : varinfo)  =
   let nullptr = (Cil.mkCast Cil.zero Cil.voidPtrType) in
@@ -906,7 +909,7 @@ class profilingAdder filename logname_var lastarrival stime itime fdec id_var co
                let previous_id_instr = makeLogTracePreviousID (mkAddrOf (var logname_var)) (v2e count_var) (v2e stime) locUnknown in
                let trace_arrival_instr = makeLogTraceArrival  (mkAddrOf (var logname_var)) (v2e count_var) (List.nth argList 1) (List.nth argList 2) (mkAddrOf
                (var lastarrival)) (mkAddrOf (var itime)) locUnknown in
-               let trace_release_instr = makeLogTraceRelease  (mkAddrOf (var logname_var)) (v2e lastarrival) (v2e itime) (mkAddrOf (var stime)) (List.nth argList 1) locUnknown in
+               let trace_release_instr = makeLogTraceRelease  (mkAddrOf (var logname_var)) (v2e lastarrival) (mkAddrOf (var itime)) (mkAddrOf (var stime)) (List.nth argList 1) locUnknown in
                let trace_end_instr = makeLogTraceExecution    (mkAddrOf (var logname_var)) (v2e stime) (mkAddrOf (var itime)) locUnknown in
                 (*let loop_instr = Set((Var(loop_var), NoOffset), BinOp(PlusA,
                  * v2e loop_var, (integer 1), intType), locUnknown) in*)

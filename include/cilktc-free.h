@@ -92,7 +92,7 @@ extern   TickType_t start_time ;
 enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
 int policy;
 
-#define spolicy(X) policy =X; sdelay(0, ms);
+#define spolicy(X) policy =X;
 #define spriority(prio) vTaskPrioritySet(NULL, prio)
 void toggle_lock_tracking();
 
