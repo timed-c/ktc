@@ -1112,10 +1112,12 @@ let findHyperperiod tlist alist jlist =
     let new_win = compute_observation_window (hp + maxos) ujblist 0 t in
     let ujblist = (unrollToHyper (new_win) tlist (utask_list) jlist) in
     let njblist = List.filter (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] -> dl <> 0) ujblist in
-    let ncsv = List.map (to_csv_string) (njblist) in
-    (*let _ = E.log "new_win %d" new_win in*)
-    let nncsv0 = List.map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] ->
-        [tid; jid; amin; amax; cmin; cmax; dl; (string_of_int ((int_of_string dl) - (int_of_string amin)))]) ncsv in
+    let _ = E.log "here" in
+    let ncsv = List.rev_map (to_csv_string) (List.rev njblist) in
+      let _ = E.log "here 2" in
+    let nncsv0 = List.rev_map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] ->
+        [tid; jid; amin; amax; cmin; cmax; dl; (string_of_int ((int_of_string dl) - (int_of_string amin)))]) (List.rev ncsv) in
+    let _ = E.log "here 1" in
     let nncsv00 = List.filter (fun [tid; jid; amin; amax; cmin; cmax; dl; pr] -> (int_of_string pr) > 0) nncsv0 in
     let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min";
     "Cost max"; "Deadline"; "Priority"] :: (nncsv00) in
