@@ -1115,7 +1115,7 @@ let findHyperperiod tlist alist jlist =
     let ncsv = List.map (to_csv_string) (njblist) in
     (*let _ = E.log "new_win %d" new_win in*)
     let nncsv0 = List.map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] ->
-        [tid; jid; amin; amax; cmin; cmax; dl; pr] ) ncsv in
+        [tid; jid; amin; amax; cmin; cmax; dl; (string_of_int ((int_of_string dl) - (int_of_string amin)))]) ncsv in
     let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min";
     "Cost max"; "Deadline"; "Priority"] :: (nncsv0) in
     let _ = Csv.save "kind.csv" ncsv in

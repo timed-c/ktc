@@ -651,15 +651,22 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
           change_priority(priority);
 		return period;
 	}
-	 if(period == 0){
+	if(period == 0){
 		struct timespec st, elapsed_time;
 		st = *start_time;
                 (void) clock_gettime(CLOCK_REALTIME, start_time);
 		elapsed_time = diff_timespec(*start_time, st);
           change_priority(priority);
 		return (timespec_to_unit(elapsed_time, unit));
-        }
-	if(period == deadline){
+    }
+    struct timespec interval_time, wait_time;
+    interval_time = convert_to_timespec(period, unit);
+    wait_time = add_timespec((*start_time), interval_time);
+    clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &wait_time, NULL);
+    *start_time = add_timespec((*start_time), interval_time);
+     change_priority(priority);
+	return 0;
+/*	if(period == deadline){
 		struct timespec end_time, elapsed_time, wait_time, interval_time, et;
 		interval_time = convert_to_timespec(period, unit);
 		(void) clock_gettime(CLOCK_REALTIME, &end_time);
@@ -679,8 +686,8 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 		}
 		if(cmp_timespec(interval_time, elapsed_time) == -1){
 			wait_time = add_timespec((*start_time), interval_time);
-			elapsed_time = diff_timespec(end_time, wait_time); /*elapsed_time here is the obershot*/
-			//printf("Time Elapsed- %lld.%.9ld\n", (long long)(elapsed_time.tv_sec), (elapsed_time.tv_nsec)) ;
+			elapsed_time = diff_timespec(end_time, wait_time);
+        //printf("Time Elapsed- %lld.%.9ld\n", (long long)(elapsed_time.tv_sec), (elapsed_time.tv_nsec)) ;
 			*start_time = add_timespec(wait_time, elapsed_time);
 			(void) clock_gettime(CLOCK_REALTIME, &et);
               change_priority(priority);
@@ -697,8 +704,8 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 			wait_time = add_timespec((*start_time), interval_time);
 			deadline_timespec = add_timespec((*start_time), deadline_timespec);
 			clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &wait_time, NULL);
-			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); /*elapsed_time here is the obershot*/
-			*start_time = wait_time;
+			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec);
+ *start_time = wait_time;
               change_priority(priority);
 			return (timespec_to_unit(overshot_timespec, unit));
 		}
@@ -712,8 +719,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 		}
 		if(cmp_timespec(interval_time, elapsed_time) == -1){
 			wait_time = add_timespec((*start_time), interval_time);
-			elapsed_time = diff_timespec(end_time, wait_time); /*elapsed_time here is the obershot*/
-			deadline_timespec = add_timespec((*start_time), deadline_timespec);
+			elapsed_time = diff_timespec(end_time, wait_time);			deadline_timespec = add_timespec((*start_time), deadline_timespec);
 			*start_time = add_timespec(wait_time, elapsed_time);
 			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec);
 			(void) clock_gettime(CLOCK_REALTIME, &et);
@@ -731,7 +737,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 			wait_time = add_timespec((*start_time), interval_time);
 			deadline_timespec = add_timespec((*start_time), deadline_timespec);
 			clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &wait_time, NULL);
-			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec); /*elapsed_time here is the obershot*/
+			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec);
 			*start_time = wait_time;
               change_priority(priority);
 			return (timespec_to_unit(overshot_timespec, unit));
@@ -746,8 +752,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 		}
 		if(cmp_timespec(interval_time, elapsed_time) == -1){
 			wait_time = add_timespec((*start_time), interval_time);
-			elapsed_time = diff_timespec(end_time, wait_time); /*elapsed_time here is the obershot*/
-			deadline_timespec = add_timespec((*start_time), deadline_timespec);
+			elapsed_time = diff_timespec(end_time, wait_time);			deadline_timespec = add_timespec((*start_time), deadline_timespec);
 			*start_time = add_timespec(wait_time, elapsed_time);
 			overshot_timespec = diff_timespec(elapsed_time, deadline_timespec);
 			(void) clock_gettime(CLOCK_REALTIME, &et);
@@ -757,6 +762,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 	}
       change_priority(priority);
 	return 0;
+    */
 }
 
 
