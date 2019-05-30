@@ -169,8 +169,8 @@ let gettime_str = "ktc_gettime"
 let timer_create_str  = "ktc_create_timer"
 let sig_setjmp_str = "__sigsetjmp"
 let fdelay_start_timer_str = "ktc_fdelay_start_timer"
-let critical_start_str  = "ktc_critical_start"
-let critical_end_str = "ktc_critical_end"
+let critical_start_str  = "mktc_critical_start"
+let critical_end_str = "mktc_critical_end"
 let pthread_create_str = "pthread_create"
 let pthread_join_str = "pthread_join"
 let log_trace_previous_id_str = "log_trace_end_id"
@@ -954,10 +954,10 @@ let add_period lst b =
 
 let unrollMultiFrameAux tlist hp id tname =
     let sum_period =  List.fold_right (add_period) (tlist) 0 in
-    let _ = E.log "sum period %s %d\n" tname sum_period in
-    let _ = E.log "hyper period %s %d\n" tname hp in
+    (*let _ = E.log "sum period %s %d\n" tname sum_period in
+    let _ = E.log "hyper period %s %d\n" tname hp in*)
     let iter = hp/sum_period in
-    let _ = E.log "iter %d\n" iter in
+   (* let _ = E.log "iter %d\n" iter in *)
     let [name; p; j; b; w; d;k] = List.hd (List.rev tlist) in
     let [n1; p1; j1; b1; w1; d1;k1] = List.hd tlist in
     let k_int = if (k = "fdelay") then 0 else 1 in
@@ -965,28 +965,39 @@ let unrollMultiFrameAux tlist hp id tname =
     [(int_of_string id); 0; 0;( int_of_string j1);
     (int_of_string b); (int_of_string w); (int_of_string d1); (int_of_string
     d1);k_int] :: nlst
+        (*[(int_of_string id); 0; 0;( int_of_string j1);
+    (int_of_string b); (int_of_string w); (int_of_string d1); (int_of_string
+    d1);k_int] :: nlst*)
+
+
+let rec increase_jid olist alist n =
+    match olist with
+    |[tid; jid; amin; amax; cmin; cmax; dl; pr;k]  :: rest -> increase_jid rest ([tid; n; amin; amax; cmin; cmax; dl; pr;k]::alist) (n+1)
+    |[] -> alist
 
 
 let unrollOneTask tlist hp id tname =
-    let _ = E.log "unrollOneTask \n"in
+    (*let _ = E.log "unrollOneTask \n"in*)
     let ntlist = List.filter (fun [tid; at; j; b; w; d;k] -> (int_of_string d) <> 0)  tlist in
     let l = List.length ntlist in
-    if (l = 1) then (unrollOneFrame tlist hp id ) else (
-        if (l =  0) then [] else (unrollMultiFrameAux
-    (List.rev tlist) hp (string_of_int id) tname))
+    let task_unroll_list = if (l = 1) then (unrollOneFrame tlist hp id ) else ( if (l =  0) then [] else (unrollMultiFrameAux (List.rev tlist) hp (string_of_int
+    id) tname)) in
+    let task_no_initial_lst =  List.filter (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] -> (dl - amin) > 0) task_unroll_list in
+    List.rev (increase_jid task_no_initial_lst [] 0)
+
 
 
 let find_offset jlist tskname =
-    let _ = E.log "find_offset %s" tskname in
+    (*let _ = E.log "find_offset %s" tskname in*)
     let olist = List.find (fun [tid; at; j; b; w; d;k] -> ((tid = tskname) & (int_of_string d) = 0) ) jlist in
     (int_of_string (List.nth olist 1))
 
 
 let max_offset jlist =
-    let olist = List.filter (fun [tid; at; j; b; w; d;k] -> ((int_of_string j) = 0)) jlist in
+    let olist = List.filter (fun [tid; at; j; b; w; d;k] -> ((int_of_string d) = 0)) jlist in
      let maxo = List.fold_right (Pervasives.max)
      (List.map (fun [tid; at; j; b; w; d;k] -> (int_of_string at)) olist) 0 in
-     (E.log "max offset %d\n" maxo); maxo
+     (*(E.log "max offset %d\n" maxo);*) maxo
 
 
 
@@ -996,8 +1007,12 @@ let rec unrollToHyper hp tlist task_list jlist =
        match task_list with
        | name :: rest -> let onetskl = List.filter (fun a -> (List.nth a 0) =
            name) tlist in
+                         let [lname; lp; lj; lb; lw; ld;lk] = List.hd (List.rev onetskl) in
+                         let first_elem = List.hd (onetskl) in
+                         let (first_j, first_cmax) = ((List.nth first_elem 2), (List.nth first_elem 4)) in
+                         let new_onetskl = List.append (List.rev (List.tl (List.rev onetskl))) [[lname; lp; first_j; lb; first_cmax; ld; lk]] in
                          let os = find_offset jlist name in
-                         let unrolledlst = unrollOneTask (onetskl) (hp) (List.length
+                         let unrolledlst = unrollOneTask (new_onetskl) (hp) (List.length
                          task_list)  name in
                          let ncsv1 = List.map (fun [tid; jid; amin; amax; cmin;
                          cmax; dl; pr;k] ->  [tid; jid; (
@@ -1006,10 +1021,10 @@ let rec unrollToHyper hp tlist task_list jlist =
                          (unrolledlst) in
                          (*let _ = E.log "a" in*)
                          let h_amin = List.nth (List.hd unrolledlst) 1 in
-                         (*let _ = E.log "b" in*)
                          let ncsv2 = if (h_amin = 0) then ncsv1 else (List.tl ncsv1) in
-                         List.append ncsv2 (unrollToHyper hp ((List.filter
+                        List.append ncsv2 (unrollToHyper hp ((List.filter
                          (fun a -> (List.nth a 0) <> name)) tlist) rest jlist)
+
        |[] -> []
 
 let to_csv_string ilist =
@@ -1019,12 +1034,11 @@ let to_csv_string ilist =
 let rec match_alist alist b w tid jid lst =
     match alist with
     | [ht; ha; hb; hw; habtmin; habtmax; dl] :: rst when (((int_of_string hw) = (int_of_string w))) ->
-            match_alist rst b w tid jid ([tid; jid; habtmin; habtmax; hb; hw] :: lst)
+            match_alist rst b w tid jid ([tid; jid; (habtmin); habtmax; (string_of_int 0); hw] :: lst)
     | [ht; ha; hb; hw; habtmin; habtmax; dl] :: rst when (((int_of_string hw) <> (int_of_string w))) ->
             match_alist rst b w tid jid (lst)
     |_ -> lst
 
-    |_ -> lst
 
 let rec create_abort_csv alist nlist lst =
     match nlist with
@@ -1067,22 +1081,30 @@ let add_cmax_win lst b =
     a + b
 
 let max_rel_win lst b =
-    let a = (List.nth lst 5) in
+    let a = (List.nth lst 3) in
     (*let _ = E.log "add period %d\n" a in*)
-    Pervasives.max a b
+    Pervasives.min a b
+
+let rec calculate_utilization task_names tlist util =
+    match task_names with
+    | tname :: rest -> let tname_list = List.filter (fun a -> (List.hd a) = tname) tlist in
+                       let tname_no_offset = List.filter (fun a -> (int_of_string (List.nth a 1)) <> 0) tname_list in
+                       let sum_period = List.fold_left (fun a b -> a + (int_of_string (List.nth b 1))) 0 tname_no_offset in
+                       let sum_bcet =  List.fold_left (fun a b -> a + (int_of_string (List.nth b 4))) 0 tname_no_offset in
+                       let new_util = util +. (float_of_int sum_bcet) /. (float_of_int sum_period) in
+                       calculate_utilization rest tlist new_util
+    |[] -> util
 
 
 let rec compute_observation_window win ujblist tp t =
-    let _ = E.log "tp %d \t" tp in
-    let _ = E.log "t %d\n" t in
     if (tp <> t) then
         let tn = List.fold_right (add_cmax_win) (List.filter (fun a -> ((tp < (List.nth a 3)) & ((List.nth a 3) <= t))) ujblist) t in
-        let cond = ((List.exists (fun a -> (((List.nth a 2) <= tn) && (tn <
-        (List.nth a 3)))) ujblist) || (tn < win)) in
-        let newtn = if ((t = tn) && cond) then List.fold_right (max_rel_win) (List.filter (fun a -> ((tn < (List.nth a 3)))) ujblist) 0 else tn in
-            compute_observation_window win ujblist t tn
+        let _ = E.log "here %d %d %d\n" t tn win in
+        let cond = (List.exists (fun a -> (((List.nth a 2) <= tn) && ((tn < (List.nth a 3))))) ujblist) || (tn < win) in
+        let newtn = if ((t = tn) && cond) then List.fold_right (max_rel_win) (List.filter (fun a -> ((tn < (List.nth a 3)))) ujblist) 10000000 else tn in
+            compute_observation_window win ujblist t newtn
     else
-        let _ =(E.log "Observation Window %d" t) in t
+        (*let _ =(E.log "Observation Window %d\n" t) in*) t
 
 let uniq l =
   let rec tail_uniq a l =
@@ -1091,46 +1113,49 @@ let uniq l =
       | hd::tl -> tail_uniq (hd::a) (List.filter (fun x -> x  != hd) tl) in
   tail_uniq [] l
 
+
 let findHyperperiod tlist alist jlist =
+    let tlist_minus_offset = List.filter (fun a -> (int_of_string (List.nth a 5)) <> 0) tlist in
     let task_arrival_pair = (List.map (fun a -> ((List.nth a 0), (int_of_string
-    (List.nth a 1))))) tlist in
+    (List.nth a 1))))) tlist_minus_offset in
     let task_list = List.map (fun a -> List.nth a 0) tlist in
     let unique_task_arrival_pair = uniqueTaskPair (task_list) ((task_arrival_pair)) in
-    let hp = calculateHyperperiod (List.map (fun a -> (snd a))
-    unique_task_arrival_pair) in
+    let hp = calculateHyperperiod (List.map (fun a -> (snd a)) unique_task_arrival_pair) in
     let maxos = max_offset jlist in
     let utask_list = uniq task_list in
+    let system_util = calculate_utilization utask_list tlist 0.0 in
+    let _ = E.log "Utilization = %f\n" system_util in
+    let _ = E.log "H+Omax : %d + %d = %d\n" hp maxos (hp + maxos) in
     let ujblist = (unrollToHyper (hp + maxos) tlist (utask_list) jlist) in
-    let _ = E.log "H+Omax : %d + %d = %d" hp maxos (hp + maxos) in
     let ncsv = List.map (to_csv_string) (ujblist) in
     let _ = Csv.save "intermediate.csv" ncsv in
        (* let ncsv2 = if (int_of_string h_amin = 0) then ncsv1 else (List.tl
         ncsv1) in*)
-    let t = List.fold_right Pervasives.max (List.map (fun a -> List.nth a 3)
-    ujblist) 0 in
+    let t = List.fold_right Pervasives.min (List.map (fun a -> List.nth a 3)
+    ujblist) 1000000 in
     (*let _ = E.log "done\n" in*)
-    let new_win = compute_observation_window (hp + maxos) ujblist 0 t in
+    let nwin = compute_observation_window (hp + maxos) ujblist 0 t in
+    let _ = (E.log "Observation Window %d\n" nwin) in
+    let new_win = if (nwin > (hp + maxos)) then nwin else (hp + maxos) in
     let ujblist = (unrollToHyper (new_win) tlist (utask_list) jlist) in
     let njblist = List.filter (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] -> dl <> 0) ujblist in
-    let _ = E.log "here" in
     let ncsv = List.rev_map (to_csv_string) (List.rev njblist) in
-      let _ = E.log "here 2" in
     let nncsv0 = List.rev_map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] ->
         [tid; jid; amin; amax; cmin; cmax; dl; (string_of_int ((int_of_string dl) - (int_of_string amin)))]) (List.rev ncsv) in
-    let _ = E.log "here 1" in
     let nncsv00 = List.filter (fun [tid; jid; amin; amax; cmin; cmax; dl; pr] -> (int_of_string pr) > 0) nncsv0 in
     let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min";
     "Cost max"; "Deadline"; "Priority"] :: (nncsv00) in
     let _ = Csv.save "kind.csv" ncsv in
     let _ = Csv.save "job.csv" nncsv
     in
+    let abort_input = List.filter (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k ] -> ((int_of_string dl) - (int_of_string amin)) > 0) ncsv in
     let abortcsv =  (match alist with
                     |[] -> (*E.log "alist empty here";*) []
-                    |_ -> (*E.log "alist not empty";*) List.rev (create_abort_csv alist (ncsv) [])) in
-    let abortncsv = ["Task ID"; "Job ID"; "TMIN"; "TMAX"; "CMIN";
-    "CMAX"] :: abortcsv in
+                    |_ -> (*E.log "alist not empty";*) List.rev (create_abort_csv alist (abort_input) [])) in
+    let abortncsv = ["TID"; "JID"; "Tmin"; "Tmax"; "Cmin";
+    "Cmax"] :: abortcsv in
     let _ = Csv.save "action.csv" abortncsv
-in ()
+    in E.log "Job generation complete\n"; ()
 
 let read_data fname =
   Csv.load (fname^".ktc.trace")
@@ -1185,6 +1210,11 @@ let findExecutionAbortTime tname src =
 let tfgFindID jnodes =
  List.length jnodes
 
+let get_name_task_list tlist =
+    let task_from_list = List.map (fun a -> List.nth a 0) tlist in
+    let utask_list = uniq task_from_list in
+    utask_list
+
 
 let addJsonNodes jnodes arrival_time deadline kind tname d =
     (*let _ = E.log "deadline %d\n" in*)
@@ -1193,7 +1223,7 @@ let addJsonNodes jnodes arrival_time deadline kind tname d =
     let (wcet,bcet) = findExecutionTimeSrc tname (string_of_int (id+1)) in
     let (min_abort, max_abort) = findExecutionAbortTime tname (string_of_int
     (id+1)) in
-    let _ = if ((max_abort) <> 0 && (max_abort <> 1000000000000) ) then
+    let _ = if ((min_abort) > 0 && (max_abort < 1000000000000) ) then
         (abortlist :=  [tname; (string_of_int arrival_time);  (string_of_int bcet); (string_of_int wcet); (string_of_int
         min_abort); (string_of_int max_abort); (string_of_int deadline)] ::
         !abortlist) in

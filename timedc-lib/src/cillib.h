@@ -75,8 +75,8 @@ uint64_t tut_get_time();
 struct timespec* timepecptr;
 timer_t ftimer;
 sigset_t sigtype;
-int ktc_critical_end(sigset_t* orig_mask);
-int ktc_critical_start(sigset_t* orig_mask);
+int ktc_critical_end(int num, struct timespec stime, int* cwcet);
+int ktc_critical_start(int num, struct timespec* stime);
 int ktc_set_sched(int policy, int runtime, int deadline, int period) ;
 
 void toggle_lock_tracking();
