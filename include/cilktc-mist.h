@@ -1,3 +1,5 @@
+/* Pragma once instead of #ifndef + #define guards. */
+#pragma once
 
 #include <stdint.h>
 #include <setjmp.h>
