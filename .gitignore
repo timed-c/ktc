@@ -72,6 +72,7 @@ Thumbs.db
 *.swm
 *.swn
 *.swo
+*.sw*
 
 #Time-C generated files#
 ########################
@@ -87,3 +88,25 @@ _build/
 /FreeRTOS/Demo/PIC32MX_MPLAB/EvalRTSS17/nbproject/private/
 /FreeRTOS/Demo/PIC32MX_MPLAB/EvalRTSS17/build/EXPLORER_16_PIC32MX795/
 /FreeRTOS/Demo/PIC32MX_MPLAB/EvalRTSS17/dist/EXPLORER_16_PIC32MX795/
+
+
+# Misc #
+#########
+rtas/
+test/
+ucamlib/
+profile-test/
+my_examples/
+*.json
+*.ktc.trace
+*.c
+*.csv
+benchmark/
+a.out
+bin/mist
+bin/rasp
+bin/*.h
+bin/*.C
+bin/demo/
+bin/*.a
+bin/src

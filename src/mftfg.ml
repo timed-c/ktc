@@ -1081,30 +1081,20 @@ let add_cmax_win lst b =
     a + b
 
 let max_rel_win lst b =
-    let a = (List.nth lst 3) in
+    let a = (List.nth lst 5) in
     (*let _ = E.log "add period %d\n" a in*)
-    Pervasives.min a b
-
-let rec calculate_utilization task_names tlist util =
-    match task_names with
-    | tname :: rest -> let tname_list = List.filter (fun a -> (List.hd a) = tname) tlist in
-                       let tname_no_offset = List.filter (fun a -> (int_of_string (List.nth a 1)) <> 0) tname_list in
-                       let sum_period = List.fold_left (fun a b -> a + (int_of_string (List.nth b 1))) 0 tname_no_offset in
-                       let sum_bcet =  List.fold_left (fun a b -> a + (int_of_string (List.nth b 4))) 0 tname_no_offset in
-                       let new_util = util +. (float_of_int sum_bcet) /. (float_of_int sum_period) in
-                       calculate_utilization rest tlist new_util
-    |[] -> util
+    Pervasives.max a b
 
 
 let rec compute_observation_window win ujblist tp t =
     if (tp <> t) then
         let tn = List.fold_right (add_cmax_win) (List.filter (fun a -> ((tp < (List.nth a 3)) & ((List.nth a 3) <= t))) ujblist) t in
-        let _ = E.log "here %d %d %d\n" t tn win in
-        let cond = (List.exists (fun a -> (((List.nth a 2) <= tn) && ((tn < (List.nth a 3))))) ujblist) || (tn < win) in
-        let newtn = if ((t = tn) && cond) then List.fold_right (max_rel_win) (List.filter (fun a -> ((tn < (List.nth a 3)))) ujblist) 10000000 else tn in
-            compute_observation_window win ujblist t newtn
+        let cond = ((List.exists (fun a -> (((List.nth a 2) <= tn) && (tn <
+        (List.nth a 3)))) ujblist) || (tn < win)) in
+        let newtn = if ((t = tn) && cond) then List.fold_right (max_rel_win) (List.filter (fun a -> ((tn < (List.nth a 3)))) ujblist) 0 else tn in
+            compute_observation_window win ujblist t tn
     else
-        (*let _ =(E.log "Observation Window %d\n" t) in*) t
+        let _ =(E.log "Observation Window %d\n" t) in t
 
 let uniq l =
   let rec tail_uniq a l =
@@ -1112,7 +1102,6 @@ let uniq l =
       | [] -> a
       | hd::tl -> tail_uniq (hd::a) (List.filter (fun x -> x  != hd) tl) in
   tail_uniq [] l
-
 
 let findHyperperiod tlist alist jlist =
     let tlist_minus_offset = List.filter (fun a -> (int_of_string (List.nth a 5)) <> 0) tlist in
@@ -1123,19 +1112,16 @@ let findHyperperiod tlist alist jlist =
     let hp = calculateHyperperiod (List.map (fun a -> (snd a)) unique_task_arrival_pair) in
     let maxos = max_offset jlist in
     let utask_list = uniq task_list in
-    let system_util = calculate_utilization utask_list tlist 0.0 in
-    let _ = E.log "Utilization = %f\n" system_util in
     let _ = E.log "H+Omax : %d + %d = %d\n" hp maxos (hp + maxos) in
     let ujblist = (unrollToHyper (hp + maxos) tlist (utask_list) jlist) in
     let ncsv = List.map (to_csv_string) (ujblist) in
     let _ = Csv.save "intermediate.csv" ncsv in
        (* let ncsv2 = if (int_of_string h_amin = 0) then ncsv1 else (List.tl
         ncsv1) in*)
-    let t = List.fold_right Pervasives.min (List.map (fun a -> List.nth a 3)
-    ujblist) 1000000 in
+    let t = List.fold_right Pervasives.max (List.map (fun a -> List.nth a 3)
+    ujblist) 0 in
     (*let _ = E.log "done\n" in*)
     let nwin = compute_observation_window (hp + maxos) ujblist 0 t in
-    let _ = (E.log "Observation Window %d\n" nwin) in
     let new_win = if (nwin > (hp + maxos)) then nwin else (hp + maxos) in
     let ujblist = (unrollToHyper (new_win) tlist (utask_list) jlist) in
     let njblist = List.filter (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] -> dl <> 0) ujblist in
@@ -1209,11 +1195,6 @@ let findExecutionAbortTime tname src =
 
 let tfgFindID jnodes =
  List.length jnodes
-
-let get_name_task_list tlist =
-    let task_from_list = List.map (fun a -> List.nth a 0) tlist in
-    let utask_list = uniq task_from_list in
-    utask_list
 
 
 let addJsonNodes jnodes arrival_time deadline kind tname d =
