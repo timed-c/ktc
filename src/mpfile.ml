@@ -389,8 +389,7 @@ let makeSdelayEndInstr (structvar : varinfo) (timervar : varinfo) (tp : varinfo)
   [mkStmtOneInstr timer_init]
 *)
 
-let makeFdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc :
-    location) (retjmp) (signo) tpstructvar (lv ) timervar =
+let makeFdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc : location) (retjmp) (signo) tpstructvar (lv ) timervar =
   let time_unit = if ((L.length argL) = 3 && not (isZero (L.hd argL))) then mkString  (E.s (E.error "%s:%d: error : unknown resolution of timing point" loc.file loc.line))  else (L.nth argL 2) in
   let f, l, deadline, period, tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, (L.nth argL 1), time_unit, mkAddrOf((var structvar)), (List.hd(List.rev argL)) in
   let waitingOffset = match tpstructvar.vtype with
@@ -398,9 +397,9 @@ let makeFdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc :
   let waitingConditionInstr = Set((Var tpstructvar, waitingOffset), Cil.one, locUnknown) in
   let logname_var = findLocalVar fdec.slocals ("ktclog") in
   let count_var  = findLocalVar fdec.slocals ("ktccount") in
-    let loop_var  = findLocalVar fdec.slocals ("ktcloopvar") in
-    let prio_var  = findLocalVar fdec.slocals ("ktcpriority") in
-    let cwcet = findLocalVar fdec.slocals ("ktc_ret_cwcet") in
+  let loop_var  = findLocalVar fdec.slocals ("ktcloopvar") in
+  let prio_var  = findLocalVar fdec.slocals ("ktcpriority") in
+  let cwcet = findLocalVar fdec.slocals ("ktc_ret_cwcet") in
   [waitingConditionInstr; Call(lv,v2e sdelayfuns.fdelay_init,
   [deadline;period;tunit;s;t_id;(v2e retjmp); signo; (mkAddrOf (var logname_var)); (v2e count_var); v2e prio_var; mkAddrOf (var tpstructvar); v2e timervar; v2e cwcet], loc)]
 
@@ -1046,16 +1045,15 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp :
 						                             let fifocount = findGlobalVar filename.globals (channame^"ktccount") in
 						                             let fifotail= findGlobalVar filename.globals (channame^"ktctail") in
 					                                     makeelemInstr  fifothrdqu fifocount fifotail lv loc *)
-    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> if
-        L.length argList < 5 then makeSdelayInitInstr fdec structvar argList loc
-        lv else makeSdelayInitInstr fdec structvar (L.tl argList) loc lv
-    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> if
-        L.length argList < 5 then makeFdelayInitInstr fdec structvar argList loc
-        ret_jmp (integer signo) tpstructvar lv timervar else makeFdelayInitInstr
-        fdec structvar (L.tl argList) loc ret_jmp (integer signo) tpstructvar
-        lv timervar
+    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> if L.length argList < 5 then
+                                                                            makeSdelayInitInstr fdec structvar argList loc lv
+                                                                        else
+                                                                            makeSdelayInitInstr fdec structvar (L.tl argList) loc lv
+    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> if L.length argList < 5 then
+                                                                            makeFdelayInitInstr fdec structvar argList loc ret_jmp (integer signo) tpstructvar lv timervar
+                                                                       else
+                                                                           makeFdelayInitInstr fdec structvar (L.tl argList) loc ret_jmp (integer signo) tpstructvar lv timervar
 	|Call(lv ,Lval(Var vi,_), argList, loc) when (vi.vname = "gettime") -> makegettimeInstr lv structvar argList loc
-	(*|Call(_,LVal(Var vi,_),_,loc) when (vi.vname = "next") -> makeNextGoto loc *)
 	|Call(_,Lval(Var vi,_),argList,_) when (isFunTask vi) ->
                                                         let pthread_id_str = "pthread_t" in
                                                         let pthread_id_type = findTypeinfo filename pthread_id_str in

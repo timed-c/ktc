@@ -311,10 +311,11 @@ let makeSdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc :
   (*let time_unit = if ((L.length argL) = 3 && not (isZero (L.hd argL))) then (E.s (E.error "%s:%d: error : unknown resolution of timing point" loc.file loc.line)) else (L.nth argL 2) in*)
   let time_unit = (L.nth argL 2) in
   let logname_var = findLocalVar fdec.slocals ("ktclog") in
-   let loop_var  = findLocalVar fdec.slocals ("ktcloopvar") in
-     let count_var  = findLocalVar fdec.slocals ("ktccount") in
+  let loop_var  = findLocalVar fdec.slocals ("ktcloopvar") in
+  let count_var  = findLocalVar fdec.slocals ("ktccount") in
+  let prio_var = findLocalVar fdec.slocals("ktcpriority") in
   let f, l, deadline, period ,tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, (L.nth argL 1), time_unit, mkAddrOf((var structvar)), (List.hd (List.rev argL))  in
-  [Call(lv,v2e sdelayfuns.sdelay_init, [deadline;period;tunit;s;t_id; ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))); v2e count_var], loc)]
+  [Call(lv,v2e sdelayfuns.sdelay_init, [deadline;period;tunit;s;t_id; (mkAddrOf (var logname_var)); v2e count_var; v2e prio_var], loc)]
 
 let makeelemInstr chan tail head lv loc =
   [Call(lv,v2e sdelayfuns.nelem, [mkAddrOf(var chan); Lval(var head); Lval(var tail)], loc)]
@@ -390,8 +391,7 @@ let makeSdelayEndInstr (structvar : varinfo) (timervar : varinfo) (tp : varinfo)
   [mkStmtOneInstr timer_init]
 *)
 
-let makeFdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc :
-    location) (retjmp) (signo) tpstructvar (lv ) =
+let makeFdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc : location) (retjmp) (signo) tpstructvar (lv) timervar =
   let time_unit = if ((L.length argL) = 3 && not (isZero (L.hd argL))) then mkString  (E.s (E.error "%s:%d: error : unknown resolution of timing point" loc.file loc.line))  else (L.nth argL 2) in
   let f, l, deadline, period, tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, (L.nth argL 1), time_unit, mkAddrOf((var structvar)), (List.hd(List.rev argL)) in
   let waitingOffset = match tpstructvar.vtype with
@@ -399,10 +399,11 @@ let makeFdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc :
   let waitingConditionInstr = Set((Var tpstructvar, waitingOffset), Cil.one, locUnknown) in
   let logname_var = findLocalVar fdec.slocals ("ktclog") in
   let count_var  = findLocalVar fdec.slocals ("ktccount") in
-    let loop_var  = findLocalVar fdec.slocals ("ktcloopvar") in
+  let loop_var  = findLocalVar fdec.slocals ("ktcloopvar") in
+  let prio_var  = findLocalVar fdec.slocals ("ktcpriority") in
+  let cwcet = findLocalVar fdec.slocals ("ktc_ret_cwcet") in
   [waitingConditionInstr; Call(lv,v2e sdelayfuns.fdelay_init,
-  [deadline;period;tunit;s;t_id;(v2e retjmp); signo; ((mkAddrOf
-  ((Var(logname_var), Index(v2e loop_var, NoOffset))))); (v2e count_var)], loc)]
+  [deadline;period;tunit;s;t_id;(v2e retjmp); signo; (mkAddrOf (var logname_var)); (v2e count_var); v2e prio_var; mkAddrOf (var tpstructvar); v2e timervar; v2e cwcet], loc)]
 
 let makegettimeInstr lv (structvar : varinfo) (argL : exp list) loc =
 	let tunit, s =  L.hd argL, mkAddrOf((var structvar)) in
@@ -973,8 +974,7 @@ class fProfilingAdder filename fdec = object(self)
 end
 
 
-class profilingAdder filename logname_var lastarrival stime itime fdec id_var
-count_var loop_var fopn = object(self)
+class profilingAdder filename logname_var lastarrival stime itime fdec id_var count_var loop_var fopn = object(self)
     inherit nopCilVisitor
     val mutable counter = 0
     method vinst (i : instr) =
@@ -988,8 +988,9 @@ count_var loop_var fopn = object(self)
                 fdec.slocals ("ktcitime")) else (makeLocalVar fdec ("ktcitime")
                 (TComp(logstart,[]))) in
                 [i]
-        |Call(_,Lval(Var vi,_),argList, loc) when ((vi.vname = "sdelayi" ||
-        vi.vname = "fdelayi") & (fdec.svar.vname <> "main")) ->
+        |Call(_,Lval(Var vi,_),argList, loc) when (vi.vname = "spriority") -> let ktc_prio_var = findLocalVar fdec.slocals ("ktcpriority") in
+               [Set((Var(ktc_prio_var), NoOffset), (List.hd argList), locUnknown)]
+        |Call(_,Lval(Var vi,_),argList, loc) when ((vi.vname = "sdelayi" || vi.vname = "fdelayi") & (fdec.svar.vname <> "main")) ->
                let inc_count_instr = counter <- counter + 1; Set((Var(count_var),
                NoOffset), BinOp(PlusA, v2e id_var, (integer counter), intType), locUnknown) in
                let previous_id_instr = makeLogTracePreviousID ((mkAddrOf ((Var(logname_var), Index(v2e loop_var, NoOffset))))) (v2e
@@ -1062,11 +1063,9 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp :
     |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> if
         L.length argList < 5 then makeSdelayInitInstr fdec structvar argList loc
         lv else makeSdelayInitInstr fdec structvar (L.tl argList) loc lv
-    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> if
-        L.length argList < 5 then makeFdelayInitInstr fdec structvar argList loc
-        ret_jmp (integer signo) tpstructvar lv else makeFdelayInitInstr
-        fdec structvar (L.tl argList) loc ret_jmp (integer signo) tpstructvar
-        lv
+    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> if L.length argList < 5 then
+                                                                            makeFdelayInitInstr fdec structvar argList loc ret_jmp (integer signo) tpstructvar lv timervar
+                                                                       else makeFdelayInitInstr fdec structvar (L.tl argList) loc ret_jmp (integer signo) tpstructvar lv timervar
 	|Call(lv ,Lval(Var vi,_), argList, loc) when (vi.vname = "gettime") -> makegettimeInstr lv structvar argList loc
 	(*|Call(_,LVal(Var vi,_),_,loc) when (vi.vname = "next") -> makeNextGoto loc *)
 	|Call(_,Lval(Var vi,_),argList,_) when (isFunTask vi) ->
@@ -1411,17 +1410,14 @@ class profileTask filename = object(self)
         let id_var = makeLocalVar fdec "ktcpid" intType in
         let count_var = makeLocalVar fdec "ktccount" intType in
         let timestruct = findCompinfo filename "timespec" in
-        let itime = makeLocalVar fdec "ktctime"
-        (TComp(timestruct,[])) in
+        let itime = makeLocalVar fdec "ktctime" (TComp(timestruct,[])) in
         (*init file instr*)
         let ktc_filename = findCompinfo filename "_IO_FILE" in
-        let filename_var = makeLocalVar fdec ("ktcfile")
-        (TPtr(TComp(ktc_filename,[]), [])) in
+        let filename_var = makeLocalVar fdec ("ktcfile") (TPtr(TComp(ktc_filename,[]), [])) in
         let logname = findCompinfo filename "log_struct" in
-        let logname_var = makeLocalVar fdec ("ktclog")
-        (TArray((TComp(logname,[])), Some((integer 2000)), [])) in
-        let log_init_instr = makeLogTraceInit (var filename_var) (mkString
-        (vi.vname^".ktc.trace")) locUnknown in
+        let logname_var = makeLocalVar fdec ("ktclog") (TArray((TComp(logname,[])), Some((integer 2000)), [])) in
+        let ktc_prio_var = makeLocalVar fdec ("ktcpriority") intType in
+        let log_init_instr = makeLogTraceInit (var filename_var) (mkString (vi.vname^".ktc.trace")) locUnknown in
          (*let flogname_var = makeLocalVar fdec ("ktcflog")
         (TPtr(TComp(logname,[]), [])) in
         let log_init_instr_f = makeLogTraceInit (var flogname_var)
