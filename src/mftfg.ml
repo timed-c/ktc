@@ -1046,6 +1046,19 @@ let rec create_abort_csv alist nlist lst =
                                                           create_abort_csv alist rst (List.append elem lst)
     | ([tid;jid; p; j; b; w; d;pr;k] :: rst) when (int_of_string k) <> 1 -> create_abort_csv alist rst lst
     |[] -> lst
+
+let rec create_pred_csv plist jlist =
+    match jlist with
+    | [tid; jid; amin; amax; cmin; cmax; dl; pr;k] ::rst -> (match rst with
+                                                             | [rst_tid; rst_jid; rst_amin; rst_amax; rst_cmin; rst_cmax; rst_dl; rst_pr;rst_k] :: rrst ->
+                                                                                if (rst_tid = tid) then
+                                                                                    create_pred_csv ([tid; jid; tid; (string_of_int ((int_of_string jid) + 1))]::plist) rst
+                                                                                else
+                                                                                    create_pred_csv plist rst
+                                                             | [] -> create_pred_csv plist rst)
+    |[] -> plist
+
+
 (*let rec create_abort_csv alist nlist lst =
     match nlist with
     | ([tid;jid; p; j; b; w; d;pr;k] :: rst) when k = 0 -> let elem = List.find
@@ -1126,11 +1139,9 @@ let findHyperperiod tlist alist jlist =
     let ujblist = (unrollToHyper (new_win) tlist (utask_list) jlist) in
     let njblist = List.filter (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] -> dl <> 0) ujblist in
     let ncsv = List.rev_map (to_csv_string) (List.rev njblist) in
-    let nncsv0 = List.rev_map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] ->
-        [tid; jid; amin; amax; cmin; cmax; dl; (string_of_int ((int_of_string dl) - (int_of_string amin)))]) (List.rev ncsv) in
+    let nncsv0 = List.rev_map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] -> [tid; jid; amin; amax; cmin; cmax; dl; dl]) (List.rev ncsv) in
     let nncsv00 = List.filter (fun [tid; jid; amin; amax; cmin; cmax; dl; pr] -> (int_of_string pr) > 0) nncsv0 in
-    let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min";
-    "Cost max"; "Deadline"; "Priority"] :: (nncsv00) in
+    let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min"; "Cost max"; "Deadline"; "Priority"] :: (nncsv00) in
     let _ = Csv.save "kind.csv" ncsv in
     let _ = Csv.save "job.csv" nncsv
     in
@@ -1138,10 +1149,11 @@ let findHyperperiod tlist alist jlist =
     let abortcsv =  (match alist with
                     |[] -> (*E.log "alist empty here";*) []
                     |_ -> (*E.log "alist not empty";*) List.rev (create_abort_csv alist (abort_input) [])) in
-    let abortncsv = ["TID"; "JID"; "Tmin"; "Tmax"; "Cmin";
-    "Cmax"] :: abortcsv in
-    let _ = Csv.save "action.csv" abortncsv
-    in E.log "Job generation complete\n"; ()
+    let predcsv = ["Predecessor TID";"Predecessor JID";"Successor TID";"Successor JID"] :: (create_pred_csv [] nncsv) in
+    let abortncsv = ["TID"; "JID"; "Tmin"; "Tmax"; "Cmin"; "Cmax"] :: abortcsv in
+    let _ = Csv.save "action.csv" abortncsv in
+    let _ = Csv.save "pred.csv" predcsv in
+    E.log "Job generation complete\n"; ()
 
 let read_data fname =
   Csv.load (fname^".ktc.trace")

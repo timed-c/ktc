@@ -31,7 +31,7 @@ typedef void * xQueueHandle;
 #define MILLI_TO_NANO 1000000
 #define MICRO_TO_NANO 1000
 #define MILLI 1000
-#define MICRO 1000000 
+#define MICRO 1000000
 #define NANO  1000000000
 
 #define ms "ms"
@@ -78,7 +78,7 @@ extern int period;
 extern int deadline;
 extern int runtime;
 
-#define aperiodic(x, ms) runtime = x; deadline = x; period = x; ktc_set_sched(policy, runtime, period, deadline) 
+#define aperiodic(x, ms) runtime = x; deadline = x; period = x; ktc_set_sched(policy, runtime, period, deadline)
 //#define cwrite(chan, ptrw); if((void *__attribute__((write_block))) (sizeof(#chan) > ptrw)) {sleep(0);}
 //#define cinit(chan, val); if((void *__attribute__((init_block))) (sizeof(#chan) > val)) {sleep(0);}
 
@@ -86,7 +86,7 @@ extern   TickType_t start_time ;
 void skipdelay();
 #define lvchannel __attribute__((lvchannel))
 #//define fifochannel  __attribute__((fifochannel))
-#define gettime(ms)  ktc_gettime(&start_time, #ms) 
+#define gettime(ms)  ktc_gettime(&start_time, #ms)
 //#define prioritychannel xQueueHandle
 #define fifochannel sardummy; xQueueHandle
 #define cread_wait(chan, ptr, val)   xQueueReceive( chan, &( ptr ), val)
@@ -94,7 +94,7 @@ void skipdelay();
 enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
 int policy;
 
-#define spolicy(X) policy =X; sdelay(0, ms); 
+#define spolicy(X) policy =X; sdelay(0, ms);
 #define spriority(prio) vTaskPrioritySet(NULL, prio)
 void toggle_lock_tracking();
 
@@ -126,8 +126,8 @@ typedef struct cbm{
 struct cab_ds{
 	struct cbm* free;
 	struct cbm* mrb;
-	int maxcbm; 
-	
+	int maxcbm;
+
 };
 
 cbm cabmsgv;
@@ -167,6 +167,49 @@ extern struct timer_env* timer_env_array[50];
 extern int compare_qsort (const void * elem1, const void * elem2);
 extern void populatelist(int num);
 
+
+#define infty 0
+struct log_struct{
+    int src;
+    unsigned long atime;
+    unsigned long rtime;
+    unsigned long jitter;
+    unsigned long execution;
+    unsigned long abort;
+    int dst;
+};
+
+struct minmax_struct{
+    int msrc;
+    unsigned long mbcet;
+    unsigned long mwcet;
+    unsigned long mjitter;
+    unsigned long mabort;
+    int mdst;
+};
+
+
+void mplog_trace_init_tp(struct minmax_struct* fp, int fptr, int tp, unsigned long* arrival_init, TickType_t* itime);
+void mplog_trace_init(const char* func, int *fp);
+void mplog_trace_arrival(struct log_struct* fp, int tp, int interval, int res, unsigned long *last_arrival, TickType_t* itime);
+void mplog_trace_release(struct log_struct* fp, unsigned long last_arrival, TickType_t* itime, TickType_t* stime, int interval);
+void mplog_trace_execution(struct log_struct* fp, TickType_t stime, TickType_t* iptime);
+void mplog_trace_end_id(struct log_struct* fp, int id, TickType_t time);
+void mplog_trace_abort_time(struct minmax_struct* mm, struct log_struct* ls, int deadline, int* mkarray, int* mkmisses, int* mkcounter);
+void mplog_write_to_file(int fp, struct minmax_struct* ls, int k, char* fname);
+
+#pragma cilnoremove("log_struct")
+#pragma cilnoremove("minmax_struct")
+#pragma cilnoremove("mplog_trace_init_tp")
+#pragma cilnoremove("mplog_trace_init")
+#pragma cilnoremove("mplog_trace_arrival")
+#pragma cilnoremove("mplog_trace_release")
+#pragma cilnoremove("mplog_trace_execution")
+#pragma cilnoremove("mplog_trace_end_id")
+#pragma cilnoremove("mplog_trace_abort_time")
+#pragma cilnoremove("mplog_write_to_file")
+#pragma cilnoremove("fopen")
+#pragma cilnoremove("fclose")
 #pragma cilnoremove("list_dl")
 #pragma cilnoremove("list_pr")
 #pragma cilnoremove("populatelist")
