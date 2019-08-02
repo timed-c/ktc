@@ -1031,26 +1031,26 @@ let to_csv_string ilist =
     List.map (fun a -> (string_of_int a)) ilist
 
 
-let rec match_alist alist b w tid jid lst =
+let rec match_alist alist b w tid jid deadl lst =
     match alist with
     | [ht; ha; hb; hw; habtmin; habtmax; dl] :: rst when (((int_of_string hw) = (int_of_string w))) ->
-            match_alist rst b w tid jid ([tid; jid; (habtmin); habtmax; (string_of_int 0); hw] :: lst)
+            match_alist rst b w tid jid deadl ([tid; jid; deadl ; (string_of_int ((int_of_string deadl) + (int_of_string habtmax))); (string_of_int 0); hw] :: lst)
     | [ht; ha; hb; hw; habtmin; habtmax; dl] :: rst when (((int_of_string hw) <> (int_of_string w))) ->
-            match_alist rst b w tid jid (lst)
+            match_alist rst b w tid jid deadl (lst)
     |_ -> lst
 
 
 let rec create_abort_csv alist nlist lst =
     match nlist with
-    | ([tid;jid; p; j; b; w; d;pr;k] :: rst) when (int_of_string k) = 1 -> let elem = match_alist alist b w tid jid [] in
+    | ([tid;jid; p; j; b; w; d;pr;k] :: rst) when (int_of_string k) = 1 -> let elem = match_alist alist b w tid jid d [] in
                                                           create_abort_csv alist rst (List.append elem lst)
     | ([tid;jid; p; j; b; w; d;pr;k] :: rst) when (int_of_string k) <> 1 -> create_abort_csv alist rst lst
     |[] -> lst
 
 let rec create_pred_csv plist jlist =
     match jlist with
-    | [tid; jid; amin; amax; cmin; cmax; dl; pr;k] ::rst -> (match rst with
-                                                             | [rst_tid; rst_jid; rst_amin; rst_amax; rst_cmin; rst_cmax; rst_dl; rst_pr;rst_k] :: rrst ->
+    | [tid; jid; amin; amax; cmin; cmax; dl; pr] :: rst -> (match rst with
+                                                             | [rst_tid; rst_jid; rst_amin; rst_amax; rst_cmin; rst_cmax; rst_dl; rst_pr] :: rrst ->
                                                                                 if (rst_tid = tid) then
                                                                                     create_pred_csv ([tid; jid; tid; (string_of_int ((int_of_string jid) + 1))]::plist) rst
                                                                                 else
@@ -1149,7 +1149,7 @@ let findHyperperiod tlist alist jlist =
     let abortcsv =  (match alist with
                     |[] -> (*E.log "alist empty here";*) []
                     |_ -> (*E.log "alist not empty";*) List.rev (create_abort_csv alist (abort_input) [])) in
-    let predcsv = ["Predecessor TID";"Predecessor JID";"Successor TID";"Successor JID"] :: (create_pred_csv [] nncsv) in
+    let predcsv = ["Predecessor TID";"Predecessor JID";"Successor TID";"Successor JID"] :: (create_pred_csv [] nncsv00) in
     let abortncsv = ["TID"; "JID"; "Tmin"; "Tmax"; "Cmin"; "Cmax"] :: abortcsv in
     let _ = Csv.save "action.csv" abortncsv in
     let _ = Csv.save "pred.csv" predcsv in
