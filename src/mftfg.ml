@@ -852,6 +852,17 @@ let calculateHyperperiod tlist =
     let hyperiod = List.fold_right lcm (tlist) 1 in
     E.log "Hyperperiod %d\n" hyperiod; hyperiod
 
+
+let rec calculate_utilization task_names tlist util =
+    match task_names with
+    | tname :: rest -> let tname_list = List.filter (fun a -> (List.hd a) = tname) tlist in
+                       let tname_no_offset = List.filter (fun a -> (int_of_string (List.nth a 1)) <> 0) tname_list in
+                       let sum_period = List.fold_left (fun a b -> a + (int_of_string (List.nth b 1))) 0 tname_no_offset in
+                       let sum_bcet =  List.fold_left (fun a b -> a + (int_of_string (List.nth b 4))) 0 tname_no_offset in
+                       let new_util = util +. (float_of_int sum_bcet) /. (float_of_int sum_period) in
+                       calculate_utilization rest tlist new_util
+    |[] -> util
+
 (*
 let rec unrolledJob num p j b w d pr nnow =
     match nnow with
@@ -1125,6 +1136,8 @@ let findHyperperiod tlist alist jlist =
     let hp = calculateHyperperiod (List.map (fun a -> (snd a)) unique_task_arrival_pair) in
     let maxos = max_offset jlist in
     let utask_list = uniq task_list in
+    let system_util = calculate_utilization utask_list tlist 0.0 in
+    let _ = E.log "Utilization = %f\n" system_util in
     let _ = E.log "H+Omax : %d + %d = %d\n" hp maxos (hp + maxos) in
     let ujblist = (unrollToHyper (hp + maxos) tlist (utask_list) jlist) in
     let ncsv = List.map (to_csv_string) (ujblist) in
