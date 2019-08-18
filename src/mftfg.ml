@@ -853,15 +853,15 @@ let calculateHyperperiod tlist =
     E.log "Hyperperiod %d\n" hyperiod; hyperiod
 
 
-let rec calculate_utilization task_names tlist util =
+let rec calculate_utilization task_names tlist util plist =
     match task_names with
     | tname :: rest -> let tname_list = List.filter (fun a -> (List.hd a) = tname) tlist in
                        let tname_no_offset = List.filter (fun a -> (int_of_string (List.nth a 1)) <> 0) tname_list in
                        let sum_period = List.fold_left (fun a b -> a + (int_of_string (List.nth b 1))) 0 tname_no_offset in
                        let sum_bcet =  List.fold_left (fun a b -> a + (int_of_string (List.nth b 4))) 0 tname_no_offset in
                        let new_util = util +. (float_of_int sum_bcet) /. (float_of_int sum_period) in
-                       calculate_utilization rest tlist new_util
-    |[] -> util
+                       calculate_utilization rest tlist new_util ((tname, sum_period)::plist)
+    |[] -> (util, plist)
 
 (*
 let rec unrolledJob num p j b w d pr nnow =
@@ -1127,6 +1127,7 @@ let uniq l =
       | hd::tl -> tail_uniq (hd::a) (List.filter (fun x -> x  != hd) tl) in
   tail_uniq [] l
 
+
 let findHyperperiod tlist alist jlist =
     let tlist_minus_offset = List.filter (fun a -> (int_of_string (List.nth a 5)) <> 0) tlist in
     let task_arrival_pair = (List.map (fun a -> ((List.nth a 0), (int_of_string
@@ -1136,8 +1137,9 @@ let findHyperperiod tlist alist jlist =
     let hp = calculateHyperperiod (List.map (fun a -> (snd a)) unique_task_arrival_pair) in
     let maxos = max_offset jlist in
     let utask_list = uniq task_list in
-    let system_util = calculate_utilization utask_list tlist 0.0 in
+    let (system_util, plist) = calculate_utilization utask_list tlist 0.0 [] in
     let _ = E.log "Utilization = %f\n" system_util in
+    let _ = List.iter (fun a -> (E.log "(%s, %d)" (fst a) (snd a))) plist in
     let _ = E.log "H+Omax : %d + %d = %d\n" hp maxos (hp + maxos) in
     let ujblist = (unrollToHyper (hp + maxos) tlist (utask_list) jlist) in
     let ncsv = List.map (to_csv_string) (ujblist) in
@@ -1154,10 +1156,13 @@ let findHyperperiod tlist alist jlist =
     let ncsv = List.rev_map (to_csv_string) (List.rev njblist) in
     let nncsv0 = List.rev_map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] -> [tid; jid; amin; amax; cmin; cmax; dl; dl]) (List.rev ncsv) in
     let nncsv00 = List.filter (fun [tid; jid; amin; amax; cmin; cmax; dl; pr] -> (int_of_string pr) > 0) nncsv0 in
+    let fp_list = [(1000,1); (2000,2);(5000,3);(10000,4);(20000,5);(50000,6);(100000,7);(200000,8);(1000000,9)] in
+    let fp_csv = List.map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr ] -> [tid; jid; amin; amax; cmin; cmax; dl; string_of_int (List.assoc tid plist)]) nncsv00 in
     let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min"; "Cost max"; "Deadline"; "Priority"] :: (nncsv00) in
+    let fp_ncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min"; "Cost max"; "Deadline"; "Priority"] :: fp_csv in
     let _ = Csv.save "kind.csv" ncsv in
-    let _ = Csv.save "job.csv" nncsv
-    in
+    let _ = Csv.save "job_edf.csv" nncsv in
+    let _ = Csv.save "job_fp.csv" fp_ncsv in
     let abort_input = List.filter (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k ] -> ((int_of_string dl) - (int_of_string amin)) > 0) ncsv in
     let abortcsv =  (match alist with
                     |[] -> (*E.log "alist empty here";*) []

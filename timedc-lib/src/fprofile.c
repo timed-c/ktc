@@ -28,14 +28,34 @@ struct log_struct{
 
 
 pthread_mutex_t mt;
+extern int ktcpolicy;
+#define gettid() syscall(__NR_gettid)
 
+#define SCHED_DEADLINE	6
+
+/* XXX use the proper syscall numbers */
+#ifdef __x86_64__
+#define __NR_sched_setattr		314
+#define __NR_sched_getattr		315
+#endif
+
+#ifdef __i386__
+#define __NR_sched_setattr		351
+#define __NR_sched_getattr		352
+#endif
+
+#ifdef __arm__
+#define __NR_sched_setattr		380
+#define __NR_sched_getattr		381
+#endif
 
 
  int sched_setattr(pid_t pid,
 		  const struct sched_attr *attr,
 		  unsigned int flags)
  {
-	return syscall(314, pid, attr, flags);
+    return syscall(__NR_sched_setattr, pid, attr, flags);
+    //return sched_setscheduler(pid, attr, flags);
  }
 
 int compare_qsort (const void * elem1, const void * elem2)
@@ -60,13 +80,16 @@ int ktc_set_sched(int policy, int runtime, int period, int deadline){
 	sa.size = sizeof(sa);
         sa.sched_flags = 0;
         sa.sched_nice = 0;
-
 	if(policy == EDF){
+        if(period == 0 ){
+            return 0;
+        }
 		sa.sched_priority = 0;
 		sa.sched_policy = SCHED_DEADLINE;
-		sa.sched_runtime = runtime * 1000 *1000;
-		sa.sched_deadline = deadline * 1000* 1000;
-		sa.sched_period = period* 1000 * 1000;
+        //printf("deadline %d, period %d\n", deadline, period);
+		sa.sched_runtime = deadline * 2000;
+        sa.sched_deadline = deadline * 1000 * 1000 ;
+		sa.sched_period =   deadline * 1000 * 1000 ;
 	}
 	if(policy == RR_RM){
 		priority = compute_priority(list_pr, period);
@@ -112,9 +135,10 @@ int ktc_set_sched(int policy, int runtime, int period, int deadline){
 	if(&sa == NULL){
 		printf("this is null");
 	}
-	 if( (err = sched_setattr(0, &sa, flag)) == -1) {
-		 perror("error");
-		 printf("%d\n", err);
+    err = sched_setattr(0, &sa, flag);
+	if(err < 0) {
+         //printf("error %d \n", deadline);
+		 perror("sched_setattr error");
 	}
 }
 
@@ -124,6 +148,15 @@ long ktc_gettime(int unit){
 	(void) clock_gettime(CLOCK_REALTIME, &st);
 	ret = timespec_to_unit(st, unit);
 	return ret;
+}
+
+void change_to_max_priority(int priority){
+    struct sched_param param;
+    int s;
+    param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+    s = pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+    if (s != 0)
+        printf("pthread_setschedparam");
 }
 
 /*
@@ -645,7 +678,7 @@ void ktc_simpson(int* sdata, int* tdata){
 }
 
 void change_priority(int deadline, int period){
-    ktc_set_sched(EDF, deadline, deadline, period);
+    ktc_set_sched(ktcpolicy, deadline, deadline, period);
 }
 
 
@@ -819,7 +852,7 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
 		    *start_time =  add_timespec((*start_time), period_timespec);
             if(pid != 0)
                 fp->abort = 356 + cwcet;
-            change_priority(deadline, period);
+            change_priority(period, period);
             //printf("No interrupt handler\n");
 			return 0;
 		}
@@ -828,7 +861,7 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
             period_us = (period * pow(10, (unit + 6)));
             if(pid != 0)
                 fp->abort = 356 + cwcet;
-            change_priority(deadline, period);
+            change_priority(period, period);
             //printf("No interrupt handler\n");
 			return elapsed_time_int;
 		}
@@ -841,7 +874,7 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
             elapsed_time_int = timespec_to_unit(elapsed_time_ts, -6);
              //fprintf(fp, "%d,", prf_zero);
              fp->abort = 356 + cwcet;
-            change_priority(deadline, period);
+            change_priority(period, period);
             //printf("Interrupt handler\n");
 			return -1;
 		}
@@ -858,7 +891,7 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
                 fp->abort = 356 + cwcet;
              else
                  fp->abort = 356 + cwcet;
-             change_priority(deadline, period);
+             change_priority(period, period);
             //printf("Interrupt handler\n");
 			return 0;
 		}

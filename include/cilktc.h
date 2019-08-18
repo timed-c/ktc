@@ -19,10 +19,11 @@
 */
 
 enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
-int policy;
+int ktcpolicy;
 extern int setschedvar;
 //#define spolicy(X) if( (X) == EDF) spolicy_edf(); else spolicy_other(); sleep(0)
-#define spolicy(X) setschedvar = 1; policy =X; sdelay(-2103, ms);
+//#define spolicy(X) setschedvar = 1; policy =X; sdelay(-2103, ms);
+define spolicy(X) setschedvar =1; ktcpolicy=X;
 #define task void* __attribute__((task))
 #define sdelay(intr, ...) sdelay(intr, intr, ##__VA_ARGS__)
 #define stp(pr, dl, unit) sdelay(pr, dl, unit)
