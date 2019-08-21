@@ -860,7 +860,7 @@ let rec calculate_utilization task_names tlist util plist =
                        let sum_period = List.fold_left (fun a b -> a + (int_of_string (List.nth b 1))) 0 tname_no_offset in
                        let sum_bcet =  List.fold_left (fun a b -> a + (int_of_string (List.nth b 4))) 0 tname_no_offset in
                        let new_util = util +. (float_of_int sum_bcet) /. (float_of_int sum_period) in
-                       calculate_utilization rest tlist new_util ((tname, sum_period)::plist)
+                       calculate_utilization rest tlist new_util (((List.length task_names), sum_period)::plist)
     |[] -> (util, plist)
 
 (*
@@ -1063,7 +1063,7 @@ let rec create_pred_csv plist jlist =
     | [tid; jid; amin; amax; cmin; cmax; dl; pr] :: rst -> (match rst with
                                                              | [rst_tid; rst_jid; rst_amin; rst_amax; rst_cmin; rst_cmax; rst_dl; rst_pr] :: rrst ->
                                                                                 if (rst_tid = tid) then
-                                                                                    create_pred_csv ([tid; jid; tid; (string_of_int ((int_of_string jid) + 1))]::plist) rst
+                                                                                    create_pred_csv (List.append plist [[tid; jid; tid; (string_of_int ((int_of_string jid) + 1))]]) rst
                                                                                 else
                                                                                     create_pred_csv plist rst
                                                              | [] -> create_pred_csv plist rst)
@@ -1127,6 +1127,20 @@ let uniq l =
       | hd::tl -> tail_uniq (hd::a) (List.filter (fun x -> x  != hd) tl) in
   tail_uniq [] l
 
+let rec index_assoc lst indx alist =
+    match lst with
+    | [] -> alist
+    | h :: t -> (index_assoc t (indx + 1) ((h, indx)::alist))
+
+let compare_period a b =
+if (a = b) then 0 else (if (a < b) then -1 else 1) 
+
+let create_priority_list_fp plist =
+    let slist = List.sort_uniq (compare_period) plist in 
+   (*let _ = List.iter (fun a -> (E.log "%d " a)) slist in *)
+    let prlist = index_assoc slist 1 [] in
+    (*let _ = List.iter (fun a -> (E.log "(%d ,%d)" (fst a) (snd a))) prlist in *)
+     prlist 
 
 let findHyperperiod tlist alist jlist =
     let tlist_minus_offset = List.filter (fun a -> (int_of_string (List.nth a 5)) <> 0) tlist in
@@ -1139,8 +1153,8 @@ let findHyperperiod tlist alist jlist =
     let utask_list = uniq task_list in
     let (system_util, plist) = calculate_utilization utask_list tlist 0.0 [] in
     let _ = E.log "Utilization = %f\n" system_util in
-    let _ = List.iter (fun a -> (E.log "(%s, %d)" (fst a) (snd a))) plist in
-    let _ = E.log "H+Omax : %d + %d = %d\n" hp maxos (hp + maxos) in
+    (*let _ = List.iter (fun a -> (E.log "(%s, %d)" (fst a) (snd a))) plist in*)
+    (*let _ = E.log "H+Omax : %d + %d = %d\n" hp maxos (hp + maxos) in *)
     let ujblist = (unrollToHyper (hp + maxos) tlist (utask_list) jlist) in
     let ncsv = List.map (to_csv_string) (ujblist) in
     let _ = Csv.save "intermediate.csv" ncsv in
@@ -1156,10 +1170,10 @@ let findHyperperiod tlist alist jlist =
     let ncsv = List.rev_map (to_csv_string) (List.rev njblist) in
     let nncsv0 = List.rev_map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr;k] -> [tid; jid; amin; amax; cmin; cmax; dl; dl]) (List.rev ncsv) in
     let nncsv00 = List.filter (fun [tid; jid; amin; amax; cmin; cmax; dl; pr] -> (int_of_string pr) > 0) nncsv0 in
-    let fp_list = [(1000,1); (2000,2);(5000,3);(10000,4);(20000,5);(50000,6);(100000,7);(200000,8);(1000000,9)] in
-    let fp_csv = List.map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr ] -> [tid; jid; amin; amax; cmin; cmax; dl; string_of_int (List.assoc tid plist)]) nncsv00 in
+    let fp_list = create_priority_list_fp (List.map (fun a-> (snd a)) plist) in
+    let fp_csv = List.map (fun [tid; jid; amin; amax; cmin; cmax; dl; pr ] -> [tid; jid; amin; amax; cmin; cmax; dl; string_of_int (List.assoc (List.assoc (int_of_string tid) plist) fp_list)]) nncsv00 in
     let nncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min"; "Cost max"; "Deadline"; "Priority"] :: (nncsv00) in
-    let fp_ncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min"; "Cost max"; "Deadline"; "Priority"] :: fp_csv in
+    let fp_ncsv = ["Task ID"; "Job ID"; "Arrival min"; "Arrival max"; "Cost min"; "Cost max"; "Deadline"; "Priority"] :: (fp_csv) in
     let _ = Csv.save "kind.csv" ncsv in
     let _ = Csv.save "job_edf.csv" nncsv in
     let _ = Csv.save "job_fp.csv" fp_ncsv in
@@ -1167,7 +1181,7 @@ let findHyperperiod tlist alist jlist =
     let abortcsv =  (match alist with
                     |[] -> (*E.log "alist empty here";*) []
                     |_ -> (*E.log "alist not empty";*) List.rev (create_abort_csv alist (abort_input) [])) in
-    let predcsv = ["Predecessor TID";"Predecessor JID";"Successor TID";"Successor JID"] :: (create_pred_csv [] nncsv00) in
+    let predcsv = ["Predecessor TID";"Predecessor JID";"Successor TID";"Successor JID"] :: ((create_pred_csv [] nncsv00)) in
     let abortncsv = ["TID"; "JID"; "Tmin"; "Tmax"; "Cmin"; "Cmax"] :: abortcsv in
     let _ = Csv.save "action.csv" abortncsv in
     let _ = Csv.save "pred.csv" predcsv in
@@ -1357,7 +1371,8 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp : 
 									     let channame = (match arg with
 											   |Lval(Var vi, _) -> vi.vname) in
 									     let fifothrdqu = findGlobalVar filename.globals channame in
-						   			     let fifochanlist = findGlobalVar filename.globals (channame^"ktclist") in
+						   			     let fifochanlist =  a) slist in
+findGlobalVar filename.globals (channame^"ktclist") in
 						                             let fifocount = findGlobalVar filename.globals (channame^"ktccount") in
 						                             let fifotail= findGlobalVar filename.globals (channame^"ktctail") in
 					                                     makeelemInstr  fifothrdqu fifocount fifotail lv loc *)

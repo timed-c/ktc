@@ -74,9 +74,9 @@ int compute_priority(int* array, int para){
 }
 
 
-int ktc_set_sched(int policy, int runtime, int period, int deadline){
+int ktc_set_sched(int policy, int period, int priority, int deadline){
 	struct sched_attr sa;
-	int priority;
+	int runtime = deadline;
 	sa.size = sizeof(sa);
         sa.sched_flags = 0;
         sa.sched_nice = 0;
@@ -101,13 +101,13 @@ int ktc_set_sched(int policy, int runtime, int period, int deadline){
 		sa.sched_period = period;
 	}
 	if(policy == FIFO_RM){
-		priority = compute_priority(list_pr, period);
-		priority = sched_get_priority_max(SCHED_RR) - priority;
+        // printf("%d\n", priority);
+		priority = sched_get_priority_max(SCHED_FIFO) - priority;
 		sa.sched_priority = priority;
 		sa.sched_policy = SCHED_FIFO;
-		sa.sched_runtime = runtime;
-		sa.sched_deadline = deadline;
-		sa.sched_period = period;
+		//sa.sched_runtime = runtime;
+		//sa.sched_deadline = deadline;
+		//sa.sched_period = period;
 	}
 	if(policy == FIFO_DM){
 		priority = compute_priority(list_dl, deadline);
@@ -677,8 +677,8 @@ void ktc_simpson(int* sdata, int* tdata){
 	*tdata = *sdata;
 }
 
-void change_priority(int deadline, int period){
-    ktc_set_sched(ktcpolicy, deadline, deadline, period);
+void change_priority(int deadline, int priority){
+    ktc_set_sched(ktcpolicy, deadline, priority, deadline);
 }
 
 
@@ -693,18 +693,18 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
 	}
 	if(period == -1404){
 		(void) clock_gettime(CLOCK_REALTIME, start_time);
-        change_priority(deadline, period);
+        change_priority(deadline, priority);
 		return (timespec_to_unit(*start_time, unit));
 	}
 	if(period < 0){
 		(void) clock_gettime(CLOCK_REALTIME, start_time);
-          change_priority(deadline, period);
+          change_priority(deadline, priority);
 		return period;
 	}
 	if(period == 0){
 		struct timespec st, elapsed_time;
 		st = *start_time;
-        change_priority(deadline, period);
+        change_priority(deadline, priority);
         (void) clock_gettime(CLOCK_REALTIME, start_time);
 		elapsed_time = diff_timespec(*start_time, st);
 		return (timespec_to_unit(elapsed_time, unit));
@@ -712,7 +712,7 @@ long ktc_sdelay_init_profile(int deadline, int period, int unit, struct timespec
     struct timespec interval_time, wait_time;
     interval_time = convert_to_timespec(period, unit);
     wait_time = add_timespec((*start_time), interval_time);
-    change_priority(deadline, period);
+    change_priority(deadline, priority);
     clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &wait_time, NULL);
     *start_time = add_timespec((*start_time), interval_time);
 	return 0;
@@ -852,7 +852,7 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
 		    *start_time =  add_timespec((*start_time), period_timespec);
             if(pid != 0)
                 fp->abort = 356 + cwcet;
-            change_priority(period, period);
+            change_priority(period, priority);
             //printf("No interrupt handler\n");
 			return 0;
 		}
@@ -861,7 +861,7 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
             period_us = (period * pow(10, (unit + 6)));
             if(pid != 0)
                 fp->abort = 356 + cwcet;
-            change_priority(period, period);
+            change_priority(period, priority);
             //printf("No interrupt handler\n");
 			return elapsed_time_int;
 		}
@@ -874,7 +874,7 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
             elapsed_time_int = timespec_to_unit(elapsed_time_ts, -6);
              //fprintf(fp, "%d,", prf_zero);
              fp->abort = 356 + cwcet;
-            change_priority(period, period);
+            change_priority(period, priority);
             //printf("Interrupt handler\n");
 			return -1;
 		}
@@ -891,7 +891,7 @@ long ktc_fdelay_init_profile(int interval, int period, int unit, struct timespec
                 fp->abort = 356 + cwcet;
              else
                  fp->abort = 356 + cwcet;
-             change_priority(period, period);
+             change_priority(period, priority);
             //printf("Interrupt handler\n");
 			return 0;
 		}
