@@ -186,14 +186,14 @@ struct minmax_struct{
     int mdst;
 };
 
-void mplog_trace_init_tp(struct minmax_struct* fp, FILE* fptr, int tp, unsigned long* arrival_init, TickType_t* itime);
+void mplog_trace_init_tp(struct minmax_struct* fp, int fptr, int tp, unsigned long* arrival_init, TickType_t* itime);
 void mplog_trace_init(const char* func, struct _IO_FILE *fp);
 void mplog_trace_arrival(struct log_struct* fp, int tp, int interval, int res, unsigned long *last_arrival, TickType_t* itime);
 void mplog_trace_release(struct log_struct* fp, unsigned long last_arrival, TickType_t* itime, TickType_t* stime, int interval);
 void mplog_trace_execution(struct log_struct* fp, TickType_t stime, TickType_t* iptime);
 void mplog_trace_end_id(struct log_struct* fp, int id, TickType_t time);
 void mplog_trace_abort_time(struct minmax_struct* mm, struct log_struct* ls, int deadline, int* mkarray, int* mkmisses, int* mkcounter);
-void mplog_write_to_file(FILE* fp, struct minmax_struct* ls, int k, char* fname);
+void mplog_write_to_file(int fp, struct minmax_struct* ls, int k, char* fname);
 
 
 #pragma cilnoremove("log_struct")
