@@ -53,7 +53,7 @@ let joblist = ref []
 let abortlist = ref []
 let offsetvar = ref 0
 let offsetlist = ref []
-
+let maplist = ref []
 
 let critical_str = "critical"
 let next_str = "next"
@@ -1023,6 +1023,7 @@ let rec unrollToHyper hp tlist task_list jlist =
                          let (first_j, first_cmax) = ((List.nth first_elem 2), (List.nth first_elem 4)) in
                          let new_onetskl = List.append (List.rev (List.tl (List.rev onetskl))) [[lname; lp; first_j; lb; first_cmax; ld; lk]] in
                          let os = find_offset jlist name in
+                         let _ = maplist := [name; (string_of_int (List.length task_list))] :: !maplist in
                          let unrolledlst = unrollOneTask (new_onetskl) (hp) (List.length
                          task_list)  name in
                          let ncsv1 = List.map (fun [tid; jid; amin; amax; cmin;
@@ -1036,7 +1037,8 @@ let rec unrollToHyper hp tlist task_list jlist =
                         List.append ncsv2 (unrollToHyper hp ((List.filter
                          (fun a -> (List.nth a 0) <> name)) tlist) rest jlist)
 
-       |[] -> []
+       |[] -> let _ = maplist := ["name"; ("index")] :: !maplist in
+            ((Csv.save "map" !maplist);[])
 
 let to_csv_string ilist =
     List.map (fun a -> (string_of_int a)) ilist
@@ -1133,14 +1135,14 @@ let rec index_assoc lst indx alist =
     | h :: t -> (index_assoc t (indx + 1) ((h, indx)::alist))
 
 let compare_period a b =
-if (a = b) then 0 else (if (a < b) then -1 else 1) 
+if (a = b) then 0 else (if (a < b) then -1 else 1)
 
 let create_priority_list_fp plist =
-    let slist = List.sort_uniq (compare_period) plist in 
+    let slist = List.sort_uniq (compare_period) plist in
    (*let _ = List.iter (fun a -> (E.log "%d " a)) slist in *)
     let prlist = index_assoc slist 1 [] in
     (*let _ = List.iter (fun a -> (E.log "(%d ,%d)" (fst a) (snd a))) prlist in *)
-     prlist 
+     prlist
 
 let findHyperperiod tlist alist jlist =
     let tlist_minus_offset = List.filter (fun a -> (int_of_string (List.nth a 5)) <> 0) tlist in
