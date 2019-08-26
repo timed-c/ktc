@@ -1037,8 +1037,7 @@ let rec unrollToHyper hp tlist task_list jlist =
                         List.append ncsv2 (unrollToHyper hp ((List.filter
                          (fun a -> (List.nth a 0) <> name)) tlist) rest jlist)
 
-       |[] -> let _ = maplist := ["name"; ("index")] :: !maplist in
-            ((Csv.save "map" !maplist);[])
+       |[] -> []
 
 let to_csv_string ilist =
     List.map (fun a -> (string_of_int a)) ilist
@@ -1164,6 +1163,8 @@ let findHyperperiod tlist alist jlist =
         ncsv1) in*)
     let t = List.fold_right Pervasives.max (List.map (fun a -> List.nth a 3)
     ujblist) 0 in
+    let _ = maplist := ["name"; ("index")] :: !maplist in
+     let _ = (Csv.save "map" !maplist) in
     (*let _ = E.log "done\n" in*)
     let nwin = compute_observation_window (hp + maxos) ujblist 0 t in
     let new_win = if (nwin > (hp + maxos)) then nwin else (hp + maxos) in
