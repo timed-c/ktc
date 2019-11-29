@@ -1,3 +1,5 @@
+/* Pragma once instead of #ifndef + #define guards. */
+#pragma once
 
 #include <stdint.h>
 #include <setjmp.h>
@@ -71,7 +73,7 @@ typedef void * xQueueHandle;
 //#define aperiodic(x, ms)  printf("");sdelay(x, ms); int i =0; while(i){sdelay(0, ms);} printf("aperiodic\n")
 void ktc_fdelay();
 #define fdelay(val, unit) ktc_fdelay()
-#define WDT_start()  WDT_start();vTaskStartScheduler();
+//#define WDT_start()  WDT_start();vTaskStartScheduler();
 extern int period;
 extern int deadline;
 extern int runtime;

@@ -1,3 +1,5 @@
+/* Pragma once instead of #ifndef + #define guards. */
+#pragma once
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -60,6 +62,11 @@ typedef void * xQueueHandle;
 #define cwrite(chan, ptr)   xQueueSend( chan, &( ptr ), 0)
 #define cinit(chan, val) chan = xQueueCreate(20, sizeof(val) )
 #define cread_wait(chan, ptr, val)   xQueueReceive( chan, &( ptr ), val)
+//#define main() populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort); } void main()
+//#define aperiodic(x, ms)  printf("");sdelay(x, ms); int i =0; while(i){sdelay(0, ms);} printf("aperiodic\n")
+void ktc_fdelay();
+#define fdelay(val, unit) ktc_fdelay()
+//#define WDT_start()  WDT_start();vTaskStartScheduler();
 extern int period;
 extern int deadline;
 extern int runtime;
