@@ -434,17 +434,20 @@ let findTasks fglobal =
 
 
 
-let addtaskdelete slist =
-  let delete_inst = Call(None, v2e sdelayfuns.vtask_delete, [ Cil.zero;], locUnknown)  in
-  let revList = List.rev slist in
-  let last_stmt  = List.hd revList in
-  let is_ret = (match last_stmt.skind with 
+let addtaskdelete slist funname =
+    if (isFunTaskName funname) then 
+        (let delete_inst = Call(None, v2e sdelayfuns.vtask_delete, [ Cil.zero;], locUnknown)  in
+        let revList = List.rev slist in
+        let last_stmt  = List.hd revList in
+        let is_ret = (match last_stmt.skind with 
                 |Return(_,_) -> true
                 |_ -> false) in
-  let with_ret_rev = (List.append [mkStmtOneInstr delete_inst] (List.tl revList)) in
-  let with_ret = List.append (List.rev with_ret_rev) [last_stmt] in
-  let without_ret = List.append slist [mkStmtOneInstr delete_inst] in
-  if is_ret then with_ret else without_ret
+        let with_ret_rev = (List.append [mkStmtOneInstr delete_inst] (List.tl revList)) in
+        let with_ret = List.append (List.rev with_ret_rev) [last_stmt] in
+        let without_ret = List.append slist [mkStmtOneInstr delete_inst] in
+        if is_ret then with_ret else without_ret)
+    else 
+         (slist)
 
 (* lvchannel commenting out*)
 (*
@@ -796,7 +799,7 @@ class sdelayFunc filename fname = object(self)
                               fdec.sbody <- visitCilBlock modifysdelay fdec.sbody;  
 		fdec.sbody.bstmts <- List.append init_start fdec.sbody.bstmts;	
                 fdec.sbody.bstmts <- addTaskDelete fdec.sbody.bstmts [mkStmtOneInstr schedular_inst]; 
-                fdec.sbody.bstmts <- addtaskdelete fdec.sbody.bstmts ;
+                fdec.sbody.bstmts <- addtaskdelete fdec.sbody.bstmts fdec.svar.vname;
 		ChangeTo(fdec)
 
 end

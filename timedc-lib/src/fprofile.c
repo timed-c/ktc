@@ -102,7 +102,7 @@ int ktc_set_sched(int policy, int period, int priority, int deadline){
 	}
 	if(policy == FIFO_RM){
         // printf("%d\n", priority);
-		priority = sched_get_priority_max(SCHED_FIFO) - priority;
+		priority = (sched_get_priority_min(SCHED_FIFO)) + (10 - priority);
 		sa.sched_priority = priority;
 		sa.sched_policy = SCHED_FIFO;
 		//sa.sched_runtime = runtime;
@@ -112,7 +112,7 @@ int ktc_set_sched(int policy, int period, int priority, int deadline){
 	if(policy == FIFO_DM){
 		priority = compute_priority(list_dl, deadline);
 		priority = compute_priority(list_pr, period);
-		priority = sched_get_priority_max(SCHED_RR) - priority;
+		priority = sched_get_priority_min(SCHED_RR) - priority;
 		sa.sched_priority = priority;
 		sa.sched_policy = SCHED_FIFO;
 		sa.sched_runtime = runtime;
