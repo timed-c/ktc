@@ -2,18 +2,23 @@
 #pragma once
 
 #include <stdint.h>
+#include <setjmp.h>
+#include <pthread.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <pthread.h>
 #include <stdbool.h>
-#include <freertos/FreeRTOS.h>
+#include  <freertos/FreeRTOS.h>
 #include <freertos/timers.h>
 #include <freertos/queue.h>
-#include <freertos/task.h>
+#include  <freertos/task.h>
 
 #include<at91/utility/trace.h>
 #include<at91/peripherals/cp15/cp15.h>
 #include<at91/utility/exithandler.h>
 #include<at91/commons.h>
 
+#include<stdlib.h>
 
 #define MAX 5
 
@@ -58,6 +63,10 @@ typedef void * xQueueHandle;
 #define pre(c)  __attribute__((pre((c))))
 
 #define critical if((void *__attribute__((critical)))0)
+#define next if((void *__attribute__((next)))0) next()
+#define skipdelay skipdelay()
+#define exec_child(x) if(x == 0)
+//#define cread(chan, ptr); if((void *__attribute__((read_block))) (sizeof(#chan) > &ptr)) {sleep(0);}
 #define cread(chan, ptr)   xQueueReceive( chan, &( ptr ), ( portMAX_DELAY ))
 #define cwrite(chan, ptr)   xQueueSend( chan, &( ptr ), 0)
 #define cinit(chan, val) chan = xQueueCreate(20, sizeof(val) )
@@ -72,16 +81,22 @@ extern int deadline;
 extern int runtime;
 
 #define aperiodic(x, ms) runtime = x; deadline = x; period = x; ktc_set_sched(policy, runtime, period, deadline)
+//#define cwrite(chan, ptrw); if((void *__attribute__((write_block))) (sizeof(#chan) > ptrw)) {sleep(0);}
+//#define cinit(chan, val); if((void *__attribute__((init_block))) (sizeof(#chan) > val)) {sleep(0);}
 
 extern   TickType_t start_time ;
 void skipdelay();
 #define lvchannel __attribute__((lvchannel))
+#//define fifochannel  __attribute__((fifochannel))
 #define gettime(ms)  ktc_gettime(&start_time, #ms)
+//#define prioritychannel xQueueHandle
+#define fifochannel sardummy; xQueueHandle
 #define cread_wait(chan, ptr, val)   xQueueReceive( chan, &( ptr ), val)
 
 enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
 int policy;
 
+#define spolicy(X) policy =X; sdelay(0, ms);
 #define spriority(prio) vTaskPrioritySet(NULL, prio)
 void toggle_lock_tracking();
 
@@ -226,5 +241,6 @@ void mplog_write_to_file(int fp, struct minmax_struct* ls, int k, char* fname);
 #pragma cilnoremove("xQueue")
 #pragma cilnoremove("MAX")
 /*FREERTOS*/
+
 
 
