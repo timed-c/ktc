@@ -3,7 +3,7 @@
 ## Introduction
 ***
 
-**KTC** is a source-to-source compiler that compiles a Timed C file into a target specific C file. The current version of KTC supports translation of Timed C programs to real-time POSIX standard and FreeRTOS API. The KTC compiler has been tested to compile and run Timed C applications on Raspberry Pi running Raspian OS, Intel x86 processor running Ubuntu, an ARM based processor running FreeRTOS, and a PIC32 microcontroller running FreeRTOS.
+**KTC** is a source-to-source compiler that compiles a Timed C file into a target specific C file. The current version of KTC supports translation of Timed C programs to real-time POSIX standard and FreeRTOS API. The KTC compiler has been tested to compile and run Timed C applications on Raspberry Pi running Raspian OS, Intel x86 processor running Ubuntu, and a PIC32 microcontroller running FreeRTOS.
 
 ## Building and Installing KTC
 ***
@@ -25,6 +25,27 @@ Follow instructions below.
 	opam config env
 	opam depext conf-m4.1
 	opam install cil
+	eval $(opam config env)
+	
+#### 2. Windows Subsytem for Linux
+For windows machine we suggest running KTC on WSL.
+
+**(a.) OCaml dependencies**
+
+Install the following packages using apt-get. 
+
+	sudo apt-get install ocaml opam ocaml-findlib liblablgtk2-gl-ocaml libocamlgraph-ocaml-dev mercurial 
+
+**(a.) Install CIL**
+
+Follow instructions below.
+
+	opam init
+	opam config env
+	opam depext conf-m4.1
+	opam install cil
+	opam install csv
+	opam install yojson 
 	eval $(opam config env)
 	
 ### B. KTC Installation
