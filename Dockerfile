@@ -30,7 +30,8 @@ ENV PERL5LIB="/root/.opam/system/lib/perl5"
 ENV OCAML_TOPLEVEL_PATH="/root/.opam/system/lib/toplevel"
 ENV PATH="/root/.opam/system/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
+RUN ln -s /opt/ktc/bin/ktc /usr/bin/ktc
+
 WORKDIR /src
 
-ENTRYPOINT [ "/opt/ktc/bin/ktc" ]
-CMD [ "--help" ]
+CMD [ "/bin/bash" ]
