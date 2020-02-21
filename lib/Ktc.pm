@@ -8,7 +8,6 @@ $::version_minor = 0;
 $::version_sub = 0;
 
 use App::Cilly;
-
 # NOTE: If perl chokes, complaining about 'our', or
 # "Array found where operator expected", it's because
 # you need perl version 5.6.0 or later.

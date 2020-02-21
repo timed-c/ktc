@@ -4,6 +4,8 @@ module E = Errormsg
 
 module O = Ktcoptions
 
+let ktcversion = "1.0.0" 
+
 let parseOneFile (fname: string) : C.file =
   let cabs, cil = F.parse_with_cabs fname () in
   Rmtmps.removeUnusedTemps cil;
@@ -16,8 +18,9 @@ let outputFile (f : C.file) : unit =
 
       C.print_CIL_Input := false;
       Stats.time "printCIL"
+        output_string c ("/* Compiled with ktc version " ^ ktcversion ^ " */\n");
         (C.dumpFile (!C.printerForMaincil) c !O.outFile) f;
-      close_out c
+        close_out c
     with _ ->
       E.s (E.error "Couldn't open file %s" !O.outFile)
 
