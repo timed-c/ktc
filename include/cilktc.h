@@ -29,7 +29,7 @@ extern int setschedvar;
 #define task void* __attribute__((task))
 #define sdelay(intr, ...) sdelay(intr, intr, ##__VA_ARGS__)
 #define stp(pr, dl, unit) sdelay(pr, dl, unit)
-#define ftp(pr, dl, unit) if (pr == 0) skipdelay;  fdelay(pr, dl, unit)
+#define ftp(pr, dl, unit) fdelay(pr, dl, unit)
 #define fdelay(intr, ...) fdelay(intr, intr, ##__VA_ARGS__)
 #define gettime(unit)  ktc_gettime(unit);sdelay(-1404, 0)
 
@@ -45,7 +45,7 @@ extern int setschedvar;
 extern int period;
 extern int runtime;
 extern int deadline;
-
+extern jmp_buf ssenv;
 struct threadqueue {
 	pthread_mutex_t mutex;
 	pthread_cond_t cond;
@@ -117,7 +117,7 @@ extern long ktc_sdelay_init_profile(int deadline, int period, int unit, struct t
 extern long ktc_sdelay_init(int deadline, int period, int unit, struct timespec* start_time, int id ) ;
 extern long ktc_fdelay_init_profile(int interval,int period, int unit, struct timespec* start_time, int id, int num, int retjmp, FILE* fp, int pid, int priority,  struct tp_struct* tp, timer_t tid, int cwcet);
 extern long ktc_gettime(int unit);
-extern long ktc_fdelay_init(int interval,int period, int unit, struct timespec* start_time, int id, int num, int retjmp);
+extern long ktc_fdelay_init(int interval,int period, int unit, struct timespec* start_time, int id, int num, int retjmp, timer_t tid);
 extern long ktc_block_signal(int n);
 sigjmp_buf buf_struct;
 
@@ -392,6 +392,7 @@ void ktc_start_time_init_free(TickType_t *start_time);
 #pragma cilnoremove("plog_write_to_file")
 #pragma cilnoremove("log_struct")
 #pragma cilnoremove("minmax_struct")
+#pragma cilnoremove("ssenv")
 extern int autotest_finished;
 //extern int ktc_sdelay_end(char const   *f , int l , int intrval , char *unit ) ;
 //extern long ktc_sdelay_init(char const   *f , int l, int intrval, char* unit, struct timespec* start_time ) ;
@@ -406,6 +407,8 @@ void return_push(uint64_t p, uint64_t v);
 void return_pop(uint64_t p, uint64_t v);
 
 void autotest_reset();
+
+
 
 //int ktc_sdelay_end(char const   *f , int l , int intrval , char *unit ) ;
 //void ktc_sdelay_init(char const   *f , int l ) ;

@@ -96,7 +96,7 @@ void ktc_create_timer(timer_t* ktctimer, timer_t tid, struct tp_struct* tp, int 
 extern int ktc_start_time_init(struct timespec* start_time) ;
 extern long ktc_sdelay_init(int deadline, int period, int unit, struct timespec* start_time, int id ) ;
 extern long ktc_gettime(int unit);
-extern long ktc_fdelay_init(int interval, int period, int unit, struct timespec* start_time, int id, int num, int retjmp);
+extern long ktc_fdelay_init(int interval, int period, int unit, struct timespec* start_time, int id, int num, int retjmp, timer_t tid);
 sigjmp_buf buf_struct;
 
 

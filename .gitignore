@@ -110,3 +110,16 @@ bin/*.C
 bin/demo/
 bin/*.a
 bin/src
+include/*
+timedc-lib/src/*.a
+*.a
+*.pm
+profiler-test/
+timedc-lib/src/*.sh
+timedc-lib/src/*.s
+bin/*
+log
+ktc-compile
+timedc-lib/src/compile-mist-*
+timedc-lib/src/:w
+

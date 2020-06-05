@@ -82,6 +82,7 @@ type functions =
   mutable critical_end : varinfo;
   mutable pthread_create : varinfo;
   mutable pthread_join : varinfo;
+  mutable pthread_exit : varinfo;
   mutable log_trace_abort_time :varinfo;
   mutable log_trace_execution : varinfo;
   mutable log_trace_release : varinfo;
@@ -120,6 +121,7 @@ let sdelayfuns = {
   critical_end = dummyVar;
   pthread_create = dummyVar;
   pthread_join = dummyVar;
+  pthread_exit = dummyVar;
   log_trace_fclose = dummyVar;
   log_trace_final_file = dummyVar;
   log_trace_init = dummyVar;
@@ -155,10 +157,11 @@ let gettime_str = "ktc_gettime"
 let timer_create_str  = "ktc_create_timer"
 let sig_setjmp_str = "__sigsetjmp"
 let fdelay_start_timer_str = "ktc_fdelay_start_timer"
-let critical_start_str  = "ktc_critical_start"
-let critical_end_str = "ktc_critical_end"
+let critical_start_str  = "mktc_critical_start"
+let critical_end_str = "mktc_critical_end"
 let pthread_create_str = "pthread_create"
 let pthread_join_str = "pthread_join"
+let pthread_exit_str = "exit"
 let log_trace_previous_id_str = "plog_trace_end_id"
 let log_trace_fclose_str = "fclose"
 let log_trace_final_file_str = "plog_write_to_file"
@@ -195,6 +198,7 @@ let sdelay_function_names = [
   critical_end_str;
   pthread_create_str;
   pthread_join_str;
+  pthread_exit_str;
   log_trace_fclose_str;
   log_trace_final_file_str;
   log_trace_init_str;
@@ -282,6 +286,7 @@ let initSdelayFunctions (f : file)  : unit =
   sdelayfuns.htc_putmes <- focf htc_putmes_str init_type;
   sdelayfuns.log_get_time <- focf log_get_time_str init_type;
   sdelayfuns.pthread_join <- focf pthread_join_str init_type;
+  sdelayfuns.pthread_exit <- focf pthread_exit_str init_type;
   sdelayfuns.log_trace_init <- focf log_trace_init_str init_type;
   sdelayfuns.log_trace_fclose <- focf log_trace_fclose_str init_type;
   sdelayfuns.log_trace_final_file <- focf log_trace_final_file_str init_type;
@@ -359,10 +364,10 @@ let makeSdelayEndInstr fdec (structvar : varinfo) (timervar : varinfo) (tp : var
   let start_time_init = Call(None, v2e sdelayfuns.start_timer_init, [s;], locUnknown) in
   let t =  mkAddrOf((var timervar)) in
   let handlrt = mkAddrOf((var tp)) in
- (* let ktctime_var = findLocalVar fdec.slocals ("ktctime") in
+  (*let ktctime_var = findLocalVar fdec.slocals ("ktctimer") in
   let itime_init_start_time = Set((Var(ktctime_var), NoOffset), (v2e
   structvar), locUnknown) in *)
-  [mkStmtOneInstr start_time_init(*; mkStmtOneInstr itime_init_start_time*)]
+  [mkStmtOneInstr start_time_init] (* mkStmtOneInstr itime_init_start_time]*)
 
 
 let makeTimerCreate fdec (structvar : varinfo) (timervar : varinfo) (tp : varinfo) (signo : int)=
@@ -380,7 +385,7 @@ let makeSdelayEndInstr (structvar : varinfo) (timervar : varinfo) (tp : varinfo)
 *)
 
 let makeFdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc :
-    location) (retjmp) (signo) tpstructvar (lv ) =
+    location) (retjmp) (signo) tpstructvar (lv ) timervar =
   let time_unit = if ((L.length argL) = 3 && not (isZero (L.hd argL))) then mkString  (E.s (E.error "%s:%d: error : unknown resolution of timing point" loc.file loc.line))  else (L.nth argL 2) in
   let f, l, deadline, period, tunit, s, t_id = mkString loc.file, integer loc.line, L.hd argL, (L.nth argL 1), time_unit, mkAddrOf((var structvar)), (List.hd(List.rev argL)) in
   let waitingOffset = match tpstructvar.vtype with
@@ -390,7 +395,7 @@ let makeFdelayInitInstr fdec (structvar : varinfo) (argL : exp list) (loc :
   let count_var  = findLocalVar fdec.slocals ("ktccount") in
     let loop_var  = findLocalVar fdec.slocals ("ktcloopvar") in*)
   [waitingConditionInstr; Call(lv,v2e sdelayfuns.fdelay_init,
-  [deadline;period;tunit;s;t_id;(v2e retjmp); signo (*((mkAddrOf
+  [deadline;period;tunit;s;t_id;(v2e retjmp); signo; v2e timervar (*((mkAddrOf
   ((Var(logname_var), Index(v2e loop_var, NoOffset))))); (v2e count_var)*)], loc)]
 
 let makegettimeInstr lv (structvar : varinfo) (argL : exp list) loc =
@@ -400,13 +405,11 @@ let makegettimeInstr lv (structvar : varinfo) (argL : exp list) loc =
 let makespolicysetInstr runtime period deadline policy =
   Call(None,v2e sdelayfuns.spolicy_set, [v2e policy; v2e runtime; v2e deadline; v2e period], locUnknown)
 
-let makeCriticalStartInstr (sigvar : varinfo) (loc: location) =
-	let argSig = mkAddrOf (var sigvar) in
-	i2s	(Call(None, v2e sdelayfuns.critical_start, [argSig;], loc) )
+let makeCriticalStartInstr signo  =
+	i2s	(Call(None, v2e sdelayfuns.critical_start, [integer signo], locUnknown) )
 
-let makeCriticalEndInstr (sigvar : varinfo) (loc: location)=
-        let argSig = mkAddrOf (var sigvar) in
-        i2s ( Call(None, v2e sdelayfuns.critical_end, [argSig;], loc) )
+let makeCriticalEndInstr signo =
+        i2s ( Call(None, v2e sdelayfuns.critical_end, [integer signo], locUnknown) )
 
 let makePthreadCreateInstr (threadvar : varinfo) (funvar : varinfo) argList
 (loc:location) fdec =
@@ -428,6 +431,9 @@ let makePthreadCreateInstr (threadvar : varinfo) (funvar : varinfo) argList
 let makePthreadJoinInstr fdec (threadvar : varinfo)  =
 	let threadvoidptr = makeLocalVar fdec (threadvar.vname^"_join") (voidPtrType) in
           mkStmt (Instr([(Call(None, v2e sdelayfuns.pthread_join, [v2e threadvar; (mkAddrOf (var threadvoidptr));], locUnknown))]))
+
+let makePthreadExit fdec =
+          mkStmt (Instr([(Call(None, v2e sdelayfuns.pthread_exit, [(integer 1)], locUnknown))]))
 
 let ifBlockFunc goto_stmt retjmp =
 	(*goto_stmt.skind <- Goto(ref goto_stmt, locUnknown);*)
@@ -506,13 +512,14 @@ let policyValue data hstm runtime deadline period priority policy list_dl list_p
 
 
 
-let maketimerfdelayStmt structvar argList tpstructvar timervar retjmp firmStmt timer_creater =
+let maketimerfdelayStmt structvar argList tpstructvar timervar retjmp firmStmt timer_creater filename =
 	 let offset' = match tpstructvar.vtype with
 			   | TComp (cinfo, _) -> Field (getCompField cinfo "env", NoOffset) in
 	 let waitingOffset = match tpstructvar.vtype with
 			   | TComp (cinfo, _) -> Field (getCompField cinfo "waiting", NoOffset) in
 	let waitingConditionStmt = mkStmtOneInstr(Set((Var tpstructvar, waitingOffset), Cil.zero, locUnknown)) in
-	let buf = Lval(Var tpstructvar, offset') in
+	(*let buf = Lval(Var tpstructvar, offset') in*)
+    let buf = v2e (findGlobalVar filename.globals ("ssenv")) in
 	let i = Cil.one in
  	let argL = if L.length argList < 5 then argList else (L.tl argList) in
 	let time_unit = L.nth argL 2 in
@@ -548,9 +555,20 @@ let pthreadJoinList fdec slist =
 	let revList = List.append [ret_stmt] revList in
 		List.rev revList
 
+let addPthreadExit fdec slist =
+	let revList = List.rev slist in
+	let ret_stmt  = List.hd revList in
+	let revList = List.tl revList in
+	let pthreadexit_stmt = makePthreadExit fdec in
+    let newstmnt = [pthreadexit_stmt] in
+	let revList = List.append newstmnt revList in
+	let revList = List.append [ret_stmt] revList in
+		List.rev revList
+
 let addPthreadJoin fdec slist =
 	if List.length !all_threads = 0 then slist
 	else  pthreadJoinList fdec slist
+
 
 let instrTimingPoint (i : instr) : bool =
    match i with
@@ -560,8 +578,8 @@ let instrTimingPoint (i : instr) : bool =
 
 let instrTimingPointAftr (i : instr) : bool =
    match i with
-    | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_sdelay_init_profile") ->  true
-    | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "ktc_fdelay_init_profile")  -> true
+    | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_sdelay_init") ->  true
+    | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "ktc_fdelay_init")  -> true
     | _ -> false
 
 (*
@@ -904,6 +922,70 @@ let isdeadlineInfinity argList =
                                 Int")) in
         arrival_time_int
 
+let rec checkForFTPInstrList ilist =
+        match ilist with
+        | ih:: rst -> (match ih with
+                       |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> Some(0)
+                       |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> Some(1)
+                       |Call(lv,Lval(Var vi,_),argList,loc) -> checkForFTPInstrList rst 
+                       | _ -> checkForFTPInstrList rst)
+        |_ -> None
+
+let rec printInstrList ilist =
+        match ilist with
+        | ih:: rst -> (match ih with
+                       |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> E.log "sdelay\n"
+                       |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> E.log "fdelay\n"
+                       |Call(lv,Lval(Var vi,_),argList,loc) -> E.log "%s\n" vi.vname; printInstrList rst 
+                       | _ -> printInstrList rst)
+        |_ -> ()
+
+let printRecStmnt sh =
+        match sh.skind with 
+        |Instr ilist -> printInstrList ilist; E.log "instruction list\n"
+        |If(_,b1,b2,_) -> E.log "if-else\n"
+        |Loop(b,_,_,_) -> E.log "loop\n"
+        |Return(_,_) -> E.log "return\n"
+        |_ -> E.log "others\n"
+
+
+
+let rec propertyStmnt slist res = 
+        match slist with
+        |sh::rst -> (match res with 
+                     |Some(t) -> Some(t) 
+                     |None -> let  prop = propertyRecStmnt sh  in 
+                                 propertyStmnt rst prop )
+        | [] -> res
+
+and propertyRecStmnt sh =
+        match sh.skind with 
+        |Instr ilist -> checkForFTPInstrList ilist 
+        |If(_,b1,b2,_) -> let res = propertyStmnt b1.bstmts None in propertyStmnt b2.bstmts res
+        |Loop(b,_,_,_) -> propertyStmnt (List.tl b.bstmts) None 
+        |Return(_,_) -> None
+        |_ -> None
+
+let rec propertyStmntUntilReturn slist = 
+        let res = propertyStmnt slist None in
+        match res with 
+        |None -> let s = List.hd (List.rev slist) in
+                 (match (s.skind) with 
+                  |Return(_,_) -> res 
+                  |_ -> propertyStmntUntilReturn (s.succs))
+        |Some(t) -> Some(t)
+
+let rec propertyStmntWhile slist = 
+        let res = propertyStmnt slist None in
+        match res with 
+        |None -> (match slist with 
+                |[] -> None 
+                |_ -> let s = List.hd (List.rev slist) in
+                      (match (s.skind) with 
+                       |Return(_,_) -> res 
+                       |_ -> propertyStmntWhile (s.succs)))
+        |Some(t) -> Some(t)
+
 
 class fProfilingAdder filename fdec = object(self)
     inherit nopCilVisitor
@@ -1029,7 +1111,37 @@ count_var loop_var fopn = object(self)
 
 end
 
+class staticAnalysisProperty filename fdec = object(self) 
+    inherit nopCilVisitor
+	method vstmt (s: stmt) =
+        (*let _ =  E.log "staticAnalysisProperty" in *)
+        (*let _ = Cfg.clearFileCFG filename; Cfg.computeFileCFG filename in*)
+        match s.skind with
+        |If(CastE(t,e),b1,b2,loc) when (isCriticalType t) -> let successors = s.succs in  
+                                                           let prop_critical = propertyStmntUntilReturn (s.succs) in
+                                                           (match prop_critical with 
+                                                            | Some(1) -> ()
+                                                            | Some(0) -> (Printf.eprintf "%s:%d:" loc.file loc.line); E.s (E.error "Critical block not followed by FTP\nERR-CRITICAL")
+                                                            | None -> (Printf.eprintf "%s:%d:" loc.file loc.line); E.s (E.error "Critical block not followed by FTP\nERR-CRITICAL")); DoChildren
+        |If(_,b1,b2,loc)  -> let prop_critical_b1 = propertyStmnt b1.bstmts None in 
+                           let prop_critical_b2 = propertyStmnt b2.bstmts None in 
+                           (match (prop_critical_b1, prop_critical_b2) with 
+                           | (Some(1), _) -> E.s (E.error "\nERR-FTP")
+                           | (_, Some(1)) -> E.s (E.error "\nERR-FTP")
+                           | (_,_) -> ()); DoChildren
+        |Loop(b,_,_,Some(br)) -> let infinite_while = (match [br] with
+                                                | [] -> true
+                                                | _ -> false)   in
+                                 let prop_critical_b = if infinite_while then None else propertyStmnt b.bstmts None in
+                                 let prop_critical_br = if infinite_while then None else propertyStmntWhile [br]  in
+                                (match (prop_critical_b,prop_critical_br) with 
+                                | (Some(1),_) -> E.s (E.error "\nERR-FTP")
+                                | (_, Some(1)) -> E.s (E.error "\nERR-FTP")
+                                | (_,_) -> ()); DoChildren
 
+        |_ ->  DoChildren
+
+end 
 
 class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp :
     varinfo) data fname sigvar  signo timer_creater = object(self)
@@ -1052,9 +1164,9 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp :
         lv else makeSdelayInitInstr fdec structvar (L.tl argList) loc lv
     |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> if
         L.length argList < 5 then makeFdelayInitInstr fdec structvar argList loc
-        ret_jmp (integer signo) tpstructvar lv else makeFdelayInitInstr
+        ret_jmp (integer signo) tpstructvar lv timervar else makeFdelayInitInstr
         fdec structvar (L.tl argList) loc ret_jmp (integer signo) tpstructvar
-        lv
+        lv timervar
 	|Call(lv ,Lval(Var vi,_), argList, loc) when (vi.vname = "gettime") -> makegettimeInstr lv structvar argList loc
 	(*|Call(_,LVal(Var vi,_),_,loc) when (vi.vname = "next") -> makeNextGoto loc *)
 	|Call(_,Lval(Var vi,_),argList,_) when (isFunTask vi) ->
@@ -1112,14 +1224,14 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp :
                          let firmSuccInst = retFirmSucc s data in
                          let intr = getInstr firmSuccInst in
                          let addthisTo = maketimerfdelayStmt structvar intr
-                         tpstructvar timervar ret_jmp firmSuccInst timer_creater in
+                         tpstructvar timervar ret_jmp firmSuccInst timer_creater filename in
                          s.skind <- Block (mkBlock (List.append
                          [(mkStmtOneInstr (List.find instrTimingPointAftr il))]
                           (addthisTo))); s
 			end
 	|If(CastE(t,z),b,_,_) when isCriticalType t ->  begin
-							let cs_start = makeCriticalStartInstr sigvar (get_stmtLoc s.skind) in
-							let cs_end = makeCriticalEndInstr sigvar (get_stmtLoc s.skind) in
+							let cs_start = makeCriticalStartInstr signo in
+							let cs_end = makeCriticalEndInstr signo in
 							let nb = mkBlock[cs_start; mkStmt (Block b); cs_end] in
 							s.skind <- Block nb; s
 							end
@@ -1331,13 +1443,23 @@ class mergeDelays filename = object(self)
 
 end
 
+class staticAnalysisFunc filename = object(self)
+        inherit nopCilVisitor 
+        method vfunc (fdec : fundec) =
+        let _ = Cfg.clearFileCFG filename; Cfg.computeFileCFG filename in
+        let _ = Cfg.printCfgFilename (fdec.svar.vname ^ ".dot") fdec in 
+        let sap = new staticAnalysisProperty filename fdec in 
+        visitCilBlock sap fdec.sbody; Cfg.clearFileCFG filename; DoChildren
+end
+
+
 class sdelayFunc filename fname fno = object(self)
         inherit nopCilVisitor
 
         method vfunc (fdec : fundec) =
-	    (*	Cfg.clearFileCFG filename; Cfg.computeFileCFG filename;
+	    (*Cfg.clearFileCFG filename; Cfg.computeFileCFG filename;
    		Cfg.printCfgFilename (fdec.svar.vname ^ ".dot") fdec; *)
-		 Cfg.clearFileCFG filename; all_threads := [];
+        Cfg.clearFileCFG filename; all_threads := [];
 	(*	Cfg.cfgFunPrint (fdec.svar.vname^".dot") fdec;
 	        computeAvail fdec;
 		computeTPSucc fdec;
@@ -1372,8 +1494,8 @@ class sdelayFunc filename fname fno = object(self)
           fdec.sbody.bstmts <- blocksg :: fdec.sbody.bstmts;
 		fdec.sbody.bstmts <- List.append init_start fdec.sbody.bstmts;
 		fdec.sbody.bstmts <- addPthreadJoin fdec fdec.sbody.bstmts ;
-		(*if fdec.svar.vname = "main" then
-		fdec.sbody.bstmts <- populate_instr :: fdec.sbody.bstmts;*)
+		 if (fdec.svar.vname <> "main") then
+		(fdec.sbody.bstmts <- addPthreadExit fdec fdec.sbody.bstmts);
                 ChangeTo(fdec)
 
 end
@@ -1801,6 +1923,10 @@ let timingConstructsTransformatn f =
         let vis = new sdelayFunc f fname 0 in
         visitCilFile vis f
 
+let staticAnalysis f =
+        let vis = new staticAnalysisFunc f  in
+        visitCilFile vis f
+
 let fillgloballist_pr_dl f =
 	let vis = new populate_pr_dl f in
 	visitCilFile vis f
@@ -1903,17 +2029,14 @@ let fifoAnalysi f =
         visitCilFile cVis f
 
 let sdelay (f : file) : unit =
-initSdelayFunctions f; (*mergeTimingPoints f ;*) timing_basic_block f;
+        (*staticAnalysis f; *) initSdelayFunctions f; (*mergeTimingPoints f ;*) timing_basic_block f;
 (*addpolicyDetail f;*) timing_basic_block f;  Cfg.clearFileCFG f; Cfg.computeFileCFG f;  addLabel f;  Cfg.clearFileCFG f; concurrencyA f;
 (*List.iter (fun (a,b) -> E.log "(%s %d)" a b) !all_task; *) chanReaderWriterAnalysis f;
    (*profileTransformation f;*) timingConstructsTransformatn f;
     (*fProfileTransformation f;*) (*tfgMinusGeneration f;*)  (*fifoAnalysi f; concurrencyConstructsTransformatn f ;*) fillgloballist_pr_dl f;  ()
-
-
 
 (*
 let sdelay (f : file) : unit =
   initSdelayFunctions f; Ciltools.one_instruction_per_statement f ; let fname = "sdelay" in
   let vis = new sdelayFunc f fname in
  *)
-

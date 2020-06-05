@@ -419,7 +419,7 @@ let computeAvail ?(doCFG:bool=false) (f: fundec)  =
 let isFirm (i : instr) : bool =
    match i with
     | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "fdelay") -> true
-    | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_fdelay_init_free") -> true
+    | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_fdelay_init") -> true
     | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "sdelay")  ->  false
     | _ -> false
 
@@ -427,7 +427,7 @@ let isTimingPoint (i : instr) : bool =
    match i with
     | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "fdelay") -> true
     | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "sdelay")  -> true
-    | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_fdelay_init_free") -> true
+    | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_fdelay_init") -> true
     | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "ktc_sdelay_init_free") -> true
     | _ -> false
 
@@ -597,7 +597,7 @@ let retTimingPoint s =
 let retFirm s =
 	match s.skind with
 	| Instr il ->  begin
-			if List.length il = 1  && (isFirm (List.hd il)) then
+			if ((List.length il = 1)  && (isFirm (List.hd il))) then
 				true
 			else
 				false
@@ -611,12 +611,12 @@ let checkSuccs (data: TS.t IH.t) (s: stmt) =
 		let firmsucc = TS.filter retFirm tsuccsofs  in
 			(if (TS.cardinal firmsucc > 1) then
 				let loc = get_stmtLoc s.skind in
-				  (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "conflicting firm timing point 1")
+        (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "conflicting firm timing point 1\nERR-FTP")
 			else
 			begin
 				if ((TS.cardinal firmsucc > 0) && (TS.cardinal totalSucc > 1)) then
   				let loc = get_stmtLoc s.skind in
-				  (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "conflicting firm timing point 2") end)
+                (Printf.eprintf "%s:%d:" loc.file loc.line)  ; E.s (E.error "conflicting firm timing point 2\nERR-FTP"); end)
 
 let checkFirmSuccs (data: TS.t IH.t) (s: stmt) =
         let tsuccsofs = getStmtTPSucc data s in

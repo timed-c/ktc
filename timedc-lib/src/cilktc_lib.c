@@ -19,7 +19,7 @@ long timespec_to_unit(struct timespec val, int unit){
 	unit_ns = unit_ns + unit;
 	unit_sec = unit_sec - unit;
 	//printf("Time Elapsed- %lld.%.9ld\n", (long long)(val.tv_sec), (val.tv_nsec)) ;
-	return(val.tv_sec * (pow(10.0, unit_sec))  + val.tv_nsec/pow(10.0, unit_ns));
+	return(val.tv_sec * (pow(10.0, unit_sec))  + round((float)val.tv_nsec/pow(10.0, unit_ns)));
 
 	/* Example of conversion
         seconds : unit = 0 
@@ -97,7 +97,7 @@ struct timespec convert_to_timespec(long interval, int unit){
         struct timespec temp;
 	int abs_unit = abs(unit);
 	if(unit < 0){
-		temp.tv_sec = interval/pow(10, abs_unit);
+		temp.tv_sec = (interval/pow(10, abs_unit));
 		temp.tv_nsec = (interval % (int)pow(10, abs_unit)) * (pow(10, 9 + unit));
 	}
 	if( unit == 0){
