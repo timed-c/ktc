@@ -27,6 +27,7 @@ extern int setschedvar;
 //#define spolicy(X) setschedvar = 1; policy =X; sdelay(-2103, ms);
 #define spolicy(X) ktcpolicy=X;
 #define task void* __attribute__((task))
+#define htp(pr, dl, unit) stp(pr, dl, unit)
 #define sdelay(intr, ...) sdelay(intr, intr, ##__VA_ARGS__)
 #define stp(pr, dl, unit) sdelay(pr, dl, unit)
 #define ftp(pr, dl, unit) fdelay(pr, dl, unit)

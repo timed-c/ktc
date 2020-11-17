@@ -4,7 +4,7 @@ module E = Errormsg
 
 module O = Ktcoptions
 
-let ktcversion = "1.0.0" 
+let ktcversion = "1.1.0" 
 
 let parseOneFile (fname: string) : C.file =
   let cabs, cil = F.parse_with_cabs fname () in
@@ -26,7 +26,7 @@ let outputFile (f : C.file) : unit =
 
 let processOneFile (cil: C.file) : unit =
   if !(O.enable_ext.(0)) then Sdelay.sdelay cil;
-  if !(O.enable_ext.(1)) then Fdelay.sdelay cil;
+  if !(O.enable_ext.(1)) then Fdelay.sdelay cil true;
   (*if !(O.enable_ext.(2)) then Profile.sdelay cil;*)
   if !(O.enable_ext.(2)) then Pfile.sdelay cil;
   if !(O.enable_ext.(3)) then Ptfg.sdelay cil;

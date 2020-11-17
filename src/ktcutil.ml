@@ -357,11 +357,11 @@ let printAvailCFG s tsucc  =
 	match s.skind with
 	| Instr il when List.length il = 1->  begin
 			match List.hd il with
-			|Call(_, Lval(Var vi, _),_,_) when vi.vname = "fdelay" -> E.log "\n%d [label= \"%s\"]" s.sid vi.vname; List.iter (printSucc s) tsucc
-        		|Call(_, Lval(Var vi, _),_,_) when vi.vname = "sdelay" -> E.log "\n%d [label= \"%s\"]" s.sid vi.vname; List.iter (printSucc s) tsucc
-			|_ -> E.log ""
+			|Call(_, Lval(Var vi, _),_,_) when vi.vname = "fdelay" ->(* E.log "\n%d [label= \"%s\"]" s.sid vi.vname;*) List.iter (printSucc s) tsucc
+        		|Call(_, Lval(Var vi, _),_,_) when vi.vname = "sdelay" -> (* E.log "\n%d [label= \"%s\"]" s.sid vi.vname;*) List.iter (printSucc s) tsucc
+			|_ -> (*E.log ""*) ()
 				end
-        |_ -> E.log ""
+        |_ -> (*E.log ""*) ()
 
 let printTimeCFG oc s tsucc  =
 	(*let h = fprintf oc "diagraph Timed_CFG {" in *)

@@ -18,13 +18,7 @@ let labelHash =  HT.create 64
 let tp_id = ref 0
 let all_task = ref []
 let fifovarlst = ref []
-	(*let all_read = ref []
-	let all_write = ref[] *) 
 let all_handles = ref []
-	(*let readChanHash = HT.create 34 
-	let writeChanHash = HT.create 34
-	let simpsonChanSet = HT.create 34 
-	*)
 let fifoChanSet = HT.create 34
 
 
@@ -39,35 +33,20 @@ let init_str = "init_block"
 
 
 let hasCriticalAttrs : attributes -> bool = hasAttribute critical_str
-
 let isCriticalType (t : typ) : bool = t |> typeAttrs |> hasCriticalAttrs
-
 let hasNextAttrs : attributes -> bool = hasAttribute next_str
-	
 let isNextType (t : typ) : bool = t |> typeAttrs |> hasNextAttrs
-
 let hasTaskAttrs : attributes -> bool = hasAttribute task_str
-	
 let isTaskType (t : typ) : bool = t |> typeAttrs |> hasTaskAttrs
-
-let hasLVAttrs : attributes -> bool = hasAttribute lv_str
-	
+let hasLVAttrs : attributes -> bool = hasAttribute lv_str	
 let isLVType (t : typ) : bool = t |> typeAttrs |> hasLVAttrs
-
-let hasReadAttrs : attributes -> bool = hasAttribute read_str
-	
+let hasReadAttrs : attributes -> bool = hasAttribute read_str	
 let isReadType (t : typ) : bool = t |> typeAttrs |> hasReadAttrs
-
-let hasWriteAttrs : attributes -> bool = hasAttribute write_str
-	
+let hasWriteAttrs : attributes -> bool = hasAttribute write_str	
 let isWriteType (t : typ) : bool = t |> typeAttrs |> hasWriteAttrs
-
 let hasFIFOAttrs : attributes -> bool = hasAttribute fifo_str
-
 let isFifoType (t : typ) : bool = t |> typeAttrs |> hasFIFOAttrs
-
 let hasInitAttrs : attributes -> bool = hasAttribute init_str
-
 let isInitType (t : typ) : bool = t |> typeAttrs |> hasInitAttrs
 
 
@@ -151,24 +130,22 @@ let sdelay_function_names = [
 
 let findGlobalFifo (f : file)  =
   let glist = List.find_all (fun gi -> match gi with
-			|GVar(vi, _, _) when  (isFifoType vi.vtype)  -> true
-			|_ ->  false ) f.globals  in
+                                       |GVar(vi, _, _) when  (isFifoType vi.vtype)  -> true
+			                           |_ ->  false ) f.globals  in
   let vchan = List.map (fun gv -> match gv with
-			|GVar(vi, _, _) -> vi.vname
-			|_ -> E.s (E.bug "List must only contain global variable declaration\n"); "error"
-	     ) glist   in
+			                      |GVar(vi, _, _) -> vi.vname
+			                      |_ -> E.s (E.bug "List must only contain global variable declaration\n"); "error") glist in
   vchan
 
 
 let findGlobalFifoVar (f : file) str  =
   let glist = List.find_all (fun gi -> match gi with
-			|GVar(vi, _, _) when  (vi.vname = str)  -> true
-			|_ ->  false ) f.globals  in
+			                           |GVar(vi, _, _) when  (vi.vname = str)  -> true
+			                           |_ ->  false ) f.globals  in
   let vchan = List.map (fun gv -> match gv with
-			|GVar(vi, _, _) -> vi
-			|_ -> E.s (E.bug "List must only contain global variable declaration\n")
-	     ) glist   in
-		(List.hd vchan)
+			                      |GVar(vi, _, _) -> vi
+			                      |_ -> E.s (E.bug "List must only contain global variable declaration\n")) glist in
+  (List.hd vchan)
 	
 
 let findGlobalLvc (f : file)  =
@@ -283,7 +260,7 @@ let getvaridStmt s =
 
 let get_label_no i =
 	match i with
-	|Call(_,Lval(Var vf,_),argList,_) -> E.log "%s\n" vf.vname; List.hd (List.rev argList)
+	|Call(_,Lval(Var vf,_),argList,_) -> (*E.log "%s\n" vf.vname;*) List.hd (List.rev argList)
 
 let getInstruction s =
 	match s.skind with
@@ -548,17 +525,17 @@ class sdelayReportAdder filename fdec structvar jmpvar timervar ret_jmp data fna
 	|Call(lv, Lval(Var vi,_),argList,loc) when (vi.vname = fname) -> makeSdelayInitInstr structvar argList loc lv
 	|Call(lv, Lval(Var vi,_),argList,loc) when (vi.vname = sname) -> makeFdelayInitInstr structvar argList loc timervar lv ret_jmp
 	(*|Call(_,LVal(Var vi,_),_,loc) when (vi.vname = "next") -> makeNextGoto loc *)
-	|Call(_,Lval(Var vi,_),arg,_) when (isFunTask vi) -> let t1 = E.log "task 1" in
+	|Call(_,Lval(Var vi,_),arg,_) when (isFunTask vi) -> (*let t1 = E.log "task 1" in*)
 							let xhandleType = findType filename.globals "TaskHandle_t" in
-							let t2 = E.log "task 2" in
+							(*let t2 = E.log "task 2" in*)
 							let xhandleVar = makeLocalVar fdec ("t_"^string_of_int(List.length !all_handles)) xhandleType in 
-							let t3 = E.log "task 3" in
+							(*let t3 = E.log "task 3" in*)
 							let idleVar = findGlobalVar filename.globals "idle_prio" in
-							let t4 = E.log "task 4" in
+							(*let t4 = E.log "task 4" in*)
 							let priovar = 5 - !fprio in
 							let _ = if (!fprio > 1) then fprio := !fprio - 1 in
 							let intr = makeTaskCreateInstrVarExp xhandleVar vi (integer !fprio) locUnknown arg in
-							let t5 = E.log "task5" in
+							(*let t5 = E.log "task5" in*)
 							all_handles := xhandleVar  :: (!all_handles); [intr]  
 
 							(*let t1 = E.log "task 1" in
@@ -611,17 +588,18 @@ SkipChildren  *)
 method vstmt s =
 let action s =
 match s.skind with
-|Instr (il) when il <> []  -> E.log "start" ; begin 
+|Instr (il) when il <> []  -> 
+        begin 
 	       if instrTimingPointAftr (List.hd il) && (checkFirmSuccs data s) then
 	       let so = if (checkFirmSuccs data s) then E.log "true" else E.log "false"; Cil.zero in 
 	       let firmSuccInst = retFirmSucc s data in
-	       let s1 = E.log "s1" in 
+	       (*let s1 = E.log "s1" in*) 
 	       let intr = getInstr firmSuccInst in
-	       let s2 = E.log "s2" in
+	       (*let s2 = E.log "s2" in*)
 	       let addthisTo = maketimerfdelayStmt structvar intr timervar ret_jmp firmSuccInst jmpvar in
-	       let s3 = E.log "s3" in
+	       (*let s3 = E.log "s3" in*)
 	       let changStm =  List.append  [mkStmtOneInstr (List.hd il)] addthisTo in
-		 let s4 = E.log "s4" in
+		 (*let s4 = E.log "s4" in*)
 	       let nb = mkBlock changStm in
 	       s.skind <- Block nb; ()
 	       end; s
@@ -641,7 +619,7 @@ match s.skind with
 						let rtjmp =mkStmtOneInstr( Set((var ret_jmp), Cil.one, locUnknown)) in
 						let nb = mkBlock[rtjmp; goto_label] in
 						s.skind <- Block nb; ()
-						end;E.log "next-end"; s(*
+						end;(*E.log "next-end";*) s(*
 	|If(CastE(t,z),b,_,_) when isTaskType t -> begin
 						let pthread_id_str = "pthread_t" in
 						let pthread_id_type = findTypeinfo filename pthread_id_str in 
@@ -728,7 +706,7 @@ class addLabelStmt fdec = object(self)
 			let label_no =  (get_label_no (List.hd il) )in
 			(*let label_no =  getvaridStmt s in*)
 			let label_stmt = mkStmt (Instr []) in 
-				label_stmt.labels <- [Label(label_name,locUnknown,false)]; E.log "s.sid  %d \n" s.sid; HT.add labelHash label_no label_stmt; 
+				label_stmt.labels <- [Label(label_name,locUnknown,false)]; (*E.log "s.sid  %d \n" s.sid;*) HT.add labelHash label_no label_stmt; 
 			let changStmTo = List.append [label_stmt][mkStmt s.skind] in
 			let block = mkBlock  changStmTo in
 			s.skind <- Block block ;
@@ -764,20 +742,14 @@ let addLabel f =
 
 
 
-class sdelayFunc filename fname = object(self)
+class sdelayFunc filename fname fexist = object(self)
 	inherit nopCilVisitor
-
 	method vfunc (fdec : fundec) =
 		Cfg.clearFileCFG filename; Cfg.computeFileCFG filename; 
 		Cfg.printCfgFilename (fdec.svar.vname ^ ".dot") fdec;
-		 Cfg.clearFileCFG filename; all_handles := [];
-	(*	Cfg.cfgFunPrint (fdec.svar.vname^".dot") fdec; 
-		computeAvail fdec; 
-		computeTPSucc fdec; 
-		computeAvail  fdec; 
-		let data = checkTPSucc fdec in *)
+		Cfg.clearFileCFG filename; all_handles := [];
 		let timername = "TimerHandle_t" in
-		let ftimer =  findType filename.globals timername in 
+       	let ftimer =  findType filename.globals timername in 
 		let ftimer = makeLocalVar fdec (fdec.svar.vname^"_timer") ftimer in             
 		let tickname = "TickType_t" in
 		let ci = findType filename.globals tickname in
@@ -789,19 +761,13 @@ class sdelayFunc filename fname = object(self)
 		let init_start = makeSdelayEndInstr timevar ftimer temptime jmpvar fdec.svar.vname  in
 		let data =  checkTPSucc fdec filename  in 
 		let y = checkAvailOfStmt fdec in
-	(*	let addl = new  addLabelStmt filename in
-		fdec.sbody <- visitCilBlock addl  fdec.sbody ; *)
-		(*let y' = isErrorFree filename in*)
 		let modifysdelay = new sdelayReportAdder filename fdec timevar jmpvar ftimer ret_jmp data fname  in
-		(*E.log "passed this";*)
-		let kk = E.log "Done" in
-                let schedular_inst = Call(None, v2e sdelayfuns.ktc_start_scheduler, [], locUnknown)  in
+		let schedular_inst = Call(None, v2e sdelayfuns.ktc_start_scheduler, [], locUnknown)  in
                               fdec.sbody <- visitCilBlock modifysdelay fdec.sbody;  
 		fdec.sbody.bstmts <- List.append init_start fdec.sbody.bstmts;	
                 fdec.sbody.bstmts <- addTaskDelete fdec.sbody.bstmts [mkStmtOneInstr schedular_inst]; 
                 fdec.sbody.bstmts <- addtaskdelete fdec.sbody.bstmts fdec.svar.vname;
 		ChangeTo(fdec)
-
 end
 
 
@@ -910,10 +876,11 @@ let concurrencyA f =
 	visitCilFile vis f
 
 
-let timingConstructsTransformatn f =
-	 let fname = "sdelay" in
-	let vis = new sdelayFunc f fname in
+let timingConstructsTransformatn f fexist =
+    let fname = "sdelay" in
+	let vis = new sdelayFunc f fname fexist in
 	visitCilFile vis f
+
 
 (*
 let concurrencyConstructsTransformatn f =
@@ -1001,7 +968,7 @@ class fifoQu f fdec  = object(self)
 						   let init_call = Call(None, v2e sdelayfuns.fifo_init, [(mkAddrOf(var fifovar));], locUnknown) in
 						   let slist = [mkStmtOneInstr init_call] in
 						   let nb = mkBlock slist in
-						    s.skind <- Block nb; E.log "INIT-END"; s
+						    s.skind <- Block nb; (*E.log "INIT-END";*) s
 						   else
 						   s
 	|If(CastE(t,e),b,_,_) when isWriteType t -> if (isFifo (fst (getExpNameW e)) !fifovarlst) then
@@ -1010,13 +977,13 @@ class fifoQu f fdec  = object(self)
 						   let write_call = Call(None, v2e sdelayfuns.fifo_write, [((v2e fifovar)); writeVal;], locUnknown) in
 						   let slist = [mkStmtOneInstr write_call] in
 						   let nb = mkBlock slist in
-						    s.skind <- Block nb;E.log "WRITE-END";  s
+						    s.skind <- Block nb; (*E.log "WRITE-END";*)  s
 						   else
 						   s
        |If(CastE(t,e),b,_,_) when isReadType t ->  if (isFifo (fst (getExpNameR e)) !fifovarlst) then
 						   let expName = getExpNameR e in
 						   let fifovar = HT.find fifoChanSet (fst (expName)) in
-						   let test = E.log "%s" (fst (expName))   in
+						   (*let test = E.log "%s" (fst (expName))   in*)
 						   let readVar = snd expName in
 						   (*let vl = begin match readVar with 
 							  |LVal(var v,_) -> v
@@ -1025,7 +992,7 @@ class fifoQu f fdec  = object(self)
 						   let read_call = Call(None, v2e sdelayfuns.fifo_read, [((v2e fifovar)); readVar;], locUnknown) in
 						   let slist = [mkStmtOneInstr read_call] in
 						   let nb = mkBlock slist in
-						    s.skind <- Block nb; E.log "READ-END"; s
+						    s.skind <- Block nb; (*E.log "READ-END";*) s
 						   else
 						   s
 
@@ -1073,15 +1040,11 @@ let cVis = new fifoTrans f in
    visitCilFile cVis f
 
  
-let sdelay (f : file) : unit =
-initSdelayFunctions f; timing_basic_block f; Cfg.computeFileCFG f; addLabel f; Cfg.clearFileCFG f; concurrencyA f; 
-List.iter (fun (a,b) -> E.log "(%s %d)" a b) !all_task; fifoAnalysi f ; (*chanReaderWriterAnalysis f; *) 
-timingConstructsTransformatn f; (*concurrencyConstructsTransformatn f ;*) () 
+let sdelay (f : file) (fexist) : unit =
+   initSdelayFunctions f; timing_basic_block f; 
+   Cfg.computeFileCFG f; addLabel f; Cfg.clearFileCFG f; 
+   concurrencyA f; (*List.iter (fun (a,b) -> E.log "(%s %d)" a b) !all_task;*)
+   fifoAnalysi f ; (*chanReaderWriterAnalysis f; *) 
+   timingConstructsTransformatn f fexist; (*concurrencyConstructsTransformatn f ;*) () 
 
 
-
-(*
-let sdelay (f : file) : unit =
-initSdelayFunctions f; Ciltools.one_instruction_per_statement f ; let fname = "sdelay" in
-let vis = new sdelayFunc f fname in
-*) 

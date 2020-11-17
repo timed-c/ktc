@@ -2029,7 +2029,7 @@ let fifoAnalysi f =
         visitCilFile cVis f
 
 let sdelay (f : file) : unit =
-        (*staticAnalysis f; *) initSdelayFunctions f; (*mergeTimingPoints f ;*) timing_basic_block f;
+        staticAnalysis f; initSdelayFunctions f; (*mergeTimingPoints f ;*) timing_basic_block f;
 (*addpolicyDetail f;*) timing_basic_block f;  Cfg.clearFileCFG f; Cfg.computeFileCFG f;  addLabel f;  Cfg.clearFileCFG f; concurrencyA f;
 (*List.iter (fun (a,b) -> E.log "(%s %d)" a b) !all_task; *) chanReaderWriterAnalysis f;
    (*profileTransformation f;*) timingConstructsTransformatn f;

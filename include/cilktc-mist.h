@@ -36,8 +36,10 @@ typedef void * xQueueHandle;
 #define MICRO 1000000
 #define NANO  1000000000
 
-#define ms "ms"
-#define sec "sec"
+#define ms -3
+#define ns -9
+#define sec 0
+#define us -6
 #define CONSTRUCTOR __attribute__((constructor))
 
 

@@ -16,7 +16,7 @@ WORKDIR /opt/ktc
 RUN ocaml -version
 RUN opam --version
 RUN ls -la
-RUN eval $(opam config env) && make
+RUN eval $(opam config env) && make clean && make
 #WORKDIR /opt/ktc/test
 #RUN eval $(opam config env) && bash run-test.sh
 #WORKDIR /opt/ktc/profile-test
