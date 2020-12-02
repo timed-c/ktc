@@ -922,11 +922,15 @@ let isdeadlineInfinity argList =
                                 Int")) in
         arrival_time_int
 
+
+
+
 let rec checkForFTPInstrList ilist =
         match ilist with
         | ih:: rst -> (match ih with
                        |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> Some(0)
                        |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> Some(1)
+                       |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "hdelay") -> Some(2)
                        |Call(lv,Lval(Var vi,_),argList,loc) -> checkForFTPInstrList rst 
                        | _ -> checkForFTPInstrList rst)
         |_ -> None
@@ -947,7 +951,6 @@ let printRecStmnt sh =
         |Loop(b,_,_,_) -> E.log "loop\n"
         |Return(_,_) -> E.log "return\n"
         |_ -> E.log "others\n"
-
 
 
 let rec propertyStmnt slist res = 
@@ -986,6 +989,52 @@ let rec propertyStmntWhile slist =
                        |_ -> propertyStmntWhile (s.succs)))
         |Some(t) -> Some(t)
 
+let rec propertyRecHTPBlock sh =
+        match sh.skind with 
+        |Instr ilist -> let ishtp = checkForFTPInstrList ilist in
+                        (match ishtp with
+                        |Some(2)-> if ((List.length ilist) > 2) then E.s (E.error "Can not find WCET of the code fragment with htp") else Some(2)
+                        |_ -> None)
+        |_ -> None
+
+
+let rec propertyHTP1 slist res =
+        match slist with 
+        | s:: tlst -> let ret = propertyRecHTPBlock s in propertyHTP1 tlst ret  
+        | [] -> res 
+
+
+let rec propertyRecHTPList sh counter str =
+        match sh with 
+        | h::tlst -> (match h with
+                      |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> propertyRecHTPList tlst 0 "None"
+                      |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> propertyRecHTPList tlst 0 "None"
+                      |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "hdelay") -> if counter == 1 then (Printf.fprintf (open_out "ktc_wcet_file.txt") "2:%s" vi.vname) else E.s (E.error "Can not find WCET of the code fragment with htp block")
+                      |Call(lv,Lval(Var vi,_),argList,loc) -> propertyRecHTPList tlst (counter + 1) vi.vname
+                      | _ ->  E.s (E.error "Can not find WCET of the code fragment with htp block"))
+       | [] -> ()
+                      
+
+let propertyRecHTPList2 ilist  =
+  let istpelem1 = checkForFTPInstrList [List.hd ilist] in
+  let istpelem2 = checkForFTPInstrList (List.tl ilist) in
+  (match (istpelem1, istpelem2) with 
+   |(Some(2), None) -> (match (List.hd (List.tl ilist)) with 
+                        |Call(lv,Lval(Var vi,_),argList,loc) -> Printf.fprintf (open_out "ktc_wcet_file.txt") "2:%s" vi.vname; E.log "%s" vi.vname
+                        | _ ->  E.s (E.error "Can not find WCET of the code fragment with htp block"))
+   |(None, Some(2)) -> (match (List.hd ilist) with 
+                        |Call(lv,Lval(Var vi,_),argList,loc) -> Printf.fprintf (open_out "ktc_wcet_file.txt") "2:%s" vi.vname; E.log "%s" vi.vname
+                        | _ ->  E.s (E.error "Can not find WCET of the code fragment with htp block"))
+   |(_, _) -> ())
+
+
+
+let rec propertyHTP2 slist =
+        if (List.length slist) != 2 then
+                (propertyRecHTPList slist 0 "None")
+        else
+                (propertyRecHTPList2 slist) 
+             
 
 class fProfilingAdder filename fdec = object(self)
     inherit nopCilVisitor
@@ -1141,7 +1190,18 @@ class staticAnalysisProperty filename fdec = object(self)
 
         |_ ->  DoChildren
 
+end
+
+class htpAnalysisProperty filename fdec = object(self)
+   inherit nopCilVisitor 
+   method vstmt (s: stmt) = 
+           match s.skind with 
+           |Loop(b,_,_,_) -> propertyHTP1 b.bstmts None; DoChildren
+           |Instr(il) -> (*let _ = E.log "Instruction \n" in*)
+                                (*printInstrList il;*) (propertyHTP2  il); DoChildren 
+          | _ -> DoChildren
 end 
+
 
 class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp :
     varinfo) data fname sigvar  signo timer_creater = object(self)
@@ -1452,6 +1512,14 @@ class staticAnalysisFunc filename = object(self)
         visitCilBlock sap fdec.sbody; Cfg.clearFileCFG filename; DoChildren
 end
 
+class htpAnalysisFunc filename = object(self)
+        inherit nopCilVisitor 
+        method vfunc (fdec : fundec) =
+        let _ = Cfg.clearFileCFG filename; Cfg.computeFileCFG filename in
+        let _ = Cfg.printCfgFilename (fdec.svar.vname ^ ".dot") fdec in 
+        let sap = new htpAnalysisProperty filename fdec in 
+        visitCilBlock sap fdec.sbody; Cfg.clearFileCFG filename; DoChildren
+end
 
 class sdelayFunc filename fname fno = object(self)
         inherit nopCilVisitor
@@ -1927,6 +1995,10 @@ let staticAnalysis f =
         let vis = new staticAnalysisFunc f  in
         visitCilFile vis f
 
+let htpAnalysis f =
+        let vis = new htpAnalysisFunc f  in
+        visitCilFile vis f
+
 let fillgloballist_pr_dl f =
 	let vis = new populate_pr_dl f in
 	visitCilFile vis f
@@ -2029,7 +2101,7 @@ let fifoAnalysi f =
         visitCilFile cVis f
 
 let sdelay (f : file) : unit =
-        staticAnalysis f; initSdelayFunctions f; (*mergeTimingPoints f ;*) timing_basic_block f;
+         htpAnalysis f;staticAnalysis f; initSdelayFunctions f; (*mergeTimingPoints f ;*) timing_basic_block f;
 (*addpolicyDetail f;*) timing_basic_block f;  Cfg.clearFileCFG f; Cfg.computeFileCFG f;  addLabel f;  Cfg.clearFileCFG f; concurrencyA f;
 (*List.iter (fun (a,b) -> E.log "(%s %d)" a b) !all_task; *) chanReaderWriterAnalysis f;
    (*profileTransformation f;*) timingConstructsTransformatn f;
