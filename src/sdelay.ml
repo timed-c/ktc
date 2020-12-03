@@ -998,42 +998,42 @@ let rec propertyRecHTPBlock sh =
         |_ -> None
 
 
-let rec propertyHTP1 slist res =
+let rec propertyHTP1 slist res fname =
         match slist with 
-        | s:: tlst -> let ret = propertyRecHTPBlock s in propertyHTP1 tlst ret  
+        | s:: tlst -> let ret = propertyRecHTPBlock s in propertyHTP1 tlst ret fname 
         | [] -> res 
 
 
-let rec propertyRecHTPList sh counter str =
+let rec propertyRecHTPList sh counter str fname =
         match sh with 
         | h::tlst -> (match h with
-                      |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> propertyRecHTPList tlst 0 "None"
-                      |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> propertyRecHTPList tlst 0 "None"
-                      |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "hdelay") -> if counter == 1 then (Printf.fprintf (open_out "ktc_wcet_file.txt") "2:%s" vi.vname) else E.s (E.error "Can not find WCET of the code fragment with htp block")
-                      |Call(lv,Lval(Var vi,_),argList,loc) -> propertyRecHTPList tlst (counter + 1) vi.vname
-                      | _ ->  E.s (E.error "Can not find WCET of the code fragment with htp block"))
+                      |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> propertyRecHTPList tlst 0 "None" fname
+                      |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> propertyRecHTPList tlst 0 "None" fname
+                      |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "hdelay") -> if counter == 1 then (Printf.fprintf (open_out "ktc_wcet_file.txt") "%s:2:%s" fname vi.vname) else E.s (E.error "Can not find WCET of the code fragment with htp block")
+                      |Call(lv,Lval(Var vi,_),argList,loc) -> propertyRecHTPList tlst (counter + 1) vi.vname fname
+                      | _ -> ()) (*E.s (E.error "3 Can not find WCET of the code fragment with htp block")*)
        | [] -> ()
                       
 
-let propertyRecHTPList2 ilist  =
+let propertyRecHTPList2 ilist fname =
   let istpelem1 = checkForFTPInstrList [List.hd ilist] in
   let istpelem2 = checkForFTPInstrList (List.tl ilist) in
   (match (istpelem1, istpelem2) with 
    |(Some(2), None) -> (match (List.hd (List.tl ilist)) with 
-                        |Call(lv,Lval(Var vi,_),argList,loc) -> Printf.fprintf (open_out "ktc_wcet_file.txt") "2:%s" vi.vname; E.log "%s" vi.vname
-                        | _ ->  E.s (E.error "Can not find WCET of the code fragment with htp block"))
+                        |Call(lv,Lval(Var vi,_),argList,loc) -> Printf.fprintf (open_out "ktc_wcet_file.txt") "%s:2:%s" fname vi.vname; E.log "%s" vi.vname
+                        | _ ->  E.s (E.error "1 Can not find WCET of the code fragment with htp block"))
    |(None, Some(2)) -> (match (List.hd ilist) with 
-                        |Call(lv,Lval(Var vi,_),argList,loc) -> Printf.fprintf (open_out "ktc_wcet_file.txt") "2:%s" vi.vname; E.log "%s" vi.vname
-                        | _ ->  E.s (E.error "Can not find WCET of the code fragment with htp block"))
+                        |Call(lv,Lval(Var vi,_),argList,loc) -> Printf.fprintf (open_out "ktc_wcet_file.txt") "%s:2:%s" fname vi.vname; E.log "%s" vi.vname
+                        | _ ->  E.s (E.error "2 Can not find WCET of the code fragment with htp block"))
    |(_, _) -> ())
 
 
 
-let rec propertyHTP2 slist =
+let rec propertyHTP2 slist fname =
         if (List.length slist) != 2 then
-                (propertyRecHTPList slist 0 "None")
+                (propertyRecHTPList slist 0 "None" fname )
         else
-                (propertyRecHTPList2 slist) 
+                (propertyRecHTPList2 slist fname ) 
              
 
 class fProfilingAdder filename fdec = object(self)
@@ -1196,9 +1196,9 @@ class htpAnalysisProperty filename fdec = object(self)
    inherit nopCilVisitor 
    method vstmt (s: stmt) = 
            match s.skind with 
-           |Loop(b,_,_,_) -> propertyHTP1 b.bstmts None; DoChildren
+           |Loop(b,_,_,_) -> propertyHTP1 b.bstmts None fdec.svar.vname; DoChildren
            |Instr(il) -> (*let _ = E.log "Instruction \n" in*)
-                                (*printInstrList il;*) (propertyHTP2  il); DoChildren 
+                                (*printInstrList il;*) (propertyHTP2  il fdec.svar.vname); DoChildren 
           | _ -> DoChildren
 end 
 
