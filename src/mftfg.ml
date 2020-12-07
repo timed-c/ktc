@@ -422,7 +422,7 @@ let getvaridStmt s =
         match s.skind with
         |Instr il when il <> []-> match List.hd il with
                         |Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay")  -> vi.vid
-			|Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay")  -> vi.vid
+			|Call(_,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay" || vi.vname = "hdelay")  -> vi.vid
 			|_ -> E.s(E.bug "Error: label"); -1
 
 let get_label_no i =
@@ -535,7 +535,7 @@ let addPthreadJoin fdec slist =
 let instrTimingPoint (i : instr) : bool =
    match i with
     | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "fdelay") -> true
-    | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "sdelay")  -> true
+    | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "sdelay" || vf.vname = "hdelay")  -> true
     | _ -> false
 
 let instrTimingPointAftr (i : instr) : bool =
@@ -783,7 +783,7 @@ end
 let rec getsumdelay il lst =
 	match lst with
 	| h :: rest -> (match h with
-		     |Call(info,Lval(Var vi,vo),argList,loc) when (vi.vname = "sdelay") -> let newarg = BinOp(PlusA, List.hd argList, il, intType) in
+		     |Call(info,Lval(Var vi,vo),argList,loc) when (vi.vname = "sdelay" || vi.vname = "hdelay") -> let newarg = BinOp(PlusA, List.hd argList, il, intType) in
 											   let newarglst = newarg :: (List.tl argList) in
 										           let newil = Call(info,Lval(Var vi,vo), newarglst,loc) in
 											   getsumdelay (List.hd newarglst) rest
@@ -797,7 +797,7 @@ let rec getsumdelay il lst =
 let rec mergedList aux lst  =
 	match lst with
 	| h :: rest -> (match h with
-			|Call(info,Lval(Var vi,vo),argList,loc) when (vi.vname = "sdelay") ->  let (newarg, newlst) =  getsumdelay (List.hd argList) rest in											     let newarg = newarg :: (List.tl argList) in
+			|Call(info,Lval(Var vi,vo),argList,loc) when (vi.vname = "sdelay" || vi.vname = "hdelay") ->  let (newarg, newlst) =  getsumdelay (List.hd argList) rest in											     let newarg = newarg :: (List.tl argList) in
 											   let newil = Call(info,Lval(Var vi,vo),newarg,loc) in
 											   let aux = newil :: aux in																	mergedList aux newlst 								    |Call(info,Lval(Var vi,vo),argList,loc) when (vi.vname = "fdelay") -> let (newarg, newlst) =  getsumdelay (List.hd argList) rest in
 											  let newarg = newarg :: (List.tl argList) in
@@ -1300,7 +1300,7 @@ class tfgMinus fdc = object(self)
         let action [i] =
             match i with
             |Call(_,Lval(Var vi,_),argL, loc) when (vi.vname = "sdelay" ||
-                                    vi.vname = "fdelay") ->(let argList = if
+                                    vi.vname = "fdelay" || vi.vname = "hdelay") ->(let argList = if
                                         ((L.length argL) < 5) then (argL) else
                                             (List.tl argL) in
                                     let (at, dl, res) = ((List.nth argList 0), (List.nth argList 1), (List.nth argList 2)) in
@@ -1340,7 +1340,7 @@ count_var = object(self)
                 (TComp(logstart,[]))) in
                 [i]
         |Call(_,Lval(Var vi,_),argList, loc) when ((vi.vname = "sdelay" ||
-        vi.vname = "fdelay") & (fdec.svar.vname <> "main")) ->
+        vi.vname = "fdelay" || vi.vname = "hdelay") & (fdec.svar.vname <> "main")) ->
                let inc_count_instr = counter <- counter + 1; Set((Var(count_var),
                NoOffset), BinOp(PlusA, v2e id_var, (integer counter), intType), locUnknown) in
                let previous_id_instr = makeLogTracePreviousID (v2e logname) (v2e
@@ -1376,7 +1376,7 @@ findGlobalVar filename.globals (channame^"ktclist") in
 						                             let fifocount = findGlobalVar filename.globals (channame^"ktccount") in
 						                             let fifotail= findGlobalVar filename.globals (channame^"ktctail") in
 					                                     makeelemInstr  fifothrdqu fifocount fifotail lv loc *)
-    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> if L.length argList < 5 then makeSdelayInitInstr structvar argList loc lv else makeSdelayInitInstr structvar (L.tl argList) loc lv
+    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay" || vi.vname = "hdelay") -> if L.length argList < 5 then makeSdelayInitInstr structvar argList loc lv else makeSdelayInitInstr structvar (L.tl argList) loc lv
     |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> if L.length argList < 5 then makeFdelayInitInstr structvar argList loc ret_jmp (integer signo) tpstructvar lv else makeFdelayInitInstr structvar (L.tl argList) loc ret_jmp (integer signo) tpstructvar  lv
 	|Call(lv ,Lval(Var vi,_), argList, loc) when (vi.vname = "gettime") -> makegettimeInstr lv structvar argList loc
 	(*|Call(_,LVal(Var vi,_),_,loc) when (vi.vname = "next") -> makeNextGoto loc *)
