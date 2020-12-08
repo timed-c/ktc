@@ -50,6 +50,7 @@ let jnodeslist = ref []
 let jtasklist = ref []
 let csvlist = ref []
 let joblist = ref []
+let kindlist = ref []
 let abortlist = ref []
 let offsetvar = ref 0
 let offsetlist = ref []
@@ -1252,6 +1253,8 @@ let addJsonNodes jnodes arrival_time deadline kind tname d =
         (abortlist :=  [tname; (string_of_int arrival_time);  (string_of_int bcet); (string_of_int wcet); (string_of_int
         min_abort); (string_of_int max_abort); (string_of_int deadline)] ::
         !abortlist) in
+    let _ = if (arrival_time > 0) then 
+            kindlist := List.append (!kindlist) ([[tname; string_of_int (id-1); kind]]) in 
     (joblist := ([tname; (string_of_int arrival_time); (string_of_int j);
     (string_of_int bcet); (string_of_int wcet); (string_of_int deadline); kind] ::
         !joblist));
@@ -1769,6 +1772,8 @@ class tfgMinusForTask filename = object(self)
         (if (fdec.svar.vname = "main") then (Yojson.Safe.to_file
         "tfg_minus.json")
         (`List(!jtasklist)));  (Csv.save "input.csv" !csvlist);
+         (Csv.save
+        "jobkind.csv" !kindlist);
         (Csv.save
         "ijob.csv" !joblist);
         (if (fdec.svar.vname = "main") then ( findHyperperiod !csvlist
