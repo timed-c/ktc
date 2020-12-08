@@ -105,6 +105,7 @@ type functions =
   mutable compute_priority : varinfo;
   mutable nelem : varinfo;
   mutable blocksignal : varinfo;
+  mutable wcet_tracker : varinfo;
 }
 
 let dummyVar = makeVarinfo false "_sdelay_foo" voidType
@@ -144,6 +145,7 @@ let sdelayfuns = {
   compute_priority = dummyVar;
   nelem = dummyVar;
   blocksignal = dummyVar;
+  wcet_tracker = dummyVar;
 
 }
 
@@ -184,6 +186,7 @@ let spolicy_set_str = "ktc_set_sched"
 let compute_priority_str = "populatelist"
 let nelem_str = "nelem"
 let blocksignal_str = "ktc_block_signal"
+let wcet_tracker_str = "ktc_swcet"
 
 
 let sdelay_function_names = [
@@ -221,6 +224,7 @@ let sdelay_function_names = [
   nelem_str;
   log_trace_abort_time_str;
   blocksignal_str;
+  wcet_tracker_str
 ]
 
 
@@ -303,6 +307,7 @@ let initSdelayFunctions (f : file)  : unit =
   sdelayfuns.spolicy_set <- focf spolicy_set_str init_type;
   sdelayfuns.nelem <- focf nelem_str init_type;
   sdelayfuns.blocksignal <- focf blocksignal_str init_type;
+  sdelayfuns.wcet_tracker <- focf wcet_tracker_str init_type;
   sdelayfuns.compute_priority <- focf compute_priority_str init_type
 
 
@@ -410,6 +415,10 @@ let makeCriticalStartInstr signo  =
 
 let makeCriticalEndInstr signo =
         i2s ( Call(None, v2e sdelayfuns.critical_end, [integer signo], locUnknown) )
+
+let makeSwcet (structvar : varinfo) (loc : location) lv  =
+  let s =  mkAddrOf((var structvar)) in  
+  [Call(lv,v2e sdelayfuns.wcet_tracker, [s], loc)]
 
 let makePthreadCreateInstr (threadvar : varinfo) (funvar : varinfo) argList
 (loc:location) fdec =
@@ -1021,10 +1030,10 @@ let propertyRecHTPList2 ilist fname =
   let istpelem2 = checkForFTPInstrList (List.tl ilist) in
   (match (istpelem1, istpelem2) with 
    |(Some(2), None) -> (match (List.hd (List.tl ilist)) with 
-                        |Call(lv,Lval(Var vi,_),argList,loc) -> Printf.fprintf (open_out "ktc_wcet_file.txt") "%s:2:%s" fname vi.vname; E.log "%s" vi.vname
+                        |Call(lv,Lval(Var vi,_),argList,loc) -> Printf.fprintf (open_out "ktc_wcet_file.txt") "%s:2:%s" fname vi.vname(*; E.log "%s" vi.vname*)
                         | _ ->  E.s (E.error "1 Can not find WCET of the code fragment with htp block"))
    |(None, Some(2)) -> (match (List.hd ilist) with 
-                        |Call(lv,Lval(Var vi,_),argList,loc) -> Printf.fprintf (open_out "ktc_wcet_file.txt") "%s:2:%s" fname vi.vname; E.log "%s" vi.vname
+                        |Call(lv,Lval(Var vi,_),argList,loc) -> Printf.fprintf (open_out "ktc_wcet_file.txt") "%s:2:%s" fname vi.vname(*; E.log "%s" vi.vname*)
                         | _ ->  E.s (E.error "2 Can not find WCET of the code fragment with htp block"))
    |(_, _) -> ())
 
@@ -1228,7 +1237,8 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp :
         ret_jmp (integer signo) tpstructvar lv timervar else makeFdelayInitInstr
         fdec structvar (L.tl argList) loc ret_jmp (integer signo) tpstructvar
         lv timervar
-	|Call(lv ,Lval(Var vi,_), argList, loc) when (vi.vname = "gettime") -> makegettimeInstr lv structvar argList loc
+    |Call(lv ,Lval(Var vi,_), _, loc) when (vi.vname = "swcet") -> makeSwcet structvar loc lv 
+	|Call(lv ,Lval(Var vi,_), argList, loc) when (vi.vname = "gettime") -> makegettimeInstr lv structvar argList loc 
 	(*|Call(_,LVal(Var vi,_),_,loc) when (vi.vname = "next") -> makeNextGoto loc *)
 	|Call(_,Lval(Var vi,_),argList,_) when (isFunTask vi) ->
                                                         let pthread_id_str = "pthread_t" in
@@ -1539,7 +1549,7 @@ class sdelayFunc filename fname fno = object(self)
 		let ftimer = makeLocalVar fdec "ktctimer" (TNamed(ftimer, [])) in
 		let structname = "timespec" in
         let ci = findCompinfo filename structname in
-        let structvar = makeLocalVar fdec "start_time" (TComp(ci,[])) in
+        let structvar = makeLocalVar fdec "start_time" (TComp(ci,[])) in 
 		let tpstructvarinfo = findCompinfo filename "tp_struct" in
 		let tpstructvar = makeLocalVar fdec "tp" (TComp(tpstructvarinfo,[])) in
 		let sigtype = findTypeinfo filename "sigset_t" in
@@ -1563,8 +1573,8 @@ class sdelayFunc filename fname fno = object(self)
           fdec.sbody.bstmts <- blocksg :: fdec.sbody.bstmts;
 		fdec.sbody.bstmts <- List.append init_start fdec.sbody.bstmts;
 		fdec.sbody.bstmts <- addPthreadJoin fdec fdec.sbody.bstmts ;
-		 if (fdec.svar.vname <> "main") then
-		(fdec.sbody.bstmts <- addPthreadExit fdec fdec.sbody.bstmts);
+		 (*if (fdec.svar.vname <> "main") then
+		(fdec.sbody.bstmts <- addPthreadExit fdec fdec.sbody.bstmts); *)
                 ChangeTo(fdec)
 
 end
