@@ -574,6 +574,7 @@ let instrTimingPoint (i : instr) : bool =
    match i with
     | Call (_, Lval (Var vf, _), _, _) when (vf.vname = "fdelay") -> true
     | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "sdelay")  -> true
+    | Call (_, Lval(Var vf,_), _, _) when (vf.vname = "hdelay")  -> true
     | _ -> false
 
 let instrTimingPointAftr (i : instr) : bool =
@@ -821,7 +822,7 @@ end
 let rec getsumdelay il lst =
 	match lst with
 	| h :: rest -> (match h with
-		     |Call(info,Lval(Var vi,vo),argList,loc) when (vi.vname = "sdelay") -> let newarg = BinOp(PlusA, List.hd argList, il, intType) in
+		     |Call(info,Lval(Var vi,vo),argList,loc) when ((vi.vname = "sdelay") || (vi.vname = "hdelay")) -> let newarg = BinOp(PlusA, List.hd argList, il, intType) in
 											   let newarglst = newarg :: (List.tl argList) in
 										           let newil = Call(info,Lval(Var vi,vo), newarglst,loc) in
 											   getsumdelay (List.hd newarglst) rest
@@ -1219,7 +1220,7 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp :
 						                             let fifocount = findGlobalVar filename.globals (channame^"ktccount") in
 						                             let fifotail= findGlobalVar filename.globals (channame^"ktctail") in
 					                                     makeelemInstr  fifothrdqu fifocount fifotail lv loc *)
-    |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "sdelay") -> if
+    |Call(lv,Lval(Var vi,_),argList,loc) when ((vi.vname = "sdelay") || (vi.vname = "hdelay")) -> if
         L.length argList < 5 then makeSdelayInitInstr fdec structvar argList loc
         lv else makeSdelayInitInstr fdec structvar (L.tl argList) loc lv
     |Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "fdelay") -> if
