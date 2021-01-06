@@ -2,12 +2,12 @@
 #include<time.h>
 
 int ktc_swcet(char* fname,  struct timespec* start_time){
-    int exec = 0;
+    long exec = 0;
     struct timespec now;
-	long tme, exec;
+	long tme, est;
     FILE *fp;
     fp = fopen(fname, "r");
-	fscanf(fp, "%d", &est);
+	fscanf(fp, "%ld", &est);
 	clock_gettime(CLOCK_REALTIME, &now);
 	exec = diff_timespec(*start_time, now);
     tme = (timespec_to_unit(exec, -3));
