@@ -3,8 +3,9 @@
 
 int ktc_swcet(char* fname,  struct timespec* start_time){
     static int i = 0;
-    struct timespec now, exectm;
-	long tme, newt;
+    struct timespec now;
+	struct timespec exectm;
+	long tme = 0, newt;
 	clock_gettime(CLOCK_REALTIME, &now);
 	exectm = diff_timespec(now, *start_time);
     newt = timespec_to_unit(exectm, -3);
