@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<time.h>
+#include <cillib.h>
 
 int ktc_swcet(char* fname,  struct timespec* start_time){
     static int i = 0;
@@ -8,7 +9,7 @@ int ktc_swcet(char* fname,  struct timespec* start_time){
 	long tme = 0, newt;
 	clock_gettime(CLOCK_REALTIME, &now);
 	exectm = diff_timespec(now, *start_time);
-    newt = timespec_to_unit(exectm, -3);
+    newt = timespec_to_unit((diff_timespec(now, *start_time)), -3);
 	if(newt > tme){
 		tme = newt;
     }
