@@ -2,8 +2,7 @@
 #include<time.h>
 
 int ktc_swcet(char* fname,  struct timespec* start_time){
-    long exec = 0;
-    struct timespec now;
+    struct timespec now, exec;
 	long tme, est;
     FILE *fp;
     fp = fopen(fname, "r");
@@ -11,7 +10,7 @@ int ktc_swcet(char* fname,  struct timespec* start_time){
 	clock_gettime(CLOCK_REALTIME, &now);
 	exec = diff_timespec(*start_time, now);
     tme = (timespec_to_unit(exec, -3));
-    if(est > exec)
+    if(est > tme)
 		return 1;
 	else
 		return 0;
