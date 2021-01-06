@@ -3,13 +3,13 @@
 
 int ktc_swcet(char* fname,  struct timespec* start_time){
     int exec = 0;
-    struct timespec now, exec;
-	long tme;
+    struct timespec now;
+	long tme, exec;
     FILE *fp;
     fp = fopen(fname, "r");
 	fscanf(fp, "%d", &est);
 	clock_gettime(CLOCK_REALTIME, &now);
-	exec = diff_timespec(*start_time, st);
+	exec = diff_timespec(*start_time, now);
     tme = (timespec_to_unit(exec, -3));
     if(est > exec)
 		return 1;
