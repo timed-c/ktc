@@ -43,6 +43,7 @@ let read_str = "read_block"
 let write_str = "write_block"
 let init_str = "init_block"
 let fifo_str = "fifochannel"
+let wcet_tracker_str = "ktc_swcet"
 
 let hasCriticalAttrs : attributes -> bool = hasAttribute critical_str
 let isCriticalType (t : typ) : bool = t |> typeAttrs |> hasCriticalAttrs
@@ -105,6 +106,7 @@ type functions =
   mutable compute_priority : varinfo;
   mutable nelem : varinfo;
   mutable blocksignal : varinfo;
+  mutable wcet_tracker : varinfo;
 }
 
 let dummyVar = makeVarinfo false "_sdelay_foo" voidType
@@ -144,7 +146,7 @@ let sdelayfuns = {
   compute_priority = dummyVar;
   nelem = dummyVar;
   blocksignal = dummyVar;
-
+  wcet_tracker = dummyVar;
 }
 
 
@@ -184,6 +186,7 @@ let spolicy_set_str = "ktc_set_sched"
 let compute_priority_str = "populatelist"
 let nelem_str = "nelem"
 let blocksignal_str = "ktc_block_signal"
+let wcet_tracker_str = "ktc_swcet_profile"
 
 
 let sdelay_function_names = [
@@ -221,6 +224,7 @@ let sdelay_function_names = [
   log_trace_abort_time_str;
   blocksignal_str;
   log_trace_set_param_str;
+  wcet_tracker_str;
 ]
 
 
@@ -374,6 +378,10 @@ let makeSdelayEndInstr fdec (structvar : varinfo) (timervar : varinfo) (tp : var
   structvar), locUnknown) in
   [mkStmtOneInstr start_time_init; mkStmtOneInstr itime_init_start_time]
 
+
+let makeSwcet (structvar : varinfo) (loc : location) lv (fnme) =
+  let s =  mkAddrOf((var structvar)) in  
+  [Call(lv,v2e sdelayfuns.wcet_tracker, [(mkString fnme); s], loc)]
 
 let makeTimerCreate fdec (structvar : varinfo) (timervar : varinfo) (tp : varinfo) (signo : int)=
   let t =  mkAddrOf((var timervar)) in
@@ -1037,6 +1045,7 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp :
         let sname = "fdelay" in
         let action [i] =
         match i with
+        |Call(lv ,Lval(Var vi,_), _, loc) when (vi.vname = "swcet") -> makeSwcet structvar loc lv (fdec.svar.vname^".rwcet") 
 	(*|Call(lv,Lval(Var vi,_),argList,loc) when (vi.vname = "nelem") ->  let arg = List.hd argList in
 									     let channame = (match arg with
 											   |Lval(Var vi, _) -> vi.vname) in

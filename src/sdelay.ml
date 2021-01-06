@@ -146,7 +146,6 @@ let sdelayfuns = {
   nelem = dummyVar;
   blocksignal = dummyVar;
   wcet_tracker = dummyVar;
-
 }
 
 
@@ -224,7 +223,7 @@ let sdelay_function_names = [
   nelem_str;
   log_trace_abort_time_str;
   blocksignal_str;
-  wcet_tracker_str
+  wcet_tracker_str;
 ]
 
 
@@ -416,9 +415,9 @@ let makeCriticalStartInstr signo  =
 let makeCriticalEndInstr signo =
         i2s ( Call(None, v2e sdelayfuns.critical_end, [integer signo], locUnknown) )
 
-let makeSwcet (structvar : varinfo) (loc : location) lv  =
+let makeSwcet (structvar : varinfo) (loc : location) lv (fnme) =
   let s =  mkAddrOf((var structvar)) in  
-  [Call(lv,v2e sdelayfuns.wcet_tracker, [s], loc)]
+  [Call(lv,v2e sdelayfuns.wcet_tracker, [(mkString fnme); s], loc)]
 
 let makePthreadCreateInstr (threadvar : varinfo) (funvar : varinfo) argList
 (loc:location) fdec =
@@ -1237,7 +1236,7 @@ class sdelayReportAdder filename fdec structvar tpstructvar timervar (ret_jmp :
         ret_jmp (integer signo) tpstructvar lv timervar else makeFdelayInitInstr
         fdec structvar (L.tl argList) loc ret_jmp (integer signo) tpstructvar
         lv timervar
-    |Call(lv ,Lval(Var vi,_), _, loc) when (vi.vname = "swcet") -> makeSwcet structvar loc lv 
+    |Call(lv ,Lval(Var vi,_), _, loc) when (vi.vname = "swcet") -> makeSwcet structvar loc lv (fdec.svar.vname^".rwcet") 
 	|Call(lv ,Lval(Var vi,_), argList, loc) when (vi.vname = "gettime") -> makegettimeInstr lv structvar argList loc 
 	(*|Call(_,LVal(Var vi,_),_,loc) when (vi.vname = "next") -> makeNextGoto loc *)
 	|Call(_,Lval(Var vi,_),argList,_) when (isFunTask vi) ->

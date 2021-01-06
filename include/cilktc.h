@@ -121,7 +121,7 @@ extern long ktc_fdelay_init_profile(int interval,int period, int unit, struct ti
 extern long ktc_gettime(int unit);
 extern long ktc_fdelay_init(int interval,int period, int unit, struct timespec* start_time, int id, int num, int retjmp, timer_t tid);
 extern long ktc_block_signal(int n);
-extern long ktc_swcet(struct timespec* start_time);
+extern long ktc_swcet(char* fname, struct timespec* start_time);
 sigjmp_buf buf_struct;
 
 
