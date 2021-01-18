@@ -28,7 +28,7 @@ Follow instructions below.
 	eval $(opam config env)
 	
 #### 2. Windows Subsytem for Linux
-For windows machine we suggest running KTC on WSL.
+For windows machine we suggest running KTC on WSL. KTC is tested and known to work only on Ubuntu 18.04.3 LTS. 
 
 **(a.) OCaml dependencies**
 

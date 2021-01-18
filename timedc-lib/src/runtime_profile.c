@@ -23,12 +23,12 @@ int ktc_swcet(char* fname,  struct timespec* start_time){
 	long tme = 0, newt;
 	clock_gettime(CLOCK_REALTIME, &now);
 	exectm = diff_timespec(now, *start_time);
-    newt = timespec_to_unit((diff_timespec(now, *start_time)), -3);
+    newt = timespec_to_unit(exectm, -3);
 	if(newt > tme){
 		tme = newt;
     }
 	i++;
-	if(i == 100){
+	if(i == 10){
        FILE *fp;
        fp = fopen(fname, "w");
        fprintf(fp, "%d", tme);
