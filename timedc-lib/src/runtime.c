@@ -16,17 +16,20 @@
 #include <errno.h>
 #include <math.h>
 
-int ktc_swcet(char* fname,  struct timespec* start_time){
+int ktc_swcet(char* fname,  struct timespec* start_time, int* count, int tunit, int *tme){
+    //printf("ktc_swcet %s", fname);
     struct timespec now, exec;
 	long tme, est;
     FILE *fp;
     fp = fopen(fname, "r");
 	fscanf(fp, "%ld", &est);
+	fclose(fp);
 	clock_gettime(CLOCK_REALTIME, &now);
-	exec = diff_timespec(*start_time, now);
-    tme = (timespec_to_unit(exec, -3));
-    if(est > tme)
-		return 1;
+	exec = diff_timespec(now, *start_time);
+    tme = (timespec_to_unit(exec, tunit));
+	printf("ktc_scwet %ld %ld\n", est, tme);
+    if(est < tme)
+		return (tme-est);
 	else
 		return 0;
 }
