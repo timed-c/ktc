@@ -417,7 +417,8 @@ let makeCriticalEndInstr signo =
 
 let makeSwcet (structvar : varinfo) (loc : location) lv (fnme) (rvar) =
   let s =  mkAddrOf((var structvar)) in  
-  [Call(lv,v2e sdelayfuns.wcet_tracker, [(mkString fnme); s; v2e rvar], loc)]
+  let rvar_addr = mkAddrOf((var rvar)) in
+  [Call(lv,v2e sdelayfuns.wcet_tracker, [(mkString fnme); s; rvar_addr], loc)]
 
 let makePthreadCreateInstr (threadvar : varinfo) (funvar : varinfo) argList
 (loc:location) fdec =

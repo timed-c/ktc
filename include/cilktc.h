@@ -34,6 +34,7 @@ extern int setschedvar;
 #define fdelay(intr, ...) fdelay(intr, intr, ##__VA_ARGS__)
 #define hdelay(intr, ...) hdelay(intr, intr, ##__VA_ARGS__)
 #define gettime(unit)  ktc_gettime(unit);sdelay(-1404, 0)
+#define fwcet swcet
 
 #define invariant(c,i,...) __blockattribute__((invariant((c),(i),__VA_ARGS__)))
 #define post(c) __attribute__((post((c))))
@@ -121,7 +122,7 @@ extern long ktc_fdelay_init_profile(int interval,int period, int unit, struct ti
 extern long ktc_gettime(int unit);
 extern long ktc_fdelay_init(int interval,int period, int unit, struct timespec* start_time, int id, int num, int retjmp, timer_t tid);
 extern long ktc_block_signal(int n);
-extern long ktc_swcet(char* fname, struct timespec* start_time, int count);
+extern long ktc_swcet(char* fname, struct timespec* start_time, int* count);
 sigjmp_buf buf_struct;
 
 
