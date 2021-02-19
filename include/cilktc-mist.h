@@ -70,7 +70,8 @@ typedef void * xQueueHandle;
 #define exec_child(x) if(x == 0)
 //#define cread(chan, ptr); if((void *__attribute__((read_block))) (sizeof(#chan) > &ptr)) {sleep(0);}
 #define cread(chan, ptr)   xQueueReceive( chan, &( ptr ), ( portMAX_DELAY ))
-#define cwrite(chan, ptr)   xQueueSend( chan, &( ptr ), 0)
+#define cread_wait(chan, ptr, tme, unit) TickType_t ktc_tick_of_time_var = ktc_tick_of_time(tme, unit); xQueueReceive( chan, &( ptr ), ktc_tick_of_time_var )
+#define cwrite(chan, ptr)   xQueueSend(chan, &( ptr ), 0)
 #define cinit(chan, val) chan = xQueueCreate(20, sizeof(val) )
 #define cread_wait(chan, ptr, val)   xQueueReceive( chan, &( ptr ), val)
 //#define main() populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort); } void main()
