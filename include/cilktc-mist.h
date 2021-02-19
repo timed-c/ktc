@@ -36,10 +36,17 @@ typedef void * xQueueHandle;
 #define MICRO 1000000
 #define NANO  1000000000
 
+/*
 #define ms -3
 #define ns -9
 #define sec 0
 #define us -6
+*/
+#define ms "ms"
+#define ns "ns"
+#define sec "sec"
+#define us "us"
+
 #define CONSTRUCTOR __attribute__((constructor))
 
 
@@ -73,7 +80,7 @@ typedef void * xQueueHandle;
 #define cread_wait(chan, ptr, tme, unit) TickType_t ktc_tick_of_time_var = ktc_tick_of_time(tme, unit); xQueueReceive( chan, &( ptr ), ktc_tick_of_time_var )
 #define cwrite(chan, ptr)   xQueueSend(chan, &( ptr ), 0)
 #define cinit(chan, val) chan = xQueueCreate(20, sizeof(val) )
-#define cread_wait(chan, ptr, val)   xQueueReceive( chan, &( ptr ), val)
+#define cread_wait(chan, ptr, val)   xQueueReceive( chan, &( ptr ), (val * portTICK_RATE_MS))
 //#define main() populatelist(int num){ if(num == 0){return 0;} qsort (list_dl, num, sizeof(int), compare_qsort); qsort (list_pr, num, sizeof(int), compare_qsort); } void main()
 //#define aperiodic(x, ms)  printf("");sdelay(x, ms); int i =0; while(i){sdelay(0, ms);} printf("aperiodic\n")
 void ktc_fdelay();
@@ -94,7 +101,6 @@ void skipdelay();
 #define gettime(ms)  ktc_gettime(&start_time, #ms)
 //#define prioritychannel xQueueHandle
 #define fifochannel sardummy; xQueueHandle
-#define cread_wait(chan, ptr, val)   xQueueReceive( chan, &( ptr ), val)
 
 enum sched_policy{EDF, FIFO_RM, RR_RM, FIFO_DM, RR_DM};
 int policy;
