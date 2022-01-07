@@ -4,7 +4,7 @@ package Ktc;
 use strict;
 
 $::version_major = 1;
-$::version_minor = 0;
+$::version_minor = 2;
 $::version_sub = 0;
 
 use App::Cilly;

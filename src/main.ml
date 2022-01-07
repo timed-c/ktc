@@ -53,6 +53,9 @@ let main () =
   E.colorFlag := true;
 
 
+  Cil.lineDirectiveStyle := None;
+  Cprint.printLn := false;
+
   Cabs2cil.doCollapseCallCast := true;
 
   let usageMsg = "Usage: ktc [options] source-files" in

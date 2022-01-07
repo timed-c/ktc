@@ -11,6 +11,7 @@ let outFile : string ref = ref ""
 let debug : bool ref = ref false
 let verbose : bool ref = ref false
 let stats: bool ref = ref false
+let noprint: bool ref = ref false
 let parseFile : string ref = ref ""
 let warnAsm: bool ref = ref false
 let warnVararg: bool ref = ref false
@@ -93,6 +94,8 @@ let options = ext_options @ [
     "Output optimizer execution time stats";
   "--help", Arg.Unit (fun () -> Arg.usage (align ()) ""; exit 0),
     "Show this help message";
+  "--noPrintLn", Arg.Set noprint,
+    "print no line number"; 
   "--merge", Arg.Set merge,
     "Operate in CIL merger mode";
    "--envmachine",
